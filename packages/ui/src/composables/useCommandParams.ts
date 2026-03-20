@@ -21,12 +21,17 @@ export function useCommandParams(selectedCommand: Ref<CommandEntry | null>) {
         next[d.key] = existing;
         continue;
       }
-      const dv = d.defaultValue;
-      if (d.type === "boolean") {
-        next[d.key] = typeof dv === "boolean" ? dv : false;
+    const dv = d.defaultValue;
+    if (d.type === "boolean") {
+      if (typeof dv === "string") {
+        const normalized = dv.trim().toLowerCase();
+        next[d.key] = normalized === "true" ? true : normalized === "false" ? false : Boolean(normalized);
       } else {
-        next[d.key] = dv === undefined || dv === null ? "" : String(dv);
+        next[d.key] = Boolean(dv);
       }
+    } else {
+      next[d.key] = dv === undefined || dv === null ? "" : String(dv);
+    }
     }
     paramValues.value = next;
   }

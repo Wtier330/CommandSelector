@@ -12,40 +12,101 @@ const errorMsg = ref("");
 
 const LIBRARY_FILE = "library.json";
 
+type RetryOptions = {
+  attempts: number;
+  baseDelayMs: number;
+};
+
+function toErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < options.attempts; attempt += 1) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < options.attempts - 1) {
+        await wait(options.baseDelayMs * 2 ** attempt);
+      }
+    }
+  }
+  throw lastError;
+}
+
 export async function loadLibrary() {
   if (isLoaded.value) return;
   try {
     let data: CommandEntry[] | null = null;
-    
+    let shouldSave = false;
+    let localError: unknown = null;
+    let remoteError: unknown = null;
+
     if (isTauri()) {
       try {
-        const fileContent = await readTextFile(LIBRARY_FILE, { baseDir: BaseDirectory.AppLocalData });
-        data = JSON.parse(fileContent);
-      } catch (err) {
-        console.warn("Local file not found or read error, fallback to public library.json", err);
+        data = await withRetry(
+          async () => {
+            const fileContent = await readTextFile(LIBRARY_FILE, { baseDir: BaseDirectory.AppLocalData });
+            return JSON.parse(fileContent) as CommandEntry[];
+          },
+          { attempts: 3, baseDelayMs: 200 }
+        );
+      } catch (error) {
+        localError = error;
       }
     } else {
-      const localData = localStorage.getItem("cs_library_data");
-      if (localData) {
-        data = JSON.parse(localData);
+      try {
+        data = await withRetry(
+          async () => {
+            const localData = localStorage.getItem("cs_library_data");
+            if (!localData) return null;
+            return JSON.parse(localData) as CommandEntry[];
+          },
+          { attempts: 3, baseDelayMs: 200 }
+        );
+      } catch (error) {
+        localError = error;
       }
     }
 
     if (!data) {
-      const response = await fetch("/library.json");
-      if (response.ok) {
-        data = await response.json();
-        if (data) {
-          commands.value = data;
-          await saveLibrary();
-        }
-      } else {
-        throw new Error(`无法加载默认库: HTTP ${response.status}`);
+      try {
+        data = await withRetry(
+          async () => {
+            const response = await fetch("/library.json");
+            if (!response.ok) throw new Error(`无法加载默认库: HTTP ${response.status}`);
+            return (await response.json()) as CommandEntry[];
+          },
+          { attempts: 3, baseDelayMs: 200 }
+        );
+        shouldSave = true;
+      } catch (error) {
+        remoteError = error;
       }
-    } else {
-      commands.value = data;
     }
-    
+
+    if (!data) {
+      const localMessage = localError ? toErrorMessage(localError) : "无本地缓存";
+      const remoteMessage = remoteError ? toErrorMessage(remoteError) : "未执行远端拉取";
+      throw new Error(`加载失败: 本地(${localMessage}); 远端(${remoteMessage})`);
+    }
+
+    if (!Array.isArray(data)) {
+      throw new Error("数据格式错误：应为 JSON 数组");
+    }
+
+    commands.value = data;
+    if (shouldSave) {
+      await saveLibrary();
+    }
+
     isLoaded.value = true;
   } catch (e: any) {
     console.error("Failed to load library:", e);
