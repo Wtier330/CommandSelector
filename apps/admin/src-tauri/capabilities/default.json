@@ -9,6 +9,9 @@
     "core:default",
     "opener:default",
     "fs:default",
+    "fs:allow-write-text-file",
+    "fs:allow-applocaldata-read",
+    "fs:allow-applocaldata-write",
     "dialog:default"
   ]
 }
