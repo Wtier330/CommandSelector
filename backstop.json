@@ -1,0 +1,85 @@
+{
+  "id": "command_selector_ui_regression",
+  "viewports": [
+    {
+      "label": "desktop",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "label": "tablet",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "label": "mobile",
+      "width": 375,
+      "height": 667
+    }
+  ],
+  "onBeforeScript": "puppet/onBefore.js",
+  "onReadyScript": "puppet/onReady.js",
+  "scenarios": [
+    {
+      "label": "Command Browser - Initial State",
+      "cookiePath": "backstop_data/engine_scripts/cookies.json",
+      "url": "http://localhost:5173",
+      "referenceUrl": "",
+      "readyEvent": "",
+      "readySelector": ".cs-shell",
+      "delay": 500,
+      "hideSelectors": [],
+      "removeSelectors": [],
+      "hoverSelector": "",
+      "clickSelector": "",
+      "postInteractionWait": 0,
+      "selectors": ["document"],
+      "selectorExpansion": true,
+      "expect": 0,
+      "misMatchThreshold": 2.0,
+      "requireSameDimensions": true
+    },
+    {
+      "label": "Command Browser - Hover Copy Button",
+      "url": "http://localhost:5173",
+      "readySelector": ".cs-shell",
+      "hoverSelector": ".cs-copy-btn-outline",
+      "delay": 500,
+      "selectors": [".cs-preview-card"],
+      "misMatchThreshold": 2.0
+    },
+    {
+      "label": "Command Browser - Command Selected",
+      "url": "http://localhost:5173",
+      "readySelector": ".cs-shell",
+      "clickSelector": ".cs-item:nth-child(2)",
+      "postInteractionWait": 500,
+      "selectors": ["document"],
+      "misMatchThreshold": 2.0
+    },
+    {
+      "label": "Command Browser - Status Bar at Bottom",
+      "url": "http://localhost:5173",
+      "readySelector": ".cs-bottom-statusbar",
+      "delay": 500,
+      "selectors": ["document"],
+      "misMatchThreshold": 2.0
+    }
+  ],
+  "paths": {
+    "bitmaps_reference": "backstop_data/bitmaps_reference",
+    "bitmaps_test": "backstop_data/bitmaps_test",
+    "engine_scripts": "backstop_data/engine_scripts",
+    "html_report": "backstop_data/html_report",
+    "ci_report": "backstop_data/ci_report"
+  },
+  "report": ["browser"],
+  "engine": "puppeteer",
+  "engineOptions": {
+    "args": ["--no-sandbox"]
+  },
+  "asyncCaptureLimit": 5,
+  "asyncCompareLimit": 50,
+  "debug": false,
+  "debugWindow": false
+}

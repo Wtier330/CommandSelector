@@ -1,0 +1,16 @@
+{
+  "name": "commandselector",
+  "private": true,
+  "packageManager": "pnpm@10.25.0",
+  "scripts": {
+    "dev": "pnpm --filter @commandselector/admin dev",
+    "tauri": "node scripts/ensure-port-free.mjs 3002 && pnpm --filter @commandselector/admin tauri dev",
+    "build": "pnpm --filter @commandselector/admin build",
+    "typecheck": "pnpm -r --filter ./apps/** typecheck",
+    "test": "node --test --experimental-strip-types"
+  },
+  "dependencies": {
+    "@tauri-apps/plugin-dialog": "^2.6.0",
+    "@tauri-apps/plugin-fs": "^2.4.5"
+  }
+}

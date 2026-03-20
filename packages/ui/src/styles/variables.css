@@ -1,0 +1,48 @@
+/* variables.css */
+:root {
+  --cs-1: 8px;
+  --cs-2: 16px;
+  --cs-3: 24px;
+  --cs-4: 32px;
+  
+  --cs-font-base: 14px;
+  --cs-title-size: 24px;
+  
+  --cs-bg: #FFFFFF;
+  --cs-card: #ffffff;
+  --cs-border: #e5e7eb;
+  
+  --cs-text: #0f172a;
+  --cs-muted: #475569;
+  --cs-muted-2: #334155;
+  
+  --cs-primary: #0b1220;
+  --cs-primary-hover: #1e293b;
+  
+  --cs-blue: #2563eb;
+  --cs-blue-50: #eff6ff;
+  --cs-blue-100: #dbeafe;
+  --cs-blue-200: #bfdbfe;
+  --cs-blue-800: #1e3a8a;
+  
+  --cs-statusbar-border: #E5E5E5;
+  
+  --cs-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --cs-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  
+  --cs-radius: 14px;
+  --cs-radius-sm: 12px;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* 关键：阻止外层滚动，将滚动交给内部的 sidebar 和 main */
+}
+
+body {
+  margin: 0;
+}

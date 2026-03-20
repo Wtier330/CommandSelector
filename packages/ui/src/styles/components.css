@@ -1,0 +1,96 @@
+/* components.css */
+/* Toast */
+.cs-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.95);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+}
+
+.cs-toast.error {
+  background: rgba(185, 28, 28, 0.95);
+}
+
+.cs-toast-icon {
+  margin-right: 6px;
+  vertical-align: text-bottom;
+}
+
+/* Empty State */
+.cs-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  border-radius: 14px;
+  border: 2px dashed var(--cs-border);
+  color: var(--cs-muted);
+  background: rgba(255, 255, 255, 0.5);
+  min-height: 300px;
+}
+
+.cs-empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.3;
+}
+
+.cs-empty-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Overlay & Drawer */
+.cs-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  z-index: 50;
+  display: flex;
+  backdrop-filter: blur(2px);
+}
+
+.cs-drawer {
+  width: min(320px, 90vw);
+  height: 100%;
+  background: var(--cs-bg);
+  border-right: 1px solid var(--cs-border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.cs-drawer-head {
+  padding: var(--cs-2);
+  border-bottom: 1px solid var(--cs-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--cs-card);
+}
+
+.cs-drawer-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.cs-drawer-body {
+  padding: var(--cs-2);
+  overflow: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

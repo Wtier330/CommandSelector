@@ -1,0 +1,199 @@
+[
+  {
+    "id": "clean-temp",
+    "name": "清理临时文件",
+    "description": "删除系统临时目录中的文件以释放空间",
+    "category": "系统维护",
+    "tags": ["磁盘清理", "维护", "临时文件"],
+    "engine": "cmd",
+    "template": "del /q /f /s %TEMP%\\* && rd /s /q %TEMP% && mkdir %TEMP%",
+    "params": [],
+    "platform": "windows",
+    "usage": "此命令会删除当前用户的临时文件夹中的所有文件和子文件夹，然后重新创建临时文件夹。\n注意：某些正在使用的临时文件可能无法删除。"
+  },
+  {
+    "id": "netstat-port",
+    "name": "查询端口占用进程",
+    "description": "通过端口号查询占用该端口的进程信息",
+    "category": "网络工具",
+    "tags": ["网络", "进程", "TCP/UDP"],
+    "engine": "cmd",
+    "template": "netstat -ano | findstr :{{port}}",
+    "params": [
+      {
+        "key": "port",
+        "label": "端口号",
+        "type": "number",
+        "required": true,
+        "defaultValue": 8080,
+        "hint": "用于查询指定端口被哪个进程占用",
+        "validation": { "kind": "regex", "pattern": "^[0-9]{1,5}$" }
+      }
+    ],
+    "platform": "windows",
+    "usage": "用于查询端口占用情况，最后一列为 PID。\n可配合 tasklist /FI \"PID eq <PID>\" 查看进程详情。"
+  },
+  {
+    "id": "sc-query",
+    "name": "查询服务状态",
+    "description": "查询指定 Windows 服务的运行状态（示例）",
+    "category": "服务管理",
+    "tags": ["服务", "状态查询"],
+    "engine": "cmd",
+    "template": "sc query {{service}}",
+    "params": [
+      {
+        "key": "service",
+        "label": "服务名",
+        "type": "text",
+        "required": false,
+        "defaultValue": "",
+        "hint": "留空则输出服务列表；填入服务名可查询单个服务"
+      }
+    ],
+    "platform": "windows",
+    "usage": "直接输出服务列表与状态信息。"
+  },
+  {
+    "id": "ipconfig-all",
+    "name": "查看网络配置详情",
+    "description": "显示所有网络适配器的完整 TCP/IP 配置信息",
+    "category": "网络工具",
+    "tags": ["网络", "IP", "MAC", "DNS"],
+    "engine": "cmd",
+    "template": "ipconfig /all",
+    "params": [],
+    "platform": "windows",
+    "usage": "用于排查网络连接问题，可获取本机的 IP 地址、子网掩码、默认网关、DNS 服务器及 MAC 地址（物理地址）。"
+  },
+  {
+    "id": "ping-test",
+    "name": "Ping 连通性测试",
+    "description": "向目标主机发送 ICMP 回显请求以测试网络连通性",
+    "category": "网络工具",
+    "tags": ["网络", "连通性", "Ping"],
+    "engine": "cmd",
+    "template": "ping {{target}} -n {{count}}",
+    "params": [
+      {
+        "key": "target",
+        "label": "目标地址",
+        "type": "text",
+        "required": true,
+        "defaultValue": "8.8.8.8",
+        "hint": "输入 IP 地址或域名"
+      },
+      {
+        "key": "count",
+        "label": "发送次数",
+        "type": "number",
+        "required": true,
+        "defaultValue": 4,
+        "hint": "要发送的回显请求数",
+        "validation": { "kind": "regex", "pattern": "^[1-9][0-9]*$" }
+      }
+    ],
+    "platform": "windows",
+    "usage": "基础网络诊断工具，常用于测试本机到网关或外网服务器的延迟和丢包情况。"
+  },
+  {
+    "id": "flush-dns",
+    "name": "清除 DNS 缓存",
+    "description": "清除本地 DNS 解析器缓存",
+    "category": "网络工具",
+    "tags": ["网络", "DNS", "修复"],
+    "engine": "cmd",
+    "template": "ipconfig /flushdns",
+    "params": [],
+    "platform": "windows",
+    "usage": "当遇到域名解析错误（如网站打不开，但 IP 能通）时，清除本地 DNS 缓存以强制重新获取最新解析记录。"
+  },
+  {
+    "id": "tasklist-find",
+    "name": "查找特定进程",
+    "description": "列出当前运行的进程，并筛选特定名称",
+    "category": "进程管理",
+    "tags": ["进程", "任务管理"],
+    "engine": "cmd",
+    "template": "tasklist | findstr /i \"{{process_name}}\"",
+    "params": [
+      {
+        "key": "process_name",
+        "label": "进程名称",
+        "type": "text",
+        "required": true,
+        "defaultValue": "chrome",
+        "hint": "输入要查找的进程名（如 chrome, explorer）"
+      }
+    ],
+    "platform": "windows",
+    "usage": "用于快速确认某个程序是否在后台运行，并获取其 PID 和内存占用信息。"
+  },
+  {
+    "id": "kill-process-name",
+    "name": "按名称结束进程",
+    "description": "强制结束指定名称的所有进程",
+    "category": "进程管理",
+    "tags": ["进程", "强制结束"],
+    "engine": "cmd",
+    "template": "taskkill /f /im {{process_name}}.exe",
+    "params": [
+      {
+        "key": "process_name",
+        "label": "进程名称 (不含 .exe)",
+        "type": "text",
+        "required": true,
+        "defaultValue": "notepad",
+        "hint": "例如结束记事本填 notepad"
+      }
+    ],
+    "platform": "windows",
+    "usage": "强制（/f）结束指定镜像名称（/im）的进程树。危险操作，请确认进程名无误。"
+  },
+  {
+    "id": "system-info",
+    "name": "获取系统详细信息",
+    "description": "显示关于计算机及其操作系统的详细配置信息",
+    "category": "系统维护",
+    "tags": ["系统", "硬件", "OS"],
+    "engine": "cmd",
+    "template": "systeminfo",
+    "params": [],
+    "platform": "windows",
+    "usage": "可查看系统启动时间、补丁安装情况、内存总量、网卡信息等。输出内容较多，可能需要几秒钟时间收集。"
+  },
+  {
+    "id": "chkdsk-scan",
+    "name": "磁盘检查与修复",
+    "description": "检查磁盘并显示状态报告",
+    "category": "磁盘管理",
+    "tags": ["磁盘", "修复", "扫描"],
+    "engine": "cmd",
+    "template": "chkdsk {{drive_letter}}: {{fix_flag}}",
+    "params": [
+      {
+        "key": "drive_letter",
+        "label": "盘符",
+        "type": "text",
+        "required": true,
+        "defaultValue": "C",
+        "hint": "例如 C, D, E",
+        "validation": { "kind": "regex", "pattern": "^[A-Za-z]$" }
+      },
+      {
+        "key": "fix_flag",
+        "label": "执行操作",
+        "type": "enum",
+        "required": true,
+        "defaultValue": "",
+        "options": [
+          { "label": "仅扫描", "value": "" },
+          { "label": "修复磁盘上的错误 (/f)", "value": "/f" },
+          { "label": "查找坏扇区并恢复可读信息 (/r)", "value": "/r" }
+        ]
+      }
+    ],
+    "platform": "windows",
+    "usage": "注意：如果选择修复系统盘（通常是 C 盘），命令无法立即执行，会提示在下次系统重启时进行检查。"
+  }
+]
