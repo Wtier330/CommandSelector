@@ -24,6 +24,7 @@ const emit = defineEmits<{
   (e: "edit", id: string): void;
   (e: "import"): void;
   (e: "export"): void;
+  (e: "update:command", command: CommandEntry): void;
 }>();
 
 const { commands } = toRefs(props);
@@ -208,13 +209,14 @@ const usageCollapsible = computed(() => {
               </section>
 
               <!-- 3. 参数配置 -->
-              <section v-if="paramDefs.length" class="cs-view-section cs-params-section">
-                <h2 class="cs-section-title-text cs-params-header">参数配置</h2>
+              <section class="cs-view-section cs-params-section">
                 <ParameterForm
+                  :command="selected"
                   :param-defs="paramDefs"
                   :param-values="paramValues"
                   :param-errors="paramErrors"
                   @update:paramValue="updateParam"
+                  @update:command="$emit('update:command', $event)"
                 />
               </section>
 

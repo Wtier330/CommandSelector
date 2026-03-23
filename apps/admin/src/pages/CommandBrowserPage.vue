@@ -8,7 +8,7 @@ import { isTauri } from "@tauri-apps/api/core";
 const router = useRouter();
 const route = useRoute();
 
-const { commands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary } = useLibraryStore();
+const { commands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary, saveCommand } = useLibraryStore();
 
 onMounted(async () => {
   await loadLibrary();
@@ -85,5 +85,6 @@ function handleExport() {
     @edit="handleEdit"
     @import="handleImport"
     @export="handleExport"
+    @update:command="saveCommand"
   />
 </template>
