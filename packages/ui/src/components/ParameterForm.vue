@@ -106,10 +106,13 @@ function saveEdit() {
   <div class="cs-params-section-inner">
     <div class="cs-params-header-row">
       <h2 class="cs-section-title-text cs-params-header">参数配置</h2>
-      <button v-if="!isEditing" class="cs-btn cs-btn-outline cs-btn-sm" @click="startEdit">编辑参数</button>
-      <div v-else class="cs-actions" style="display: flex; gap: 8px;">
-        <button class="cs-btn cs-btn-outline cs-btn-sm" @click="cancelEdit">取消</button>
-        <button class="cs-btn cs-btn-primary cs-btn-sm" @click="saveEdit">完成</button>
+      <button v-if="!isEditing" class="cs-btn-icon cs-btn-edit-entry" @click="startEdit" title="编辑参数">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        <span>配置</span>
+      </button>
+      <div v-else class="cs-actions" style="display: flex; gap: 12px;">
+        <button class="cs-btn cs-btn-outline" @click="cancelEdit">取消</button>
+        <button class="cs-btn cs-btn-primary" @click="saveEdit">完成</button>
       </div>
     </div>
 
@@ -169,9 +172,9 @@ function saveEdit() {
     </div>
 
     <div v-else class="cs-params-edit-wrap">
-      <div class="cs-edit-actions" style="margin: 12px 0;">
-        <button class="cs-btn cs-btn-primary cs-btn-sm" @click="addParam">新增参数</button>
-        <span class="cs-help" style="margin-left: 12px; display: inline-block;">新增参数会自动插入模板末尾，删除参数会自动从模板移除占位符</span>
+      <div class="cs-edit-actions" style="margin: 0 0 20px 0; display: flex; align-items: center;">
+        <button class="cs-btn cs-btn-outline" @click="addParam">新增参数</button>
+        <span class="cs-help" style="margin-left: 16px;">新增参数会自动插入模板末尾，删除参数会自动从模板移除占位符</span>
       </div>
       
       <div class="cs-param-edit-list">
@@ -195,9 +198,9 @@ function saveEdit() {
                 <option value="boolean">布尔 (Boolean)</option>
               </select>
             </label>
-            <button class="cs-btn cs-btn-outline cs-btn-sm cs-btn-danger-text" style="margin-top: 20px;" @click="removeParam(i)">删除</button>
+            <button class="cs-btn cs-btn-outline cs-btn-danger-text" style="margin-top: 25px;" @click="removeParam(i)">删除</button>
           </div>
-          <div class="cs-param-edit-row" style="margin-top: 12px;">
+          <div class="cs-param-edit-row" style="margin-top: 16px;">
             <label class="cs-param-edit-field">
               <span>默认值</span>
               <input v-if="p.type !== 'boolean'" v-model="p.defaultValue" class="cs-input cs-input-sm" placeholder="选填" />
@@ -230,7 +233,7 @@ function saveEdit() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .cs-params-header {
@@ -240,40 +243,47 @@ function saveEdit() {
 .cs-param-edit-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .cs-param-edit-card {
-  background: var(--cs-bg-muted);
-  border: 1px solid var(--cs-border-color);
-  border-radius: var(--cs-radius-md);
-  padding: 12px;
+  background: var(--cs-card);
+  border: 1px solid var(--cs-border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
 .cs-param-edit-row {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   align-items: flex-start;
 }
 
 .cs-param-edit-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--cs-text-secondary);
+  gap: 6px;
+  font-size: 13px;
+  color: var(--cs-muted-2);
 }
 
 .cs-param-edit-field span {
   font-weight: 500;
 }
 
-.cs-btn-danger-text {
-  color: #ef4444;
-  border-color: #fca5a5;
+.cs-input-sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid var(--cs-border);
+  background: #f8fafc;
 }
-.cs-btn-danger-text:hover {
-  background: #fef2f2;
-  border-color: #ef4444;
+.cs-input-sm:focus {
+  background: #fff;
+  border-color: var(--cs-blue-200);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 </style>
