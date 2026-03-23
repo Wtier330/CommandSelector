@@ -6,9 +6,8 @@
   border-radius: 14px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   box-shadow: var(--cs-shadow-sm);
-  margin-bottom: 16px;
+  margin-bottom: 32px;
   min-height: calc(100% - 16px);
 }
 
@@ -214,7 +213,7 @@
 
 /* Usage Section */
 .cs-usage-wrapper {
-  padding-bottom: 32px;
+  padding-bottom: 40px;
   padding-top: 24px;
 }
 
@@ -304,4 +303,16 @@
   color: var(--cs-muted);
   line-height: 1.6;
   margin: 12px 0 0 0;
+}
+
+@media (max-width: 960px) {
+  .cs-input-param {
+    border-bottom-width: 1.5px;
+    margin-bottom: 1px;
+  }
+
+  .cs-input-sm {
+    border-bottom-width: 1.5px;
+    margin-bottom: 1px;
+  }
 }

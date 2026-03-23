@@ -126,6 +126,57 @@ const usageCollapsible = computed(() => {
   const bp = breakpoint.value;
   return bp === "M" || bp === "S" || bp === "XS" || heightLevel.value !== "H2";
 });
+
+const isCommandEditing = ref(false);
+const draftCommand = ref<CommandEntry | null>(null);
+
+function startCommandEdit() {
+  if (!selected.value) return;
+  draftCommand.value = JSON.parse(JSON.stringify(selected.value));
+  isCommandEditing.value = true;
+}
+
+function cancelCommandEdit() {
+  isCommandEditing.value = false;
+  draftCommand.value = null;
+}
+
+function saveCommandEdit() {
+  if (!draftCommand.value) return;
+  if (!draftCommand.value.name.trim()) {
+    showToast("命令名称不能为空", "error");
+    return;
+  }
+  if (!draftCommand.value.template.trim()) {
+    showToast("命令模板不能为空", "error");
+    return;
+  }
+  emit("update:command", draftCommand.value);
+  isCommandEditing.value = false;
+  showToast("保存成功", "success");
+}
+
+watch(
+  () => selected.value?.id,
+  () => {
+    isCommandEditing.value = false;
+  }
+);
+
+const draftTagsStr = computed({
+  get() {
+    return draftCommand.value?.tags?.join(", ") ?? "";
+  },
+  set(val: string) {
+    if (draftCommand.value) {
+      draftCommand.value.tags = val.split(",").map(s => s.trim()).filter(Boolean);
+    }
+  }
+});
+
+defineExpose({
+  startEdit: startCommandEdit
+});
 </script>
 
 <template>
@@ -176,27 +227,73 @@ const usageCollapsible = computed(() => {
           <div v-else class="cs-content">
             <div class="cs-view-panel">
               <!-- 1. 命令标题 -->
-              <header class="cs-view-section cs-header-section">
-                <div class="cs-title-row">
-                  <div class="cs-title-main">
-                    <h1 class="cs-title">{{ selected.name }}</h1>
+              <header v-if="selected || isCommandEditing" class="cs-view-section cs-header-section">
+                <template v-if="!isCommandEditing && selected">
+                  <div class="cs-title-row">
+                    <div class="cs-title-main">
+                      <h1 class="cs-title">{{ selected.name }}</h1>
+                    </div>
+                    <div class="cs-actions">
+                    <button
+                      class="cs-btn-icon cs-btn-edit-entry"
+                      type="button"
+                      title="编辑命令"
+                      @click="startCommandEdit"
+                    >
+                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      <span>编辑</span>
+                    </button>
+                    </div>
                   </div>
-                  <div class="cs-actions">
-                  <button
-                    class="cs-btn-icon cs-btn-edit-entry"
-                    type="button"
-                    title="编辑命令"
-                    @click="$emit('edit', selected.id)"
-                  >
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    <span>编辑</span>
-                  </button>
+                  <p v-if="selected.description" class="cs-subtitle">{{ selected.description }}</p>
+                  <div v-if="selected.tags?.length" class="cs-tags cs-tags-lg" style="margin-top: 16px;">
+                    <span v-for="t in selected.tags" :key="t" class="cs-tag cs-tag-lg">{{ t }}</span>
                   </div>
-                </div>
-                <p v-if="selected.description" class="cs-subtitle">{{ selected.description }}</p>
-                <div v-if="selected.tags?.length" class="cs-tags cs-tags-lg" style="margin-top: 16px;">
-                  <span v-for="t in selected.tags" :key="t" class="cs-tag cs-tag-lg">{{ t }}</span>
-                </div>
+                </template>
+
+                <template v-else-if="draftCommand">
+                  <div class="cs-title-row" style="margin-bottom: 16px;">
+                    <h1 class="cs-title" style="font-size: 18px;">编辑基本信息</h1>
+                    <div class="cs-actions" style="display: flex; gap: 12px;">
+                      <button class="cs-btn cs-btn-outline" @click="cancelCommandEdit">取消</button>
+                      <button class="cs-btn cs-btn-primary" @click="saveCommandEdit">完成</button>
+                    </div>
+                  </div>
+                  <div class="cs-command-edit-grid">
+                    <label class="cs-field-col">
+                      <span class="cs-field-label">命令名称 <span style="color:#ef4444">*</span></span>
+                      <input v-model="draftCommand.name" class="cs-input cs-input-sm" placeholder="必填" />
+                    </label>
+                    <label class="cs-field-col">
+                      <span class="cs-field-label">分类</span>
+                      <input v-model="draftCommand.category" class="cs-input cs-input-sm" placeholder="例如: 系统维护" />
+                    </label>
+                    <label class="cs-field-col">
+                      <span class="cs-field-label">执行引擎</span>
+                      <select v-model="draftCommand.engine" class="cs-input cs-input-sm">
+                        <option value="cmd">CMD</option>
+                        <option value="cmd+powershell">混合 (CMD+PowerShell)</option>
+                      </select>
+                    </label>
+                    <label class="cs-field-col">
+                      <span class="cs-field-label">适用平台</span>
+                      <select v-model="draftCommand.platform" class="cs-input cs-input-sm">
+                        <option value="windows">Windows</option>
+                        <option value="macos">macOS</option>
+                        <option value="linux">Linux</option>
+                        <option value="any">不限</option>
+                      </select>
+                    </label>
+                    <label class="cs-field-col" style="grid-column: 1 / -1;">
+                      <span class="cs-field-label">描述</span>
+                      <input v-model="draftCommand.description" class="cs-input cs-input-sm" placeholder="一句话描述用途" />
+                    </label>
+                    <label class="cs-field-col" style="grid-column: 1 / -1;">
+                      <span class="cs-field-label">标签 (逗号分隔)</span>
+                      <input v-model="draftTagsStr" class="cs-input cs-input-sm" placeholder="例如: 网络, 进程, 维护" />
+                    </label>
+                  </div>
+                </template>
               </header>
 
               <!-- 2. 最终命令预览（核心区域） -->
@@ -210,8 +307,19 @@ const usageCollapsible = computed(() => {
                 />
               </section>
 
+              <!-- 2.5 模板编辑 (Only in edit mode) -->
+              <section v-if="isCommandEditing && draftCommand" class="cs-view-section cs-template-edit-section">
+                <h2 class="cs-section-title-text cs-params-header">编辑模板 <span style="color:#ef4444">*</span></h2>
+                <textarea
+                  v-model="draftCommand.template"
+                  class="cs-input cs-textarea"
+                  rows="3"
+                  placeholder="使用 {{参数名}} 作为占位符，如：ping {{target}} -n {{count}}"
+                ></textarea>
+              </section>
+
               <!-- 3. 参数配置 -->
-              <section class="cs-view-section cs-params-section">
+              <section v-if="selected" class="cs-view-section cs-params-section">
                 <ParameterForm
                   :command="selected"
                   :param-defs="paramDefs"
@@ -223,11 +331,22 @@ const usageCollapsible = computed(() => {
               </section>
 
               <!-- 4. 使用说明 -->
-              <section v-if="selected.usage" class="cs-view-section cs-usage-wrapper">
-                <UsageInstruction
-                  :usage="selected.usage"
-                  :collapsible="usageCollapsible"
-                />
+              <section v-if="selected?.usage || isCommandEditing" class="cs-view-section cs-usage-wrapper">
+                <template v-if="isCommandEditing && draftCommand">
+                  <h2 class="cs-section-title-text cs-params-header">编辑使用说明</h2>
+                  <textarea
+                    v-model="draftCommand.usage"
+                    class="cs-input cs-textarea"
+                    rows="4"
+                    placeholder="补充说明或注意事项"
+                  ></textarea>
+                </template>
+                <template v-else-if="selected">
+                  <UsageInstruction
+                    :usage="selected.usage"
+                    :collapsible="usageCollapsible"
+                  />
+                </template>
               </section>
             </div>
           </div>

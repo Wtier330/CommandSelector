@@ -3,12 +3,15 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  padding-bottom: 8px;
 }
 
 .cs-search {
   position: relative;
   margin-bottom: 24px;
   flex-shrink: 0;
+  padding-bottom: 4px;
+  overflow: visible;
 }
 
 .cs-search-icon {
@@ -29,9 +32,11 @@
   padding: 0 16px 0 44px;
   box-sizing: border-box;
   color: var(--cs-text);
-  outline: none;
   font-size: 14px;
   transition: all 0.2s;
+  margin-bottom: 2px;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .cs-input::placeholder {
@@ -41,6 +46,23 @@
 .cs-input:focus {
   border-color: var(--cs-blue-200);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+@media (max-width: 960px) {
+  .cs-sidebar-content {
+    padding-bottom: 16px;
+  }
+
+  .cs-search {
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+    height: 64px;
+  }
+
+  .cs-input {
+    height: 40px;
+    border-bottom-width: 1.5px;
+  }
 }
 
 .cs-section {

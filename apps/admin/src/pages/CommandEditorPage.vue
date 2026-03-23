@@ -110,7 +110,7 @@ function handleCancel() {
 </script>
 
 <template>
-  <div style="max-width: 800px; margin: 0 auto; padding: 24px;">
+  <div style="max-width: 800px; margin: 0 auto; padding: 24px; overflow-y: auto;">
     <n-space vertical size="large">
       <n-card :title="isNew ? '新建命令' : `编辑命令：${id}`" size="small">
         <template #header-extra>

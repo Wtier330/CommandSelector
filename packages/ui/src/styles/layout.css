@@ -5,7 +5,7 @@
   font-size: var(--cs-font-base);
   height: 100vh;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
     "Apple Color Emoji", "Segoe UI Emoji";
   display: flex;
@@ -17,7 +17,8 @@
   flex: 1;
   min-height: 0;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  padding-bottom: 8px;
 }
 
 /* Scaling Canvas */
@@ -26,12 +27,15 @@
   top: 0;
   left: 0;
   width: calc(100% / var(--cs-scale, 1));
-  height: calc(100% / var(--cs-scale, 1));
+  height: calc((100% - 4px) / var(--cs-scale, 1));
   transform: scale(var(--cs-scale, 1));
   transform-origin: top left;
   will-change: transform;
   display: flex;
   flex-direction: column;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: visible;
 }
 
 /* Layout Container */
@@ -40,8 +44,8 @@
   grid-template-columns: 320px 1fr;
   gap: 24px;
   flex: 1;
-  height: 100%;
-  padding: 16px 24px 0 24px;
+  height: calc(100% - 16px);
+  padding: 16px 24px 24px 24px;
   box-sizing: border-box;
   max-width: 100%;
   margin: 0;
@@ -64,6 +68,7 @@
   display: flex;
   flex-direction: column;
   padding-right: 4px;
+  padding-bottom: 2px;
 }
 
 .cs-sidebar::-webkit-scrollbar {
@@ -82,7 +87,7 @@
   display: flex;
   flex-direction: column;
   padding-right: 4px;
-  padding-bottom: 16px;
+  padding-bottom: 32px;
   scroll-behavior: smooth;
 }
 
@@ -97,8 +102,12 @@
 @media (max-width: 960px) {
   .cs-shell {
     grid-template-columns: 240px 1fr;
-    padding: 8px 16px 0 16px;
+    padding: 8px 16px 24px 16px;
     gap: 16px;
+  }
+
+  .cs-canvas-container {
+    padding-bottom: 16px;
   }
 }
 

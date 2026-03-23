@@ -94,3 +94,64 @@
   display: flex;
   flex-direction: column;
 }
+
+/* Inline Edit Styles */
+.cs-command-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.cs-field-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cs-field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cs-muted-2);
+}
+.cs-textarea {
+  resize: vertical;
+  padding: 10px 12px;
+  font-family: inherit;
+  height: auto;
+  min-height: 40px;
+  line-height: 1.5;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--cs-border);
+  border-radius: 6px;
+  background: #f8fafc;
+  font-size: 13px;
+  color: var(--cs-text);
+  margin-bottom: 2px;
+}
+.cs-textarea:focus {
+  background: #fff;
+  border-color: var(--cs-blue-200);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+.cs-template-edit-section {
+  padding-top: 24px;
+  background: var(--cs-card);
+  border-radius: 8px;
+  border: 1px dashed var(--cs-border);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+.cs-input-sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid var(--cs-border);
+  background: #f8fafc;
+}
+.cs-input-sm:focus {
+  background: #fff;
+  border-color: var(--cs-blue-200);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}

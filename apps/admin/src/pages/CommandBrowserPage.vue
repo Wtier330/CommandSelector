@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { CommandBrowser } from "@commandselector/ui";
 import { useLibraryStore } from "../store/library";
@@ -7,6 +7,7 @@ import { isTauri } from "@tauri-apps/api/core";
 
 const router = useRouter();
 const route = useRoute();
+const browserRef = ref<InstanceType<typeof CommandBrowser> | null>(null);
 
 const { commands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary, saveCommand } = useLibraryStore();
 
@@ -27,12 +28,26 @@ function onSelect(id: string) {
   router.replace({ name: "commands", query: { ...route.query, id } });
 }
 
-function onCreate() {
-  router.push({ name: "edit", params: { id: "new" } });
-}
-
-function handleEdit(id: string) {
-  router.push({ name: "edit", params: { id } });
+async function onCreate() {
+  const newId = "cmd-" + Date.now();
+  const newCommand = {
+    id: newId,
+    name: "新建命令",
+    description: "",
+    category: "未分类",
+    tags: [],
+    engine: "cmd" as const,
+    template: "",
+    params: [],
+    platform: "windows" as const,
+    usage: ""
+  };
+  await saveCommand(newCommand);
+  router.replace({ name: "commands", query: { ...route.query, id: newId } });
+  
+  setTimeout(() => {
+    browserRef.value?.startEdit();
+  }, 100);
 }
 
 function handleImport() {
@@ -76,13 +91,13 @@ function handleExport() {
     {{ errorMsg }}
   </div>
   <CommandBrowser
+    ref="browserRef"
     v-else
     :commands="commands"
     :selected-id="selectedId"
     :responsive="{ scaleOverride }"
     @select="onSelect"
     @create="onCreate"
-    @edit="handleEdit"
     @import="handleImport"
     @export="handleExport"
     @update:command="saveCommand"
