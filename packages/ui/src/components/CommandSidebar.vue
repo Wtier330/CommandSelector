@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import type { CommandEntry } from "@commandselector/shared";
 import CategoryMultiSelect from "./CategoryMultiSelect.vue";
+import CommandTrash from "./CommandTrash.vue";
 
 defineProps<{
   categories: string[];
@@ -8,6 +10,7 @@ defineProps<{
   selectedId: string | null;
   keyword: string;
   selectedCategories: string[];
+  trashedCommands: CommandEntry[];
 }>();
 
 const emit = defineEmits<{
@@ -17,7 +20,12 @@ const emit = defineEmits<{
   (e: "create"): void;
   (e: "import"): void;
   (e: "export"): void;
+  (e: "restore-trash", id: string): void;
+  (e: "delete-permanently", id: string): void;
+  (e: "empty-trash"): void;
 }>();
+
+const showTrash = ref(false);
 
 function selectCommand(id: string) {
   emit("select", id);
@@ -80,24 +88,48 @@ function selectCommand(id: string) {
         </div>
       </div>
 
-      <div class="cs-list">
+      <!-- 回收站按钮 -->
+      <div class="cs-trash-btn-wrapper">
         <button
-          v-for="c in filteredCommands"
-          :key="c.id"
-          class="cs-item"
-          :class="{ 'is-selected': selectedId === c.id }"
+          class="cs-btn cs-btn-trash cs-btn-sm"
           type="button"
-          @click="selectCommand(c.id)"
+          @click="showTrash = true"
         >
-          <div class="cs-item-top">
-            <div class="cs-item-title">{{ c.name }}</div>
-            <span v-if="c.engine" class="cs-badge">
-              {{ c.engine === 'cmd' ? 'CMD' : 'PS' }}
-            </span>
-          </div>
-          <div v-if="c.description" class="cs-item-desc">{{ c.description }}</div>
+          回收站
         </button>
       </div>
+
+      <!-- 回收站弹窗 -->
+      <Transition name="cs-trash-fade">
+        <div v-if="showTrash" class="cs-trash-overlay" @click.self="showTrash = false">
+          <CommandTrash
+            :trashed-commands="trashedCommands"
+            @restore="$emit('restore-trash', $event)"
+            @delete-permanently="$emit('delete-permanently', $event)"
+            @empty-trash="$emit('empty-trash')"
+            @close="showTrash = false"
+          />
+        </div>
+      </Transition>
+    </div>
+
+    <div class="cs-list">
+      <button
+        v-for="c in filteredCommands"
+        :key="c.id"
+        class="cs-item"
+        :class="{ 'is-selected': selectedId === c.id }"
+        type="button"
+        @click="selectCommand(c.id)"
+      >
+        <div class="cs-item-top">
+          <div class="cs-item-title">{{ c.name }}</div>
+          <span v-if="c.engine" class="cs-badge">
+            {{ c.engine === 'cmd' ? 'CMD' : 'PS' }}
+          </span>
+        </div>
+        <div v-if="c.description" class="cs-item-desc">{{ c.description }}</div>
+      </button>
     </div>
   </div>
 </template>

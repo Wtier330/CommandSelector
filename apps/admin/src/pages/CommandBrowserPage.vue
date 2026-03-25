@@ -9,7 +9,7 @@ const router = useRouter();
 const route = useRoute();
 const browserRef = ref<InstanceType<typeof CommandBrowser> | null>(null);
 
-const { commands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary, saveCommand } = useLibraryStore();
+const { commands, trashedCommands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary, saveCommand, moveToTrash, restoreCommand, deletePermanently, emptyTrash } = useLibraryStore();
 
 onMounted(async () => {
   await loadLibrary();
@@ -44,7 +44,7 @@ async function onCreate() {
   };
   await saveCommand(newCommand);
   router.replace({ name: "commands", query: { ...route.query, id: newId } });
-  
+
   setTimeout(() => {
     browserRef.value?.startEdit();
   }, 100);
@@ -81,6 +81,25 @@ function handleImport() {
 function handleExport() {
   exportLibrary();
 }
+
+function handleDelete(id: string) {
+  moveToTrash(id);
+  if (selectedId.value === id) {
+    router.replace({ name: "commands", query: { ...route.query, id: undefined } });
+  }
+}
+
+function handleRestoreTrash(id: string) {
+  restoreCommand(id);
+}
+
+function handleDeletePermanently(id: string) {
+  deletePermanently(id);
+}
+
+function handleEmptyTrash() {
+  emptyTrash();
+}
 </script>
 
 <template>
@@ -101,5 +120,9 @@ function handleExport() {
     @import="handleImport"
     @export="handleExport"
     @update:command="saveCommand"
+    @delete="handleDelete"
+    @restore-trash="handleRestoreTrash"
+    @delete-permanently="handleDeletePermanently"
+    @empty-trash="handleEmptyTrash"
   />
 </template>

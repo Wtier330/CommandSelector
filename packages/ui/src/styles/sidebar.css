@@ -50,18 +50,12 @@
 
 @media (max-width: 960px) {
   .cs-sidebar-content {
-    padding-bottom: 16px;
-  }
-
-  .cs-search {
-    padding-bottom: 20px;
-    margin-bottom: 28px;
-    height: 64px;
+    padding-bottom: 12px;
   }
 
   .cs-input {
-    height: 40px;
     border-bottom-width: 1.5px;
+    margin-bottom: 2px;
   }
 }
 
@@ -70,10 +64,9 @@
 }
 
 .cs-list-section {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  flex-shrink: 0;
   margin-bottom: 0;
 }
 
@@ -139,8 +132,10 @@
   gap: 16px;
   overflow-y: auto;
   padding-right: 2px;
-  padding-bottom: 16px;
+  padding-bottom: 8px;
   flex: 1;
+  min-height: 0;
+  flex-shrink: 1;
 }
 
 .cs-item {
@@ -189,6 +184,7 @@
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -248,9 +244,6 @@
   border-color: transparent;
 }
 
-.cs-btn-outline {
-  /* Inherits default cs-btn styles */
-}
 
 .cs-btn-danger-text {
   color: #ef4444;
@@ -290,6 +283,11 @@
   transform: scale(0.96);
 }
 
+.cs-btn-delete-entry:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
 .cs-btn-dark {
   background: var(--cs-primary);
   color: #ffffff;
@@ -297,6 +295,41 @@
 
 .cs-btn-dark:hover {
   background: var(--cs-primary-hover);
+}
+
+.cs-btn-trash {
+  background: #6b7280;
+  color: white;
+}
+
+.cs-btn-trash:hover {
+  background: #5b621f;
+}
+
+.cs-trash-btn-wrapper {
+  padding: 8px 0 4px 0;
+}
+
+.cs-trash-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  padding: 16px;
+}
+
+.cs-trash-fade-enter-active,
+.cs-trash-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.cs-trash-fade-enter-from,
+.cs-trash-fade-leave-to {
+  opacity: 0;
 }
 
 .cs-btn-sm {

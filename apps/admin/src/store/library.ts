@@ -1,14 +1,22 @@
 import { ref } from "vue";
 import type { CommandEntry } from "@commandselector/shared";
 
+interface TrashedCommand extends CommandEntry {
+  deletedAt: number; // 删除时间戳
+  originalId?: string; // 原始 ID（用于恢复时避免 ID 冲突）
+}
+
 // Tauri plugins
 import { readTextFile, writeTextFile, BaseDirectory } from "@tauri-apps/plugin-fs";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import { isTauri } from "@tauri-apps/api/core";
 
 const commands = ref<CommandEntry[]>([]);
+const trashedCommands = ref<TrashedCommand[]>([]);
 const isLoaded = ref(false);
 const errorMsg = ref("");
+
+const TRASH_FILE = "trash.json";
 
 const LIBRARY_FILE = "library.json";
 
@@ -39,6 +47,45 @@ async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions): Promis
     }
   }
   throw lastError;
+}
+
+async function loadTrash() {
+  try {
+    let trash: TrashedCommand[] | null = null;
+    if (isTauri()) {
+      try {
+        trash = await withRetry(
+          async () => {
+            const fileContent = await readTextFile(TRASH_FILE, { baseDir: BaseDirectory.AppLocalData });
+            return JSON.parse(fileContent) as TrashedCommand[];
+          },
+          { attempts: 3, baseDelayMs: 200 }
+        );
+      } catch (error) {
+        // 文件不存在或其他错误，忽略
+      }
+    } else {
+      try {
+        const localData = localStorage.getItem("cs_trash_data");
+        if (localData) {
+          trash = JSON.parse(localData) as TrashedCommand[];
+        }
+      } catch (error) {
+        // 忽略错误
+      }
+    }
+
+    if (trash && Array.isArray(trash)) {
+      // 自动清理超过 30 天的回收站项
+      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+      trash = trash.filter(item => item.deletedAt > thirtyDaysAgo);
+      trashedCommands.value = trash;
+    } else {
+      trashedCommands.value = [];
+    }
+  } catch (e: any) {
+    console.error("Failed to load trash:", e);
+  }
 }
 
 export async function loadLibrary() {
@@ -107,6 +154,9 @@ export async function loadLibrary() {
       await saveLibrary();
     }
 
+    // 同时加载回收站
+    await loadTrash();
+
     isLoaded.value = true;
   } catch (e: any) {
     console.error("Failed to load library:", e);
@@ -127,6 +177,19 @@ export async function saveLibrary() {
   }
 }
 
+async function saveTrash() {
+  try {
+    const jsonStr = JSON.stringify(trashedCommands.value, null, 2);
+    if (isTauri()) {
+      await writeTextFile(TRASH_FILE, jsonStr, { baseDir: BaseDirectory.AppLocalData });
+    } else {
+      localStorage.setItem("cs_trash_data", jsonStr);
+    }
+  } catch (e) {
+    console.error("Failed to save trash:", e);
+  }
+}
+
 export async function saveCommand(entry: CommandEntry) {
   const index = commands.value.findIndex((c) => c.id === entry.id);
   if (index >= 0) {
@@ -135,6 +198,61 @@ export async function saveCommand(entry: CommandEntry) {
     commands.value.push({ ...entry });
   }
   await saveLibrary();
+}
+
+export async function moveToTrash(id: string) {
+  const index = commands.value.findIndex((c) => c.id === id);
+  if (index >= 0) {
+    const command = commands.value[index];
+    const trashedItem: TrashedCommand = {
+      ...command,
+      originalId: command.id,
+      id: `trashed-${command.id}-${Date.now()}`,
+      deletedAt: Date.now()
+    };
+    trashedCommands.value.push(trashedItem);
+    commands.value.splice(index, 1);
+    await saveLibrary();
+    await saveTrash();
+  }
+}
+
+export async function deleteCommand(id: string) {
+  const index = commands.value.findIndex((c) => c.id === id);
+  if (index >= 0) {
+    commands.value.splice(index, 1);
+    await saveLibrary();
+  }
+}
+
+export async function restoreCommand(id: string) {
+  const index = trashedCommands.value.findIndex((c) => c.id === id);
+  if (index >= 0) {
+    const trashedItem = trashedCommands.value[index];
+    const restoredCommand: CommandEntry = {
+      ...trashedItem,
+      id: trashedItem.originalId || trashedItem.id
+    };
+    delete restoredCommand.deletedAt;
+    delete (restoredCommand as any).originalId;
+    commands.value.push(restoredCommand);
+    trashedCommands.value.splice(index, 1);
+    await saveLibrary();
+    await saveTrash();
+  }
+}
+
+export async function deletePermanently(id: string) {
+  const index = trashedCommands.value.findIndex((c) => c.id === id);
+  if (index >= 0) {
+    trashedCommands.value.splice(index, 1);
+    await saveTrash();
+  }
+}
+
+export async function emptyTrash() {
+  trashedCommands.value = [];
+  await saveTrash();
 }
 
 export async function importLibrary(fileContent?: string): Promise<boolean> {
@@ -201,11 +319,16 @@ export async function exportLibrary() {
 export function useLibraryStore() {
   return {
     commands,
+    trashedCommands,
     isLoaded,
     errorMsg,
     loadLibrary,
     saveLibrary,
     saveCommand,
+    moveToTrash,
+    restoreCommand,
+    deletePermanently,
+    emptyTrash,
     importLibrary,
     exportLibrary,
   };

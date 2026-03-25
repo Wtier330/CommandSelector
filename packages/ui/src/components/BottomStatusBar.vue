@@ -1,12 +1,17 @@
 <script setup lang="ts">
+import { ref } from "vue";
+import ProjectInfoModal from "./ProjectInfoModal.vue";
+
+const showModal = ref(false);
+
 function handleGithubClick() {
-  window.open("https://github.com", "_blank");
+  showModal.value = true;
 }
 </script>
 
 <template>
   <div class="cs-bottom-statusbar" data-testid="statusbar">
-    <button class="cs-statusbar-btn" @click="handleGithubClick" title="GitHub">
+    <button class="cs-statusbar-btn" @click="handleGithubClick" title="项目信息">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 16 16"
@@ -19,6 +24,7 @@ function handleGithubClick() {
     </button>
     <span class="cs-statusbar-text">CommandSelector - 快捷生成并复制你的运维指令</span>
   </div>
+  <ProjectInfoModal :is-open="showModal" @close="showModal = false" />
 </template>
 
 <style scoped>
@@ -31,7 +37,7 @@ function handleGithubClick() {
   padding: 0;
   flex-shrink: 0;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  z-index: 50;
+  z-index: 40;
   width: 100%;
   bottom: 0;
   left: 0;

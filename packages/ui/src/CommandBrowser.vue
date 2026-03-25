@@ -25,6 +25,7 @@ const emit = defineEmits<{
   (e: "import"): void;
   (e: "export"): void;
   (e: "update:command", command: CommandEntry): void;
+  (e: "delete", id: string): void;
 }>();
 
 const { commands } = toRefs(props);
@@ -53,6 +54,8 @@ const mainEl = ref<HTMLElement | null>(null);
 
 // 2. 过滤与列表
 const { keyword, selectedCategories, categories, filteredCommands } = useCommandFilter(commands);
+
+const trashedCommands = ref<CommandEntry[]>([]);
 
 // 3. 选择逻辑
 const internalSelectedId = ref<string>(props.selectedId ?? "");
@@ -156,6 +159,13 @@ function saveCommandEdit() {
   showToast("保存成功", "success");
 }
 
+function handleDeleteCommand() {
+  if (!selected.value) return;
+  emit("delete", selected.value.id);
+  internalSelectedId.value = "";
+  showToast("删除成功", "success");
+}
+
 watch(
   () => selected.value?.id,
   () => {
@@ -190,13 +200,12 @@ defineExpose({
     <div class="cs-canvas-container">
       <div class="cs-canvas">
         <div class="cs-shell" :class="{ 'is-narrow': isNarrow }">
-          
-          <!-- Sidebar Navigation -->
         <aside v-if="!isNarrow" class="cs-sidebar">
           <CommandSidebar
             :categories="categories"
             :filtered-commands="filteredCommands"
             :selected-id="selected?.id ?? null"
+            :trashed-commands="trashedCommands"
             v-model:keyword="keyword"
             v-model:selected-categories="selectedCategories"
             @select="handleSelect"
@@ -222,7 +231,7 @@ defineExpose({
             <div class="cs-empty-icon">⌘</div>
             <div class="cs-empty-text">请在左侧选择一条命令以开始配置</div>
           </div>
-          
+
           <!-- Content State -->
           <div v-else class="cs-content">
             <div class="cs-view-panel">
@@ -240,8 +249,24 @@ defineExpose({
                       title="编辑命令"
                       @click="startCommandEdit"
                     >
-                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0 -2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2 -2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1 1-4 9.5-9.5-9.5z"></path>
+                      </svg>
                       <span>编辑</span>
+                    </button>
+                    <button
+                      class="cs-btn-icon cs-btn-delete-entry"
+                      type="button"
+                      title="删除命令"
+                      @click="handleDeleteCommand"
+                    >
+                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1 -1 2 -2 -2 H7 c -1 0 -2 -1 -2 -2 V6"></path>
+                        <path d="M8 6V4c0 -1 1 -2 2 -2 h4 c1 0 2 1 2 2 v2"></path>
+                      </svg>
+                      <span>删除</span>
                     </button>
                     </div>
                   </div>
@@ -359,14 +384,12 @@ defineExpose({
     <div v-if="navOpen" class="cs-overlay" @click="navOpen = false">
       <div class="cs-drawer" @click.stop>
         <div class="cs-drawer-head">
-          <div class="cs-drawer-title">命令列表</div>
-          <button class="cs-btn cs-btn-outline cs-btn-sm" type="button" @click="navOpen = false">关闭</button>
-        </div>
         <div class="cs-drawer-body">
           <CommandSidebar
             :categories="categories"
             :filtered-commands="filteredCommands"
             :selected-id="selected?.id ?? null"
+            :trashed-commands="trashedCommands"
             v-model:keyword="keyword"
             v-model:selected-categories="selectedCategories"
             @select="handleSelect"
@@ -375,12 +398,15 @@ defineExpose({
             @export="$emit('export')"
           />
         </div>
+            @export="$emit('export')"
+          />
+        </div>
       </div>
     </div>
 
     <!-- Toast Notification -->
     <ToastNotification :toast="toast" />
-    
+
     <BottomStatusBar />
   </div>
 </template>
@@ -391,9 +417,9 @@ defineExpose({
 @import "./styles/components.css";
 
 /* Breakpoint specific adjustments that need global scope */
-.cs-root[data-bp="M"] .cs-tags-lg,
-.cs-root[data-bp="S"] .cs-tags-lg,
-.cs-root[data-bp="XS"] .cs-tags-lg {
+.cs-root[data-bp="M"] .cs-tags-tags-lg,
+.cs-root[data-bp="S"] .cs-tags-tags-lg,
+.cs-root[data-bp="XS"] .cs-tags-tags-lg {
   max-height: 36px;
   overflow: hidden;
 }

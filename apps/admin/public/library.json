@@ -11,6 +11,42 @@
     "platform": "windows",
     "usage": "此命令会删除当前用户的临时文件夹中的所有文件和子文件夹，然后重新创建临时文件夹。\n注意：某些正在使用的临时文件可能无法删除。"
   },
+    {
+    "id": "clean-recycle",
+    "name": "清空回收站",
+    "description": "删除回收站中的所有文件",
+    "category": "磁盘管理",
+    "tags": ["磁盘清理", "回收站"],
+    "engine": "powershell",
+    "template": "Clear-RecycleBin -Force",
+    "params": [],
+    "platform": "windows",
+    "usage": "清空当前用户回收站中的所有文件，释放磁盘空间。"
+  },
+  {
+    "id": "clean-prefetch",
+    "name": "清理预读缓存",
+    "description": "删除 Windows 预读文件以优化系统性能",
+    "category": "系统维护",
+    "tags": ["性能优化", "缓存"],
+    "engine": "cmd",
+    "template": "del /q /f /s C:\\Windows\\Prefetch\\*",
+    "params": [],
+    "platform": "windows",
+    "usage": "清理预读缓存文件，Windows 会自动重新生成。有助于解决启动缓慢问题。"
+  },
+  {
+    "id": "clean-thumbnail",
+    "name": "清理缩略图缓存",
+    "description": "删除缩略图缓存文件",
+    "category": "系统维护",
+    "tags": ["缓存", "磁盘清理"],
+    "engine": "cmd",
+    "template": "del /q /f /s %LOCALAPPDATA%\\Microsoft\\Windows\\Explorer\\*",
+    "params": [],
+    "platform": "windows",
+    "usage": "清理资源管理器的缩略图缓存，有助于解决缩略图显示异常的问题。"
+  },
   {
     "id": "netstat-port",
     "name": "查询端口占用进程",
@@ -31,12 +67,12 @@
       }
     ],
     "platform": "windows",
-    "usage": "用于查询端口占用情况，最后一列为 PID。\n可配合 tasklist /FI \"PID eq <PID>\" 查看进程详情。"
+    "usage": "用于查询端口占用情况，最后一列为 PID。\n可配合 taskkill /PID <PID> /F 终止进程。"
   },
   {
     "id": "sc-query",
     "name": "查询服务状态",
-    "description": "查询指定 Windows 服务的运行状态（示例）",
+    "description": "查询指定 Windows 服务的运行状态",
     "category": "服务管理",
     "tags": ["服务", "状态查询"],
     "engine": "cmd",
@@ -48,11 +84,11 @@
         "type": "text",
         "required": false,
         "defaultValue": "",
-        "hint": "留空则输出服务列表；填入服务名可查询单个服务"
+        "hint": "填入服务名查询；留空查询所有服务"
       }
     ],
     "platform": "windows",
-    "usage": "直接输出服务列表与状态信息。"
+    "usage": "显示服务的状态、运行类型等详细信息。"
   },
   {
     "id": "ipconfig-all",
@@ -64,7 +100,7 @@
     "template": "ipconfig /all",
     "params": [],
     "platform": "windows",
-    "usage": "用于排查网络连接问题，可获取本机的 IP 地址、子网掩码、默认网关、DNS 服务器及 MAC 地址（物理地址）。"
+    "usage": "用于排查网络连接问题，可获取本机的 IP 地址、子网掩码、默认网关、DNS 服务器及 MAC 地址。"
   },
   {
     "id": "ping-test",
@@ -90,7 +126,7 @@
         "required": true,
         "defaultValue": 4,
         "hint": "要发送的回显请求数",
-        "validation": { "kind": "regex", "pattern": "^[1-9][0-9]*$" }
+        "validation": { "kind": "regex", "pattern": "^[1-990]+$" }
       }
     ],
     "platform": "windows",
@@ -106,7 +142,7 @@
     "template": "ipconfig /flushdns",
     "params": [],
     "platform": "windows",
-    "usage": "当遇到域名解析错误（如网站打不开，但 IP 能通）时，清除本地 DNS 缓存以强制重新获取最新解析记录。"
+    "usage": "当遇到域名解析错误时，清除本地 DNS 缓存以强制重新获取最新解析记录。"
   },
   {
     "id": "tasklist-find",
@@ -148,7 +184,7 @@
       }
     ],
     "platform": "windows",
-    "usage": "强制（/f）结束指定镜像名称（/im）的进程树。危险操作，请确认进程名无误。"
+    "usage": "强制结束指定镜像名称的进程树。危险操作，请确认进程名无误。"
   },
   {
     "id": "system-info",
@@ -160,7 +196,7 @@
     "template": "systeminfo",
     "params": [],
     "platform": "windows",
-    "usage": "可查看系统启动时间、补丁安装情况、内存总量、网卡信息等。输出内容较多，可能需要几秒钟时间收集。"
+    "usage": "可查看系统启动时间、补丁安装情况、内存总量、网卡信息等。"
   },
   {
     "id": "chkdsk-scan",
@@ -188,12 +224,1706 @@
         "defaultValue": "",
         "options": [
           { "label": "仅扫描", "value": "" },
-          { "label": "修复磁盘上的错误 (/f)", "value": "/f" },
-          { "label": "查找坏扇区并恢复可读信息 (/r)", "value": "/r" }
+          { "label": "修复错误 (/f)", "value": "/f" },
+          { "label": "查找坏扇区 (/r)", "value": "/r" }
         ]
       }
     ],
     "platform": "windows",
-    "usage": "注意：如果选择修复系统盘（通常是 C 盘），命令无法立即执行，会提示在下次系统重启时进行检查。"
+    "usage": "如果选择修复系统盘（通常是 C 盘），命令无法立即执行，会提示在下次系统重启时进行检查。"
+  },
+  {
+    "id": "sc-start",
+    "name": "启动服务",
+    "description": "启动指定的 Windows 服务",
+    "category": "服务管理",
+    "tags": ["服务", "启动"],
+    "engine": "cmd",
+    "template": "sc start {{service}}",
+    "params": [
+      {
+        "key": "service",
+        "label": "服务名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "Spooler",
+        "hint": "输入服务名称（如 Spooler, wuauserv）"
+      }
+    ],
+    "platform": "windows",
+    "usage": "启动指定的 Windows 服务。需要管理员权限。"
+  },
+  {
+    "id": "sc-stop",
+    "name": "停止服务",
+    "description": "停止指定的 Windows 服务",
+    "category": "服务管理",
+    "tags": ["服务", "停止"],
+    "engine": "cmd",
+    "template": "sc stop {{service}}",
+    "params": [
+      {
+        "key": "service",
+        "label": "服务名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入服务名称"
+      }
+    ],
+    "platform": "windows",
+    "usage": "停止指定的 Windows 服务。需要管理员权限。"
+  },
+  {
+    "id": "sc-disable",
+    "name": "禁用服务",
+    "description": "禁用指定的 Windows 服务",
+    "category": "服务管理",
+    "tags": ["服务", "禁用"],
+    "engine": "cmd",
+    "template": "sc config {{service}} start= disabled",
+    "params": [
+      {
+        "key": "service",
+        "label": "服务名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入服务名称"
+      }
+    ],
+    "platform": "windows",
+    "usage": "将服务设置为禁用状态，服务将无法启动。需要管理员权限。"
+  },
+  {
+    "id": "sc-enable",
+    "name": "启用服务",
+    "description": "将服务设置为自动启动",
+    "category": "服务管理",
+    "tags": ["服务", "启用"],
+    "engine": "cmd",
+    "template": "sc config {{service}} start= auto",
+    "params": [
+      {
+        "key": "service",
+        "label": "服务名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入服务名称"
+      }
+    ],
+    "platform": "windows",
+    "usage": "将服务设置为自动启动模式。需要管理员权限。"
+  },
+  {
+    "id": "disk-usage",
+    "name": "磁盘使用情况",
+    "description": "查看所有磁盘分区的使用情况",
+    "category": "磁盘管理",
+    "tags": ["磁盘", "空间"],
+    "engine": "cmd",
+    "template": "wmic logicaldisk get size,freespace,caption",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有逻辑磁盘的容量、可用空间和盘符。"
+  },
+  {
+    "id": "defrag-disk",
+    "name": "磁盘碎片整理",
+    "description": "对指定磁盘进行碎片整理",
+    "category": "磁盘管理",
+    "tags": [ "磁盘", "优化"],
+    "engine": "cmd",
+    "template": "defrag {{drive_letter}}: {{analyze_flag}}",
+    "params": [
+      {
+        "key": "drive_letter",
+        "label": "盘符",
+        "type": "text",
+        "required": true,
+        "defaultValue": "C",
+        "hint": "例如 C, D, E"
+      },
+      {
+        "key": "analyze_flag",
+        "label": "操作类型",
+        "type": "enum",
+        "required": true,
+        "defaultValue": "/A",
+        "options": [
+          { "label": "仅分析", "value": "/A" },
+          { "label": "整理碎片", "value": "/O" },
+          { "label": "强制整理", "value": "/F" }
+        ]
+      }
+    ],
+    "platform": "windows",
+    "usage": "磁盘碎片整理可以提高磁盘读写性能。固态硬盘通常不需要碎片整理。"
+  },
+  {
+    "id": "format-disk",
+    "name": "格式化磁盘",
+    "description": "格式化指定的磁盘分区",
+    "category": "磁盘管理",
+    "tags": ["磁盘", "格式化"],
+    "engine": "cmd",
+    "template": "format {{drive_letter}}: /fs:{{filesystem}} /q /y",
+    "params": [
+      {
+        "key": "drive_letter",
+        "label": "盘符",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "要格式化的盘符"
+      },
+      {
+        "key": "filesystem",
+        "label": "文件系统",
+        "type": "enum",
+        "required": true,
+        "defaultValue": "NTFS",
+        "options": [
+          { "label": "NTFS", "value": "NTFS" },
+          { "label": "exFAT", "value": "exFAT" },
+          { "label": "FAT32", "value": "FAT32" }
+        ]
+      }
+    ],
+    "platform": "windows",
+    "usage": "危险操作！格式化将删除磁盘上的所有数据，请务必确认无误后再执行。需要管理员权限。"
+  },
+  {
+    "id": "whoami-info",
+    "name": "当前用户信息",
+    "description": "显示当前登录用户的详细信息",
+    "category": "用户管理",
+    "tags": ["用户", "权限"],
+    "engine": "cmd",
+    "template": "whoami /all",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示当前用户名、SID、组信息、权限等。"
+  },
+  {
+    "id": "net-user-add",
+    "name": "创建本地用户",
+    "description": "创建新的本地用户账户",
+    "category": "用户管理",
+    "tags": ["用户", "账户"],
+    "engine": "cmd",
+    "template": "net user {{username}} {{password}} /add",
+    "params": [
+      {
+        "key": "username",
+        "label": "用户名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入新用户名"
+      },
+      {
+        "key": "password",
+        "label": "密码",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "设置用户密码"
+      }
+    ],
+    "platform": "windows",
+    "usage": "创建新的本地用户账户。需要管理员权限。"
+  },
+  {
+    "id": "net-user-delete",
+    "name": "删除本地用户",
+    "description": "删除指定的本地用户账户",
+    "category": "用户管理",
+    "tags": ["用户", "账户"],
+    "engine": "cmd",
+    "template": "net user {{username}} /delete",
+    "params": [
+      {
+        "key": "username",
+        "label": "用户名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入要删除的用户名"
+      }
+    ],
+    "platform": "windows",
+    "usage": "删除指定的本地用户账户。危险操作，不可恢复！需要管理员权限。"
+  },
+  {
+    "id": "net-localgroup-members",
+    "name": "查看管理员组成员",
+    "description": "显示管理员组的所有成员",
+    "category": "用户管理",
+    "tags": ["用户", "权限"],
+    "engine": "cmd",
+    "template": "net localgroup administrators",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示管理员组的所有成员用户。"
+  },
+  {
+    "id": "net-localgroup-add",
+    "name": "添加用户到管理员组",
+    "description": "将指定用户添加到管理员组",
+    "category": "用户管理",
+    "tags": ["用户", "权限"],
+    "engine": "cmd",
+    "template": "net localgroup administrators {{username}} /add",
+    "params": [
+      {
+        "key": "username",
+        "label": "用户名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入要添加的用户名"
+      }
+    ],
+    "platform": "windows",
+    "usage": "为用户赋予管理员权限。需要管理员权限。"
+  },
+  {
+    "id": "firewall-list",
+    "name": "查看防火墙规则",
+    "description": "列出所有防火墙入站规则",
+    "category": "防火墙管理",
+    "tags": ["防火墙", "安全"],
+    "engine": "powershell",
+    "template": "Get-NetFirewallRule -Direction Inbound",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有入站防火墙规则的详细信息。"
+  },
+  {
+    "id": "firewall-add-port",
+    "name": "添加防火墙端口规则",
+    "description": "在防火墙中开放指定端口",
+    "category": "防火墙管理",
+    "tags": ["防火墙", "安全"],
+    "engine": "cmd",
+    "template": "netsh advfirewall firewall add rule name={{rule_name}} dir=in action=allow protocol={{protocol}} localport={{port}}",
+    "params": [
+      {
+        "key": "rule_name",
+        "label": "规则名称",
+        "type": "text",
+        "required": true,
+        "defaultValue": "Allow Port",
+        "hint": "输入规则名称"
+      },
+      {
+        "key": "protocol",
+        "label": "协议",
+        "type": "enum",
+        "required": true,
+        "defaultValue": "TCP",
+        "options": [
+          { "label": "TCP", "value": "TCP" },
+          { "label": "UDP", "value": "UDP" }
+        ]
+      },
+      {
+        "key": "port",
+        "label": "端口号",
+        "type": "number",
+        "required": true,
+        "defaultValue": 80,
+        "hint": "输入要开放的端口号"
+      }
+    ],
+    "platform": "windows",
+    "usage": "在防火墙中创建入站规则，允许访问指定端口。需要管理员权限。"
+  },
+  {
+    "id": "firewall-delete-rule",
+    "name": "删除防火墙规则",
+    "description": "删除指定的防火墙规则",
+    "category": "防火墙管理",
+    "tags": ["防火墙", "安全"],
+    "engine": "cmd",
+    "template": "netsh advfirewall firewall delete rule name={{rule_name}}",
+    "params": [
+      {
+        "key": "rule_name",
+        "label": "规则名称",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入要删除的规则名称"
+      }
+    ],
+    "platform": "windows",
+    "usage": "删除指定的防火墙规则。需要管理员权限。"
+  },
+  {
+    "id": "firewall-state",
+    "name": "查看防火墙状态",
+    "description": "查看防火墙各配置文件的当前状态",
+    "category": "防火墙管理",
+    "tags": ["防火墙", "安全"],
+    "engine": "cmd",
+    "template": "netsh advfirewall show allprofiles state",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示域、专用、公用配置文件的防火墙状态。"
+  },
+  {
+    "id": "eventlog-list",
+    "name": "查看事件日志",
+    "description": "列出系统事件日志",
+    "category": "日志管理",
+    "tags": ["日志", "系统"],
+    "engine": "powershell",
+    "template": "Get-EventLog -List",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有可用的日志。"
+  },
+  {
+    "id": "eventlog-system",
+    "name": "查看系统日志",
+    "description": "查看最近 10 条系统日志",
+    "category": "日志管理",
+    "tags": ["日志", "系统"],
+    "engine": "powershell",
+    "template": "Get-EventLog -LogName System -Newest {{count}}",
+    "params": [
+      {
+        "key": "count",
+        "label": "日志条数",
+        "type": "number",
+        "required": true,
+        "defaultValue": 10,
+        "hint": "要显示的日志条数"
+      }
+    ],
+    "platform": "windows",
+    "usage": "查看最近 N 条系统日志。"
+  },
+  {
+    "id": "eventlog-application",
+    "name": "查看应用日志",
+    "description": "查看最近 10 条应用程序日志",
+    "category": "日志管理",
+    "tags": ["日志", "应用"],
+    "engine": "powershell",
+    "template": "Get-EventLog -LogName Application -Newest {{count}}",
+    "params": [
+      {
+        "key": "count",
+        "label": "日志条数",
+        "type": "number",
+        "required": true,
+        "defaultValue": 10,
+        "hint": "要显示的日志条数"
+      }
+    ],
+    "platform": "windows",
+    "usage": "查看最近 N 条应用程序日志。"
+  },
+  {
+    "id": "eventlog-clear",
+    "name": "清空事件日志",
+    "description": "清空指定的事件日志",
+    "category": "日志管理",
+    "tags": ["日志", "清理"],
+    "engine": "cmd",
+    "template": "wevtutil cl {{log_name}}",
+    "params": [
+      {
+        "key": "log_name",
+        "label": "日志名称",
+        "type": "text",
+        "required": true,
+        "defaultValue": "System",
+        "hint": "如 System, Application, Security"
+      }
+    ],
+    "platform": "windows",
+    "usage": "清空指定的事件日志。需要管理员权限。"
+  },
+  {
+    "id": "performance-monitor",
+    "name": "性能监控",
+    "description": "实时监控系统性能指标",
+    "category": "性能监控",
+    "tags": ["性能", "监控"],
+    "engine": "cmd",
+    "template": "typeperf \"\\Processor(_Total)因为% Processor Time\" \"\\Memory\\Available MBytes\" \"\\PhysicalDisk(_Total)因为% Disk Time\"",
+    "params": [],
+    "platform": "windows",
+    "usage": "实时显示 CPU 使用率、可用内存和磁盘使用率。"
+  },
+  {
+    "id": "memory-usage",
+    "name": "内存使用详情",
+    "description": "查看系统内存使用情况",
+    "category": "性能监控",
+    "tags": ["性能", "内存"],
+    "engine": "powershell",
+    "template": "Get-WmiObject -Class Win32_OperatingSystem | Select-Object @{Name=\"TotalMemory(GB)\";Expression={[math]::Round($_.TotalVisibleMemorySize/1MB,2)}},@{Name=\"FreeMemory(GB)\";Expression={[math]::Round($_.FreePhysicalMemory/1MB,2)}},@{Name=\"UsedMemory(GB)\";Expression={[math]::Round(($_.TotalVisibleMemorySize-$_.FreePhysicalMemory)/1MB,2)}}",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示系统总内存、可用内存和已用内存。"
+  },
+  {
+    "id": "cpu-info",
+    "name": "CPU 信息",
+    "description": "查看 CPU 详细信息",
+    "category": "系统维护",
+    "tags": ["系统", "硬件"],
+    "engine": "cmd",
+    "template": "wmic cpu get name,numberOfCores,numberOfLogicalProcessors,maxclockspeed",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示 CPU 名称、核心数、逻辑处理器数和最大频率。"
+  },
+  {
+    "id": "route-print",
+    "name": "查看路由表",
+    "description": "显示当前的路由表",
+    "category": "网络工具",
+    "tags": ["网络", "路由"],
+    "engine": "cmd",
+    "template": "rout print -4",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示当前 IPv4 路由表。"
+  },
+  {
+    "id": "route-add",
+    "name": "添加路由",
+    "description": "添加静态路由",
+    "category": "网络工具",
+    "tags": ["网络", "路由"],
+    "engine": "cmd",
+    "template": "rout add {{destination}} mask {{subnet_mask}} {{gateway}} {{metric_flag}}",
+    "params": [
+      {
+        "key": "destination",
+        "label": "目标网络",
+        "type": "text",
+        "required": true,
+        "defaultValue": "192.168.0.0",
+        "hint": "目标网络地址"
+      },
+      {
+        "key": "subnet_mask",
+        "label": "子网掩码",
+        "type": "text",
+        "required": true,
+        "defaultValue": "255.255.255.0",
+        "hint": "子网掩码"
+      },
+      {
+        "key": "gateway",
+        "label": "网关",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "网关 IP 地址"
+      },
+      {
+        "key": "metric_flag",
+        "label": "跃点数",
+        "type": "text",
+        "required": false,
+        "defaultValue": "",
+        "hint": "留空使用默认，或指定跃点数"
+      }
+    ],
+    "platform": "windows",
+    "usage": "添加静态路由条目。需要管理员权限。"
+  },
+  {
+    "id": "arp-table",
+    "name": "查看 ARP 表",
+    "description": "显示 ARP 缓存表",
+    "category": "网络工具",
+    "tags": ["网络", "ARP"],
+    "engine": "cmd",
+    "template": "arp -a",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示 ARP 缓存表，包含 IP 地址和对应的 MAC 地址。"
+  },
+  {
+    "id": "nslookup",
+    "name": "DNS 值查询",
+    "description": "查询域名的 DNS 记录",
+    "category": "网络工具",
+    "tags": ["网络", "DNS"],
+    "engine": "cmd",
+    "template": "nslookup {{domain}} {{dns_server}}",
+    "params": [
+      {
+        "key": "domain",
+        "label": "域名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "baidu.com",
+        "hint": "要查询的域名"
+      },
+      {
+        "key": "dns_server",
+        "label": "DNS 服务器",
+        "type": "text",
+        "required": false,
+        "defaultValue": "",
+        "hint": "留空使用默认 DNS 服务器"
+      }
+    ],
+    "platform": "windows",
+    "usage": "查询域名的 DNS 解析结果。"
+  },
+  {
+    "id": "tracert",
+    "name": "路由跟踪",
+    "description": "跟踪到目标主机的路由路径",
+    "category": "网络工具",
+    "tags": ["网络", "路由跟踪"],
+    "engine": "cmd",
+    "template": "tracert {{target}}",
+    "params": [
+      {
+        "key": "target",
+        "label": "目标地址",
+        "type": "text",
+        "required": true,
+        "defaultValue": "baidu.com",
+        "hint": "IP 地址或域名"
+      }
+    ],
+    "platform": "windows",
+    "usage": "显示从本机到目标主机经过的所有路由跳数。"
+  },
+  {
+    "id": "netsh-reset",
+    "name": "重置网络配置",
+    "description": "重置网络协议栈到默认状态",
+    "category": "网络工具",
+    "tags": ["网络", "修复"],
+    "engine": "cmd",
+    "template": "netsh winsock reset && netsh int ip reset",
+    "params": [],
+    "platform": "windows",
+    "usage": "重置网络协议栈，用于解决网络连接问题。需要重启计算机。"
+  },
+  {
+    "id": "tasklist-detail",
+    "name": "进程详细列表",
+    "description": "显示所有运行进程的详细信息",
+    "category": "进程管理",
+    "tags": ["进程"],
+    "engine": "cmd",
+    "template": "tasklist /v",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有进程的详细信息，包括用户名、会话名和内存使用。"
+  },
+  {
+    "id": "wmic-process",
+    "name": "进程高级信息",
+    "description": "使用 WMIC 查看进程详细信息",
+    "category": "进程管理",
+    "tags": ["进程"],
+    "engine": "cmd",
+    "template": "wmic process get name,processid,pagefileusage,workingsetsize,commandline",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示进程名称、PID、页面文件使用量、工作集大小和命令行参数。"
+  },
+  {
+    "id": "task-scheduler-list",
+    "name": "查看计划任务",
+    "description": "列出系统中的所有计划任务",
+    "category": "系统维护",
+    "tags": ["计划任务"],
+    "engine": "cmd",
+    "template": "schtasks /query /fo LIST",
+    "params": [],
+    "platform": "windows",
+    "usage": "列出系统中所有计划任务及其状态。"
+  },
+  {
+    "id": "task-scheduler-run",
+    "name": "运行计划任务",
+    "description": "立即运行指定的计划任务",
+    "category": "系统维护",
+    "tags": ["计划任务"],
+    "engine": "cmd",
+    "template": "schtasks /run /tn \"{{task_name}}\"",
+    "params": [
+      {
+        "key": "task_name",
+        "label": "任务名称",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入计划任务名称"
+      }
+    ],
+    "platform": "windows",
+    "usage": "立即执行指定的计划任务。"
+  },
+  {
+    "id": "shutdown-timed",
+    "name": "定时关机",
+    "description": "设置定时关机",
+    "category": "系统维护",
+    "tags": ["关机", "计划"],
+    "engine": "cmd",
+    "template": "shutdown /s /t {{seconds}}",
+    "params": [
+      {
+        "key": "seconds",
+        "label": "秒数",
+        "type": "number",
+        "required": true,
+        "defaultValue": 3600,
+        "hint": "多少秒后关机"
+      }
+    ],
+    "platform": "windows",
+    "usage": "设置在指定秒数后关机。使用 shutdown /a 可以取消。"
+  },
+  {
+    "id": "shutdown-cancel",
+    "name": "取消关机",
+    "description": "取消计划的关机或重启",
+    "category": "系统维护",
+    "tags": ["关机", "取消"],
+    "engine": "cmd",
+    "template": "shutdown /a",
+    "params": [],
+    "platform": "windows",
+    "usage": "取消已计划的关机或重启。"
+  },
+  {
+    "id": "reboot",
+    "name": "立即重启",
+    "description": "立即重启计算机",
+    "category": "系统维护",
+    "tags": ["重启"],
+    "engine": "cmd",
+    "template": "shutdown /r /t 0",
+    "params": [],
+    "platform": "windows",
+    "usage": "立即重启计算机。未保存的数据将丢失。"
+  },
+  {
+    "id": "logoff",
+    "name": "注销当前用户",
+    "description": "注销当前登录的用户",
+    "category": "系统维护",
+    "tags": ["注销"],
+    "engine": "cmd",
+    "template": "shutdown /l",
+    "params": [],
+    "platform": "windows",
+    "usage": "注销当前用户。未保存的数据将丢失。"
+  },
+  {
+    "id": "file-copy-remote",
+    "name": "远程文件复制",
+    "description": "将文件复制到远程计算机",
+    "category": "文件操作",
+    "tags": ["文件", "网络"],
+    "engine": "cmd",
+    "template": "copy {{source}} \\\\{{remote_host}}\\{{share_path}}\\{{dest_name}}",
+    "params": [
+      {
+        "key": "source",
+        "label": "源文件路径",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "本地文件完整路径"
+      },
+      {
+        "key": "remote_host",
+        "label": "远程主机",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "远程计算机名称或 IP"
+      },
+      {
+        "key": "dest_path",
+        "label": "目标路径",
+        "type": "text",
+        "required": true,
+        "defaultValue": "temp",
+        "hint": "远程目录路径"
+      },
+      {
+        "key": "dest_name",
+        "label": "目标文件名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "保留原文件名或指定新名称"
+      }
+    ],
+    "platform": "windows",
+    "usage": "通过 SMB 共享将文件复制到远程计算机。需要目标主机的共享访问权限。"
+  },
+  {
+    "id": "robocopy-backup",
+    "name": "Robocopy 备份",
+    "description": "使用 Robocopy 进行文件备份",
+    "category": "文件操作",
+    "tags": ["文件", "备份"],
+    "engine": "cmd",
+    "template": "robocopy \"{{source}}\" \"{{destination}}\" /E /XO /R:2 /W:5",
+    "params": [
+      {
+        "key": "source",
+        "label": "源目录",
+        "type": "path",
+        "required": true,
+        "defaultValue": "",
+        "hint": "要备份的源目录路径"
+      },
+      {
+        "key": "destination",
+        "label": "目标目录",
+        "type": "path",
+        "required": true,
+        "defaultValue": "",
+        "hint": "备份目标目录路径"
+      }
+    ],
+    "platform": "windows",
+    "usage": "Robocopy（可靠文件复制）可以高效复制大量文件，支持断点续传。"
+  },
+  {
+    "id": "take-ownership",
+    "name": "获取文件所有权",
+    "description": "获取文件或文件夹的所有权",
+    "category": "文件操作",
+    "tags": ["文件", "权限"],
+    "engine": "cmd",
+    "template": "takeown /f \"{{path}}\" /r /d",
+    "params": [
+      {
+        "key": "path",
+        "label": "文件/文件夹路径",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入完整路径"
+      }
+    ],
+    "platform": "windows",
+    "usage": "获取指定文件或文件夹的所有权。/r 递归，/d 处理文件夹。需要管理员权限。"
+  },
+  {
+    "id": "grant-permission",
+    "name": "授予文件权限",
+    "description": "授予用户对文件或文件夹的完全控制权限",
+    "category": "文件操作",
+    "tags": ["文件", "权限"],
+    "engine": "cmd",
+    "template": "icacls \"{{path}}\" /grant {{username}}:(F) /t",
+    "params": [
+      {
+        "key": "path",
+        "label": "文件/文件夹路径",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入完整路径"
+      },
+      {
+        "key": "username",
+        "label": "用户名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "%USERNAME%",
+        "hint": "要授权的用户名"
+      }
+    ],
+    "platform": "windows",
+    "usage": "授予指定用户完全控制权限。/t 递归应用到子文件和文件夹。"
+  },
+  {
+    "id": "file-list-large",
+    "name": "查找大文件",
+    "description": "查找指定目录中超过指定大小的文件",
+    "category": "文件操作",
+    "tags": ["文件", "搜索"],
+    "engine": "powershell",
+    "template": "Get-ChildItem -Path \"{{path}}\" -Recurse -File | Where-Object {$_.Length -gt {{size_mb}}MB} | Sort-Object -Property Length -Descending | Select-Object -First {{count}}",
+    "params": [
+      {
+        "key": "path",
+        "label": "搜索路径",
+        "type": "path",
+        "required": true,
+        "defaultValue": "C:\\",
+        "hint": "要搜索的根目录"
+      },
+      {
+        "key": "size_mb",
+        "label": "最小大小 (MB)",
+        "type": "number",
+        "required": true,
+        "defaultValue": 100,
+        "hint": "文件大于此大小(MB)才会显示"
+      },
+      {
+        "key": "count",
+        "label": "显示数量",
+        "type": "number",
+        "required": true,
+        "defaultValue": 20,
+        "hint": "最多显示的文件数量"
+      }
+    ],
+    "platform": "windows",
+    "usage": "用于快速定位占用大量磁盘空间的文件。"
+  },
+  {
+    "id": "file-list-old",
+    "name": "查找旧文件",
+    "description": "查找指定目录中超过指定天数的文件",
+    "category": "文件操作",
+    "tags": ["文件", "搜索"],
+    "engine": "powershell",
+    "template": "Get-ChildItem -Path \"{{path}}\" -Recurse -File | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-{{days}})} | Sort-Object -Property LastWriteTime | Select-Object -First {{count}}",
+    "params": [
+      {
+        "key": "path",
+        "label": "搜索路径",
+        "type": "path",
+        "required": true,
+        "defaultValue": "C:\\",
+        "hint": "要搜索的根目录"
+      },
+      {
+        "key": "days",
+        "label": "天数",
+        "type": "number",
+        "required": true,
+        "defaultValue": 365,
+        "hint": "修改时间超过此天数"
+      },
+      {
+        "key": "count",
+        "label": "显示数量",
+        "type": "number",
+        "required": true,
+        "defaultValue": 20,
+        "hint": "最多显示的文件数量"
+      }
+    ],
+    "platform": "windows",
+    "usage": "用于查找长期未使用的文件，可用于清理。"
+  },
+  {
+    "id": "registry-backup",
+    "name": "注册表备份",
+    "description": "导出注册表项进行备份",
+    "category": "系统维护",
+    "tags": ["注册表", "备份"],
+    "engine": "cmd",
+    "template": "reg export \"{{key}}\" \"{{backup_path}}\" /y",
+    "params": [
+      {
+        "key": "key",
+        "label": "注册表项路径",
+        "type": "text",
+        "required": true,
+        "defaultValue": "HKEY_LOCAL_MACHINE\\SOFTWARE",
+        "hint": "要备份的注册表项"
+      },
+      {
+        "key": "backup_path",
+        "label": "备份文件路径",
+        "type": "text",
+        "required": true,
+        "defaultValue": "C:\\registry_backup.reg",
+        "hint": "备份文件保存位置"
+      }
+    ],
+    "platform": "windows",
+    "usage": "导出指定的注册表项到 .reg 文件。"
+  },
+  {
+    "id": "registry-restore",
+    "name": "注册表恢复",
+    "description": "从备份文件恢复注册表",
+    "category": "系统维护",
+    "tags": ["注册表", "恢复"],
+    "engine": "cmd",
+    "template": "reg import \"{{backup_path}}\"",
+    "params": [
+      {
+        "key": "backup_path",
+        "label": "备份文件路径",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "备份 .reg 文件路径"
+      }
+    ],
+    "platform": "windows",
+    "usage": "从备份文件恢复注册表。需要管理员权限。"
+  },
+  {
+    "id": "driver-list",
+    "name": "列出已安装的驱动",
+    "description": "显示系统中所有已安装的驱动程序",
+    "category": "系统维护",
+    "tags": ["驱动", "硬件"],
+    "engine": "cmd",
+    "template": "driverquery",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有已安装的驱动程序及其类型。"
+  },
+  {
+    "id": "driver-info",
+    "name": "驱动详细信息",
+    "description": "显示指定驱动的详细信息",
+    "category": "系统维护",
+    "tags": ["驱动", "硬件"],
+    "engine": "cmd",
+    "template": "sc query {{driver_name}}",
+    "params": [
+      {
+        "key": "driver_name",
+        "label": "驱动名称",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入驱动服务名称"
+      }
+    ],
+    "platform": "windows",
+    "usage": "显示指定驱动服务的详细状态和配置信息。"
+  },
+  {
+    "id": "hotfix-list",
+    "name": "查看已安装补丁",
+    "description": "列出所有已安装的系统更新和补丁",
+    "category": "系统维护",
+    "tags": ["系统", "补丁"],
+    "engine": "cmd",
+    "template": "wmic qfe get hotfixid,installedon,description",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有已安装的 Windows 更新和补丁信息。"
+  },
+  {
+    "id": "product-key",
+    "name": "查看 Windows 产品密钥",
+    "description": "查看当前 Windows 系统的产品密钥（部分）",
+    "category": "系统维护",
+    "tags": ["系统", "密钥"],
+    "engine": "cmd",
+    "template": "wmic os get ProductKey",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示 Windows 产品密钥的最后 5 位（出于安全原因完整密钥无法显示）。"
+  },
+  {
+    "id": "serial-number",
+    "name": "查看系统序列号",
+    "description": "查看计算机硬件序列号",
+    "category": "系统维护",
+    "tags": ["系统", "硬件"],
+    "engine": "cmd",
+    "template": "wmic bios get serialnumber",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示计算机主板/BIOS 序列号。"
+  },
+  {
+    "id": "installed-software",
+    "name": "列出已安装软件",
+    "description": "列出系统中所有已安装的软件",
+    "category": "系统维护",
+    "tags": ["系统", "软件"],
+    "engine": "cmd",
+    "template": "wmic product get name,version,vendor",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有已安装软件的名称、版本和供应商。"
+  },
+  {
+    "id": "disk-geometry",
+    "name": "磁盘几何信息",
+    "description": "显示磁盘的几何结构和分区信息",
+    "category": "磁盘管理",
+    "tags": ["磁盘", "分区"],
+    "engine": "cmd",
+    "template": "diskpart\nlist disk\nselect disk {{disk_number}}\nlist partition",
+    "params": [
+      {
+        "key": "disk_number",
+        "label": "磁盘编号",
+        "type": "number",
+        "required": true,
+        "defaultValue": 0,
+        "hint": "输入磁盘编号（从 0 开始）"
+      }
+    ],
+    "platform": "windows",
+    "usage": "显示磁盘和分区的详细信息。需要管理员权限。"
+  },
+  {
+    "id": "mount-point-list",
+    "name": "查看挂载点",
+    "description": "显示所有挂载点和卷信息",
+    "category": "磁盘管理",
+    "tags": ["磁盘", "挂载"],
+    "engine": "cmd",
+    "template": "mountvol",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有挂载点和可用的卷。"
+  },
+  {
+    "id": "create-folder",
+    "name": "创建文件夹",
+    "description": "创建新的文件夹",
+    "category": "文件操作",
+    "tags": ["文件", "创建"],
+    "engine": "cmd",
+    "template": "mkdir \"{{path}}\"",
+    "params": [
+      {
+        "key": "path",
+        "label": "文件夹路径",
+        "type": "path",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入要创建的文件夹完整路径"
+      }
+    ],
+    "platform": "windows",
+    "usage": "创建指定的文件夹及其父级目录（如果不存在）。"
+  },
+  {
+    "id": "delete-folder",
+    "name": "删除文件夹",
+    "description": "删除文件夹及其所有内容",
+    "category": "文件操作",
+    "tags": ["文件", "删除"],
+    "engine": "cmd",
+    "template": "rd /s /q \"{{path}}\"",
+    "params": [
+      {
+        "key": "path",
+        "label": "文件夹路径",
+        "type": "path",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入要删除的文件夹完整路径"
+      }
+    ],
+    "platform": "windows",
+    "usage": "递归删除文件夹及其所有子文件夹和文件。危险操作，不可恢复！"
+  },
+  {
+    "id": "file-encrypt",
+    "name": "加密文件",
+    "description": "使用 EFS 加密文件或文件夹",
+    "category": "文件操作",
+    "tags": ["文件", "加密"],
+    "engine": "cmd",
+    "template": "cipher /e \"{{path}}\"",
+    "params": [
+      {
+        "key": "path",
+        "label": "文件/文件夹路径",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入要加密的文件或文件夹路径"
+      }
+    ],
+    "platform": "windows",
+    "usage": "使用 Windows EFS（加密文件系统）加密指定文件或文件夹。只有加密用户才能访问。"
+  },
+  {
+    "id": "file-decrypt",
+    "name": "解密文件",
+    "description": "解密 EFS 加密的文件或文件夹",
+    "category": "文件操作",
+    "tags": ["文件", "加密"],
+    "engine": "cmd",
+    "template": "cipher /d \"{{path}}\"",
+    "params": [
+      {
+        "key": "path",
+        "label": "文件/文件夹路径",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入要解密的文件或文件夹路径"
+      }
+    ],
+    "platform": "windows",
+    "usage": "解密使用 EFS 加密的文件或文件夹。"
+  },
+  {
+    "id": "compact-file",
+    "name": "压缩文件",
+    "description": "使用 NTFS 压缩压缩文件或文件夹",
+    "category": "文件操作",
+    "tags": ["文件", "压缩"],
+    "engine": "cmd",
+    "template": "compact /c \"{{path}}\"",
+    "params": [
+      {
+        "key": "path",
+        "label": "文件/文件夹路径",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入要压缩的文件或文件夹路径"
+      }
+    ],
+    "platform": "windows",
+    "usage": "使用 NTFS 文件系统压缩功能压缩指定文件或文件夹。"
+  },
+  {
+    "id": "uncompact-file",
+    "name": "解压文件",
+    "description": "解压缩 NTFS 压缩的文件或文件夹",
+    "category": "文件操作",
+    "tags": ["文件", "压缩"],
+    "engine": "cmd",
+    "template": "compact /u \"{{path}}\"",
+    "params": [
+      {
+        "key": "path",
+        "label": "文件/文件夹路径",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入要解压缩的文件或文件夹路径"
+      }
+    ],
+    "platform": "windows",
+    "usageugs": "解压缩 NTFS 压缩的文件或文件夹。"
+  },
+  {
+    "id": "group-policy-update",
+    "name": "强制更新组策略",
+    "description": "立即更新计算机和用户的组策略设置",
+    "category": "系统维护",
+    "tags": ["系统", "组策略"],
+    "engine": "cmd",
+    "template": "gpupdate /force",
+    "params": [],
+    "platform": "windows",
+    "usage": "强制刷新组策略，立即应用更改。需要管理员权限。"
+  },
+  {
+    "id": "wmi-query",
+    "name": "WMI 查询",
+    "description": "使用 WMI 查询系统信息",
+    "category": "系统维护",
+    "tags": ["系统", "WMI"],
+    "engine": "cmd",
+    "template": "wmic {{class}} get {{properties}}",
+    "params": [
+      {
+        "key": "class",
+        "label": "WMI 类名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "process",
+        "hint": "如 process, os, bios, cpu"
+      },
+      {
+        "key": "properties",
+        "label": "属性",
+        "type": "text",
+        "required": true,
+        "defaultValue": "name,processid",
+        "hint": "逗号分隔的属性列表"
+      }
+    ],
+    "platform": "windows",
+    "usage": "使用 WMI 查询获取各种系统管理信息。"
+  },
+  {
+    "id": "power-scheme-list",
+    "name": "查看电源方案",
+    "description": "列出系统中的所有电源方案",
+    "category": "系统维护",
+    "tags": ["系统", "电源"],
+    "engine": "cmd",
+    "template": "powercfg /list",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有可用的电源方案及其 GUID。"
+  },
+  {
+    "id": "power-scheme-active",
+    "name": "查看当前电源方案",
+    "description": "显示当前活动的电源方案",
+    "category": "系统维护",
+    "tags": ["系统", "电源"],
+    "engine": "cmd",
+    "template": "powercfg /getactivescheme",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示当前活动的电源方案的详细 GUID。"
+  },
+  {
+    "id": "power-scheme-set",
+    "name": "设置电源方案",
+    "description": "切换到指定的电源方案",
+    "category": "系统维护",
+    "tags": ["系统", "电源"],
+    "engine": "cmd",
+    "template": "powercfg /setactive {{scheme_guid}}",
+    "params": [
+      {
+        "key": "scheme_guid",
+        "label": "电源方案 GUID",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入电源方案的完整 GUID"
+      }
+    ],
+    "platform": "windows",
+    "usage": "切换到指定的电源方案。需要 GUID，可通过 powercfg /list 获取。"
+  },
+  {
+    "id": "power-report",
+    "name": "生成电源效率报告",
+    "description": "生成系统电源效率诊断报告",
+    "category": "系统维护",
+    "tags": ["系统", "电源", "诊断"],
+    "engine": "cmd",
+    "template": "powercfg /batteryreport",
+    "params": [],
+    "platform": "windows",
+    "usage": "生成 HTML 格式的电源效率报告，保存在用户目录中。"
+  },
+  {
+    "id": "check-disk-speed",
+    "name": "磁盘读写测试",
+    "description": "测试磁盘读写速度",
+    "category": "性能监控",
+    "tags": ["性能", "磁盘"],
+    "engine": "powershell",
+    "template": "$disk = {{drive_letter}}\n$testFile = \"$disk\\test.dat\"\n1..5 | ForEach-Object {Measure-Command {Set-Content -Path $testFile -Value (New-Object byte[] 1GB) -Force} | Select-Object -ExpandProperty TotalSeconds} | Measure-Object -Average | Select-Object @{N='WriteSpeed_GB/s';E={[math]::Round(1/$_.Average,2)}}",
+    "params": [
+      {
+        "key": "drive_letter",
+        "label": "盘符",
+        "type": "text",
+        "required": true,
+        "defaultValue": "C",
+        "hint": "输入要测试的盘符（如 C, D）"
+      }
+    ],
+    "platform": "windows",
+    "usage": "在指定磁盘创建 1GB 测试文件以测量写入速度。测试完成后会删除测试文件。"
+  },
+  {
+    "id": "network-adapter",
+    "name": "查看网络适配器状态",
+    "description": "显示所有网络适配器的状态",
+    "category": "网络工具",
+    "tags": ["网络", "适配器"],
+    "engine": "powershell",
+    "template": "Get-NetAdapter | Select-Object Name,Status,LinkSpeed,InterfaceDescription",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有网络适配器的名称、状态、链接速度和描述。"
+  },
+  {
+    "id": "network-speed",
+    "name": "网络流量监控",
+    "description": "实时监控网络适配器流量",
+    "category": "性能监控",
+    "tags": ["性能", "网络"],
+    "engine": "powershell",
+    "template": "Get-Counter \"\\Network Interface(*)\\Bytes Received/sec\",\"\\Network Interface(*)\\Bytes Sent/sec\" -SampleInterval 5 -MaxSamples 3",
+    "params": [],
+    "platform": "windows",
+    "usage": "监控所有网络适配器的实时接收和发送字节数。"
+  },
+  {
+    "id": "smb-share-list",
+    "name": "查看 SMB 共享",
+    "description": "列出所有 SMB 文件共享",
+    "category": "网络工具",
+    "tags": ["网络", "SMB"],
+    "engine": "cmd",
+    "template": "net share",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有 SMB 文件共享及其路径和描述。"
+  },
+  {
+    "id": "smb-session-list",
+    "name": "查看 SMB 会话",
+    "description": "列出所有活跃的 SMB 会话",
+    "category": "网络工具",
+    "tags": ["网络", "SMB"],
+    "engine": "cmd",
+    "template": "net session",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有连接到本机的 SMB 会话。需要管理员权限。"
+  },
+  {
+    "id": "smb-share-create",
+    "name": "创建 SMB 共享",
+    "description": "创建新的 SMB 文文件共享",
+    "category": "网络工具",
+    "tags": ["网络", "SMB"],
+    "engine": "cmd",
+    "template": "net share {{share_name}}={{share_path}} /grant:{{user}},{{permission}}",
+    "params": [
+      {
+        "key": "share_name",
+        "label": "共享名称",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入共享名称"
+      },
+      {
+        "key": "share_path",
+        "label": "共享路径",
+        "type": "path",
+        "required": true,
+        "defaultValue": "",
+        "hint": "要共享的本地文件夹路径"
+      },
+      {
+        "key": "user",
+        "label": "用户",
+        "type": "text",
+        "required": true,
+        "defaultValue": "Everyone",
+        "hint": "授权用户名"
+      },
+      {
+        "key": "permission",
+        "label": "权限",
+        "type": "enum",
+        "required": true,
+        "defaultValue": "READ",
+        "options": [
+          { "label": "读取", "value": "READ" },
+          { "label": "完全控制", "value": "FULL" },
+          { "label": "更改", "value": "CHANGE" }
+        ]
+      }
+    ],
+    "platform": "windows",
+    "usage": "创建新的 SMB 文件共享。需要管理员权限。"
+  },
+  {
+    "id": "certificate-list",
+    "name": "列出证书",
+    "description": "列出个人存储中的所有证书",
+    "category": "安全",
+    "tags": ["安全", "证书"],
+    "engine": "powershell",
+    "template": "Get-ChildItem -Path Cert:\\CurrentUser\\My",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示当前用户个人证书存储中的所有证书。"
+  },
+  {
+    "id": "bitlocker-status",
+    "name": "查看 BitLocker 状态",
+    "description": "查看所有驱动器的 BitLocker 加密状态",
+    "category": "安全",
+    "tags": ["安全", "加密"],
+    "engine": "cmd",
+    "template": "manage-bde -status {{drive_letter}}:",
+    "params": [
+      {
+        "key": "drive_letter",
+        "label": "盘符",
+        "type": "text",
+        "required": true,
+        "defaultValue": "C",
+        "hint": "输入盘符（留空查看所有）"
+      }
+    ],
+    "platform": "windows",
+    "usage": "显示指定驱动器的 BitLocker 加密状态和保护方法。需要管理员权限。"
+  },
+  {
+    "id": "audit-policy",
+    "name": "查看审核策略",
+    "description": "显示系统的审核策略设置",
+    "category": "安全",
+    "tags": ["安全", "审计"],
+    "engine": "cmd",
+    "template": "auditpol /get /category:*",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有审核类别的策略设置。需要管理员权限。"
+  },
+  {
+    "id": "user-rights",
+    "name": "查看用户权限",
+    "description": "显示指定用户的所有权限",
+    "category": "用户管理",
+    "tags": ["用户", "权限"],
+    "engine": "powershell",
+    "template": "Get-LocalUser | Where-Object {$_.Name -like \"*{{user_pattern}}*\"} | Select-Object Name,Enabled,LastLogon",
+    "params": [
+      {
+        "key": "user_pattern",
+        "label": "用户名模式",
+        "type": "text",
+        "required": false,
+        "defaultValue": "*",
+        "hint": "支持通配符，留空显示所有"
+      }
+    ],
+    "platform": "windows",
+    "usage": "显示匹配模式的本地用户及其状态和最后登录时间。"
+  },
+  {
+    "id": "shadow-copy-list",
+    "name": "查看卷影副本",
+    "description": "列出指定卷的所有卷影副本",
+    "category": "磁盘管理",
+    "tags": ["磁盘", "备份"],
+    "engine": "cmd",
+    "template": "vssadmin list shadows /for={{drive_letter}}:",
+    "params": [
+      {
+        "key": "drive_letter",
+        "label": "盘符",
+        "type": "text",
+        "required": true,
+        "defaultValue": "C",
+        "hint": "输入盘符"
+      }
+    ],
+    "platform": "windows",
+    "usage": "显示指定卷的所有卷影副本（系统还原点）。需要管理员权限。"
+  },
+  {
+    "id": "system-restore-list",
+    "name": "查看系统还原点",
+    "description": "列出所有可用的系统还原点",
+    "category": "系统维护",
+    "tags": ["系统", "还原"],
+    "engine": "powershell",
+    "template": "Get-ComputerRestorePoint",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有可用的系统还原点及其创建时间和描述。"
+  },
+  {
+    "id": "system-restore-create",
+    "name": "创建系统还原点",
+    "description": "手动创建系统还原点",
+    "category": "系统维护",
+    "tags": ["系统", "还原"],
+    "engine": "powershell",
+    "template": "Checkpoint-Computer -Description \"{{description}}\"",
+    "params": [
+      {
+        "key": "description",
+        "label": "描述",
+        "type": "text",
+        "required": true,
+        "defaultValue": "手动还原点",
+        "hint": "还原点描述"
+      }
+    ],
+    "platform": "windows",
+    "usage": "创建系统还原点，便于后续系统还原。需要管理员权限。"
+  },
+  {
+    "id": "pagefile-config",
+    "name": "查看页面文件配置",
+    "description": "显示系统页面文件的配置信息",
+    "category": "性能监控",
+    "tags": ["性能", "内存"],
+    "engine": "cmd",
+    "template": "wmic pagefile get name,initialsize,maximumsize",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示所有页面文件的位置、初始大小和最大大小。"
+  },
+  {
+    "id": "service-dependencies",
+    "name": "查看服务依赖关系",
+    "description": "显示指定服务所依赖的其他服务",
+    "category": "服务管理",
+    "tags": ["服务", "依赖"],
+    "engine": "cmd",
+    "template": "sc enumdepend {{service}}",
+    "params": [
+      {
+        "key": "service",
+        "label": "服务名",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入服务名称"
+      }
+    ],
+    "platform": "windows",
+    "usage": "显示指定服务所依赖的其他服务列表。"
+  },
+  {
+    "id": "event-log-filter",
+    "name": "过滤事件日志",
+    "description": "根据关键字筛选事件日志",
+    "category": "日志管理",
+    "tags": ["日志", "筛选"],
+    "engine": "powershell",
+    "template": "Get-EventLog -LogName {{log_name}} | Where-Object {$_.Message -like \"*{{keyword}}*\"} | Select-Object -First {{count}}",
+    "params": [
+      {
+        "key": "log_name",
+        "label": "日志名称",
+        "type": "enum",
+        "required": true,
+        "defaultValue": "Application",
+        "options": [
+          { "label": "应用程序", "value": "Application" },
+          { "label": "系统", "value": "System" },
+          { "label": "安全", "value": "Security" }
+        ]
+      },
+      {
+        "key": "keyword",
+        "label": "关键词",
+        "type": "text",
+        "required": true,
+        "defaultValue": "error",
+        "hint": "消息中包含的关键词"
+      },
+      {
+        "key": "count",
+        "label": "显示数量",
+        "type": "number",
+        "required": true,
+        "defaultValue": 20,
+        "hint": "最多显示的日志条数"
+      }
+    ],
+    "platform": "windows",
+    "usage": "从指定日志中筛选包含特定关键词的事件。"
+  },
+  {
+    "id": "scheduled-task-create",
+    "name": "创建计划任务",
+    "description": "创建简单的计划任务",
+    "category": "系统维护",
+    "tags": ["计划任务"],
+    "engine": "cmd",
+    "template": "schtasks /create /tn \"{{task_name}}\" /tr {{command}} /sc {{schedule}} /st {{time}}",
+    "params": [
+      {
+        "key": "task_name",
+        "label": "任务名称",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "输入任务名称"
+      },
+      {
+        "key": "command",
+        "label": "执行的命令",
+        "type": "text",
+        "required": true,
+        "defaultValue": "",
+        "hint": "要执行的程序或命令"
+      },
+      {
+        "key": "schedule",
+        "label": "计划类型",
+        "type": "enum",
+        "required": true,
+        "defaultValue": "DAILY",
+        "options": [
+          { "label": "每天", "value": "DAILY" },
+          { "label": "每周", "value": "WEEKLY" },
+          { "label": "每月", "value": "MONTHLY" },
+          { "label": "一次性", "value": "ONCE" }
+        ]
+      },
+      {
+        "key": "time",
+        "label": "开始时间",
+        "type": "text",
+        "required": true,
+        "defaultValue": "09:00",
+        "hint": "HH:MM 格式"
+      }
+    ],
+    "platform": "windows",
+    "usage": "创建按计划执行的简单任务。需要管理员权限。"
+  },
+  {
+    "id": "environment-vars",
+    "name": "查看环境变量",
+    "description": "显示所有当前环境变量",
+    "category": "系统维护",
+    "tags": ["系统", "环境"],
+    "engine": "cmd",
+    "template": "set",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示当前会话的所有环境变量。"
+  },
+  {
+    "id": "path-var",
+    "name": "查看 PATH 变量",
+    "description": "显示系统 PATH 环境变量",
+    "category": "系统维护",
+    "tags": ["系统", "环境"],
+    "engine": "cmd",
+    "template": "echo %PATH%",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示 PATH 环境变量（用分号分隔多个路径）。"
+  },
+  {
+    "id": "windows-version",
+    "name": "查看 Windows 版本",
+    "description": "显示 Windows 操作系统版本信息",
+    "category": "系统维护",
+    "tags": ["系统", "版本"],
+    "engine": "cmd",
+    "template": "ver",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示 Windows 版本和构建号。"
+  },
+  {
+    "id": "uptime",
+    "name": "查看系统运行时间",
+    "description": "显示系统已运行的时间",
+    "category": "系统维护",
+    "tags": ["系统", "运行时间"],
+    "engine": "powershell",
+    "template": "(Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime",
+    "params": [],
+    "platform": "windows",
+    "usage": "显示系统上次启动到当前的时间差。"
   }
 ]
