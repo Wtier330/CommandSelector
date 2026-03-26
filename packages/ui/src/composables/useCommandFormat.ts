@@ -3,6 +3,8 @@ import type { ExecMode } from "@commandselector/shared";
 
 export function useCommandFormat(finalCommand: Ref<string>) {
   const execMode = ref<ExecMode>("cmd");
+  const runAsAdmin = ref(true);
+  const silentMode = ref(true);
 
   const formattedCommand = computed(() => {
     const cmd = finalCommand.value.trim();
@@ -12,7 +14,7 @@ export function useCommandFormat(finalCommand: Ref<string>) {
       case "powershell":
         return convertToPowerShell(cmd);
       case "cmd2powershell":
-        return convertToCmd2PowerShell(cmd);
+        return convertToCmd2PowerShell(cmd, runAsAdmin.value, silentMode.value);
       case "cmd":
       default:
         return cmd;
@@ -55,15 +57,32 @@ export function useCommandFormat(finalCommand: Ref<string>) {
     return psCmd;
   }
 
-  function convertToCmd2PowerShell(cmd: string): string {
+  function convertToCmd2PowerShell(cmd: string, runAsAdmin: boolean, silentMode: boolean): string {
     // 通过 cmd.exe 调用 PowerShell
     const psCmd = convertToPowerShell(cmd);
 
     // 对 PowerShell 命令进行转义，使其能在 cmd 中通过 PowerShell.exe 调用
-    // 需要处理特殊字符: &, |, <, >, (, ), ^, %, ", ', `
     const escapedCmd = escapeForCmd(psCmd);
 
-    return `powershell.exe -Command "${escapedCmd}"`;
+    // 构建 PowerShell 参数
+    let psArgs = '';
+    if (silentMode) {
+      psArgs += ' -WindowStyle Hidden';
+    }
+    if (runAsAdmin) {
+      psArgs += ' -ExecutionPolicy Bypass';
+    }
+
+    // 如果需要提权执行，使用 Start-Process -Verb RunAs
+    if (runAsAdmin) {
+      // 构建内部的 PowerShell 命令
+      const innerPsCmd = psArgs ? `-Command "${escapedCmd}" ${psArgs.trim()}` : `-Command "${escapedCmd}"`;
+      // 使用 Start-Process 提升权限
+      return `powershell.exe -WindowStyle Hidden -Command "Start-Process powershell.exe -ArgumentList '${innerPsCmd}' -Verb RunAs"`;
+    }
+
+    // 普通执行
+    return `powershell.exe${psArgs} -Command "${escapedCmd}"`;
   }
 
   function escapeForCmd(str: string): string {
@@ -89,6 +108,8 @@ export function useCommandFormat(finalCommand: Ref<string>) {
 
   return {
     execMode,
+    runAsAdmin,
+    silentMode,
     formattedCommand,
     modeLabels,
     modeDescriptions

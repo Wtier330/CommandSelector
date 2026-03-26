@@ -14,7 +14,7 @@ const emit = defineEmits<{
 }>();
 
 const finalCommandRef = ref(props.finalCommand);
-const { execMode, formattedCommand, modeLabels, modeDescriptions } = useCommandFormat(finalCommandRef);
+const { execMode, runAsAdmin, silentMode, formattedCommand, modeLabels, modeDescriptions } = useCommandFormat(finalCommandRef);
 
 // 接收 props 中的 finalCommand 并传递给 ref
 watch(() => props.finalCommand, (val) => {
@@ -54,6 +54,20 @@ async function handleCopy() {
         <span class="cs-exec-mode-label">{{ modeLabels[mode] }}</span>
         <span class="cs-exec-mode-desc">{{ modeDescriptions[mode] }}</span>
       </button>
+    </div>
+
+    <!-- CMD→PS 执行选项 -->
+    <div v-if="execMode === 'cmd2powershell'" class="cs-exec-options">
+      <label class="cs-checkbox-option">
+        <input type="checkbox" v-model="runAsAdmin" class="cs-checkbox-input" />
+        <span class="cs-checkbox-label">提权执行</span>
+        <span class="cs-checkbox-hint">使用管理员权限运行</span>
+      </label>
+      <label class="cs-checkbox-option">
+        <input type="checkbox" v-model="silentMode" class="cs-checkbox-input" />
+        <span class="cs-checkbox-label">静默执行</span>
+        <span class="cs-checkbox-hint">隐藏 PowerShell 窗口</span>
+      </label>
     </div>
 
     <div class="cs-code-wrap">
