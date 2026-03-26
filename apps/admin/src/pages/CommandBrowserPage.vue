@@ -113,6 +113,7 @@ function handleEmptyTrash() {
     ref="browserRef"
     v-else
     :commands="commands"
+    :trashed-commands="trashedCommands"
     :selected-id="selectedId"
     :responsive="{ scaleOverride }"
     @select="onSelect"

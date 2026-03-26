@@ -14,6 +14,7 @@ import BottomStatusBar from "./components/BottomStatusBar.vue";
 
 const props = defineProps<{
   commands: CommandEntry[];
+  trashedCommands?: CommandEntry[];
   selectedId?: string;
   responsive?: ResponsiveOptions;
 }>();
@@ -26,9 +27,12 @@ const emit = defineEmits<{
   (e: "export"): void;
   (e: "update:command", command: CommandEntry): void;
   (e: "delete", id: string): void;
+  (e: "restore-trash", id: string): void;
+  (e: "delete-permanently", id: string): void;
+  (e: "empty-trash"): void;
 }>();
 
-const { commands } = toRefs(props);
+const { commands, trashedCommands } = toRefs(props);
 
 // 1. 响应式布局
 const rootEl = ref<HTMLElement | null>(null);
@@ -54,8 +58,6 @@ const mainEl = ref<HTMLElement | null>(null);
 
 // 2. 过滤与列表
 const { keyword, selectedCategories, categories, filteredCommands } = useCommandFilter(commands);
-
-const trashedCommands = ref<CommandEntry[]>([]);
 
 // 3. 选择逻辑
 const internalSelectedId = ref<string>(props.selectedId ?? "");
@@ -212,6 +214,9 @@ defineExpose({
             @create="$emit('create')"
             @import="$emit('import')"
             @export="$emit('export')"
+            @restore-trash="$emit('restore-trash', $event)"
+            @delete-permanently="$emit('delete-permanently', $event)"
+            @empty-trash="$emit('empty-trash')"
           />
         </aside>
 
@@ -251,7 +256,7 @@ defineExpose({
                     >
                       <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 4H4a2 2 0 0 0 -2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2 -2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1 1-4 9.5-9.5-9.5z"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1 1 4 9.5-9.5-9.5z"></path>
                       </svg>
                       <span>编辑</span>
                     </button>
