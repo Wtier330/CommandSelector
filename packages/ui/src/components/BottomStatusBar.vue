@@ -1,41 +1,55 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import SettingsModal from "./SettingsModal.vue";
 import ProjectInfoModal from "./ProjectInfoModal.vue";
 
-const showModal = ref(false);
+const showSettings = ref(false);
+const showProjectInfo = ref(false);
+
+function handleSettingsClick() {
+  showSettings.value = true;
+}
 
 function handleGithubClick() {
-  showModal.value = true;
+  showProjectInfo.value = true;
 }
 
 async function handleOpenUrl(url: string) {
   try {
-    // 尝试使用 Tauri opener 插件
     const opener = await import("@tauri-apps/plugin-opener");
     await opener.openUrl(url);
   } catch {
-    // 降级到 window.open
     window.open(url, "_blank");
   }
+}
+
+function handleImport() {
+  window.dispatchEvent(new CustomEvent("cs-import"));
+  showSettings.value = false;
+}
+
+function handleExport() {
+  window.dispatchEvent(new CustomEvent("cs-export"));
+  showSettings.value = false;
+}
+
+function handleOpenTrash() {
+  window.dispatchEvent(new CustomEvent("cs-open-trash"));
 }
 </script>
 
 <template>
   <div class="cs-bottom-statusbar" data-testid="statusbar">
-    <button class="cs-statusbar-btn" @click="handleGithubClick" title="项目信息">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 16 16"
-        width="16"
-        height="16"
-        fill="currentColor"
-      >
-        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-      </svg>
+    <button class="cs-statusbar-btn" @click="handleSettingsClick" title="设置">
+      <svg t="1774535196918" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6470" width="16" height="16"><path d="M128 469.333333c-23.466667 0-42.666667-19.2-42.666667-42.666666V128c0-23.466667 19.2-42.666667 42.666667-42.666667h298.666667c23.466667 0 42.666667 19.2 42.666666 42.666667v298.666667c0 23.466667-19.2 42.666667-42.666666 42.666666H128z m42.666667-85.333333h213.333333V170.666667H170.666667v213.333333zM85.333333 896V597.333333c0-23.466667 19.2-42.666667 42.666667-42.666666h298.666667c23.466667 0 42.666667 19.2 42.666666 42.666666v298.666667c0 23.466667-19.2 42.666667-42.666666 42.666667H128c-23.466667 0-42.666667-19.2-42.666667-42.666667z m85.333334-42.666667h213.333333V640H170.666667v213.333333zM554.666667 896V597.333333c0-23.466667 19.2-42.666667 42.666666-42.666666h298.666667c23.466667 0 42.666667 19.2 42.666667 42.666666v298.666667c0 23.466667-19.2 42.666667-42.666667 42.666667H597.333333c-23.466667 0-42.666667-19.2-42.666666-42.666667z m85.333333-42.666667h213.333333V640H640v213.333333zM746.666667 469.333333c-106.666667 0-192-85.333333-192-192s85.333333-192 192-192 192 85.333333 192 192-85.333333 192-192 192z m0-298.666666c-59.733333 0-106.666667 46.933333-106.666667 106.666666s46.933333 106.666667 106.666667 106.666667 106.666667-46.933333 106.666666-106.666667-46.933333-106.666667-106.666666-106.666666z" fill="#1296db" p-id="6471"></path></svg>
     </button>
     <span class="cs-statusbar-text">CommandSelector - 快捷生成并复制你的运维指令</span>
+    <button class="cs-statusbar-btn cs-statusbar-btn-github" @click="handleGithubClick" title="项目信息">
+      <svg t="1774535325473" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7884" width="16" height="16"><path d="M695.744 981.312H419.712c-26.816 0-47.296-21.056-47.296-48.64V739.84c0-29.184 6.336-56.768 17.344-81.088-129.28-48.64-214.528-150.72-214.528-264.256 0-53.44 17.344-103.68 50.496-147.52C213.12 204.8 209.92 151.296 213.12 89.664c3.2-27.52 23.68-46.976 48.896-46.976 14.208 0 134.08 1.6 203.52 64.832a504.384 504.384 0 0 1 184.512 0C717.888 44.288 837.696 42.688 853.504 42.688a47.36 47.36 0 0 1 47.36 45.376c4.672 61.568 0 115.072-12.672 157.248 33.152 45.44 50.496 95.68 50.496 147.52 0 113.472-85.184 215.68-214.528 264.32 11.072 25.856 17.344 53.44 17.344 81.024v192.896c1.6 27.52-20.48 50.24-45.76 50.24z m-228.672-97.28h181.376V739.84c0-27.52-12.608-53.504-33.152-71.36a48.96 48.96 0 0 1-15.744-50.24c4.736-17.856 18.944-32.384 36.288-35.648 123.008-24.32 208.192-102.144 208.192-189.696 0-46.976-25.216-82.688-45.76-105.344a47.36 47.36 0 0 1-7.872-55.168c6.336-12.928 15.808-40.512 15.808-89.152-39.488 6.464-85.184 19.456-102.528 45.44a47.552 47.552 0 0 1-50.56 19.392 393.024 393.024 0 0 0-193.92 0c-18.944 4.864-37.888-3.2-50.56-19.456-17.28-25.92-63.04-38.912-102.464-45.376 1.6 48.64 9.472 76.16 15.744 89.152a53.696 53.696 0 0 1-7.872 55.168c-20.48 22.656-45.76 58.368-45.76 105.344 0 87.552 85.184 163.776 208.256 189.696 17.28 3.2 31.552 17.792 36.224 35.648a51.008 51.008 0 0 1-15.744 50.24c-20.48 17.856-33.152 43.776-33.152 71.36v144.256h3.2z" fill="#2c2c2c" p-id="7885"></path><path d="M403.968 788.416c-212.928 0-309.12-194.56-313.92-202.688-11.008-24.32-1.536-53.44 20.48-64.832a47.424 47.424 0 0 1 63.168 21.12c3.136 6.4 80.448 157.248 241.28 149.12a46.08 46.08 0 0 1 48.896 47.04c1.6 27.52-18.88 50.24-45.696 50.24h-14.208z" fill="#2c2c2c" p-id="7886"></path></svg>
+    </button>
   </div>
-  <ProjectInfoModal :is-open="showModal" @close="showModal = false" @open-url="handleOpenUrl" />
+  <SettingsModal :is-open="showSettings" @close="showSettings = false" @import="handleImport" @export="handleExport" @open-trash="handleOpenTrash" />
+  <ProjectInfoModal :is-open="showProjectInfo" @close="showProjectInfo = false" @open-url="handleOpenUrl" />
 </template>
 
 <style scoped>
@@ -77,6 +91,11 @@ async function handleOpenUrl(url: string) {
 .cs-statusbar-text {
   font-size: 14px;
   margin-left: 8px;
-  margin-right: 12px;
+  margin-right: auto;
+  flex: 1;
+}
+
+.cs-statusbar-btn-github {
+  margin-left: 8px;
 }
 </style>

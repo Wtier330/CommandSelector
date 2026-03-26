@@ -23,8 +23,6 @@ const emit = defineEmits<{
   (e: "select", id: string): void;
   (e: "create"): void;
   (e: "edit", id: string): void;
-  (e: "import"): void;
-  (e: "export"): void;
   (e: "update:command", command: CommandEntry): void;
   (e: "delete", id: string): void;
   (e: "restore-trash", id: string): void;
@@ -206,8 +204,6 @@ defineExpose({
             v-model:selected-categories="selectedCategories"
             @select="handleSelect"
             @create="$emit('create')"
-            @import="$emit('import')"
-            @export="$emit('export')"
             @restore-trash="$emit('restore-trash', $event)"
             @delete-permanently="$emit('delete-permanently', $event)"
             @empty-trash="$emit('empty-trash')"
@@ -260,11 +256,7 @@ defineExpose({
                       title="删除命令"
                       @click="handleDeleteCommand"
                     >
-                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14c0 1 -1 2 -2 -2 H7 c -1 0 -2 -1 -2 -2 V6"></path>
-                        <path d="M8 6V4c0 -1 1 -2 2 -2 h4 c1 0 2 1 2 2 v2"></path>
-                      </svg>
+                      <svg t="1774535411098" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="8973" width="16" height="16"><path d="M128 320l0 640c0 35.20512 28.79488 64 64 64l576 0c35.20512 0 64-28.79488 64-64l0-640-704 0zM320 896l-64 0 0-448 64 0 0 448zM448 896l-64 0 0-448 64 0 0 448zM576 896l-64 0 0-448 64 0 0 448zM704 896l-64 0 0-448 64 0 0 448z" fill="#444444" p-id="8974"></path><path d="M847.99488 128l-207.99488 0 0-79.99488c0-26.39872-21.6064-48.00512-48.00512-48.00512l-224.01024 0c-26.39872 0-48.00512 21.6064-48.00512 48.00512l0 79.99488-207.99488 0c-26.39872 0-48.00512 21.6064-48.00512 48.00512l0 79.99488 832 0 0-79.99488c0-26.39872-21.6064-48.00512-48.00512-48.00512zM576 128l-192 0 0-63.20128 192 0 0 63.20128z" fill="#444444" p-id="8975"></path></svg>
                       <span>删除</span>
                     </button>
                     </div>

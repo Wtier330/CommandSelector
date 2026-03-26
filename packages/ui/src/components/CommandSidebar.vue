@@ -2,7 +2,6 @@
 import { ref } from "vue";
 import type { CommandEntry } from "@commandselector/shared";
 import CategoryMultiSelect from "./CategoryMultiSelect.vue";
-import CommandTrash from "./CommandTrash.vue";
 
 defineProps<{
   categories: string[];
@@ -10,7 +9,6 @@ defineProps<{
   selectedId: string | null;
   keyword: string;
   selectedCategories: string[];
-  trashedCommands: CommandEntry[];
 }>();
 
 const emit = defineEmits<{
@@ -18,14 +16,7 @@ const emit = defineEmits<{
   (e: "update:selectedCategories", value: string[]): void;
   (e: "select", id: string): void;
   (e: "create"): void;
-  (e: "import"): void;
-  (e: "export"): void;
-  (e: "restore-trash", id: string): void;
-  (e: "delete-permanently", id: string): void;
-  (e: "empty-trash"): void;
 }>();
-
-const showTrash = ref(false);
 
 function selectCommand(id: string) {
   emit("select", id);
@@ -61,23 +52,8 @@ function selectCommand(id: string) {
     <div class="cs-section cs-list-section">
       <div class="cs-section-header">
         <div class="cs-section-title">命令</div>
+        <div class="cs-command-count">{{ filteredCommands.length }} 条</div>
         <div class="cs-sidebar-actions">
-          <button
-            class="cs-btn cs-btn-outline cs-btn-sm"
-            type="button"
-            title="导入"
-            @click="$emit('import')"
-          >
-            导入
-          </button>
-          <button
-            class="cs-btn cs-btn-outline cs-btn-sm"
-            type="button"
-            title="导出"
-            @click="$emit('export')"
-          >
-            导出
-          </button>
           <button
             class="cs-btn cs-btn-primary cs-btn-sm"
             type="button"
@@ -87,30 +63,6 @@ function selectCommand(id: string) {
           </button>
         </div>
       </div>
-
-      <!-- 回收站按钮 -->
-      <div class="cs-trash-btn-wrapper">
-        <button
-          class="cs-btn cs-btn-trash cs-btn-sm"
-          type="button"
-          @click="showTrash = true"
-        >
-          回收站
-        </button>
-      </div>
-
-      <!-- 回收站弹窗 -->
-      <Transition name="cs-trash-fade">
-        <div v-if="showTrash" class="cs-trash-overlay" @click.self="showTrash = false">
-          <CommandTrash
-            :trashed-commands="trashedCommands"
-            @restore="$emit('restore-trash', $event)"
-            @delete-permanently="$emit('delete-permanently', $event)"
-            @empty-trash="$emit('empty-trash')"
-            @close="showTrash = false"
-          />
-        </div>
-      </Transition>
     </div>
 
     <div class="cs-list">

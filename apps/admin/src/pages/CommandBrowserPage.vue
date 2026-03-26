@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { CommandBrowser } from "@commandselector/ui";
+import { CommandBrowser, BottomStatusBar, CommandTrash } from "@commandselector/ui";
 import { useLibraryStore } from "../store/library";
 import { isTauri } from "@tauri-apps/api/core";
 
 const router = useRouter();
 const route = useRoute();
-const browserRef = ref<InstanceType<typeof CommandBrowser> | null>(null);
 
 const { commands, trashedCommands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary, saveCommand, moveToTrash, restoreCommand, deletePermanently, emptyTrash } = useLibraryStore();
 
-onMounted(async () => {
-  await loadLibrary();
-});
+const showTrashModal = ref(false);
 
 const selectedId = computed(() => String(route.query.id ?? ""));
 
@@ -46,7 +43,10 @@ async function onCreate() {
   router.replace({ name: "commands", query: { ...route.query, id: newId } });
 
   setTimeout(() => {
-    browserRef.value?.startEdit();
+    const browserRefValue = (window as any).__browserRef;
+    if (browserRefValue && browserRefValue.startEdit) {
+      browserRefValue.startEdit();
+    }
   }, 100);
 }
 
@@ -100,6 +100,31 @@ function handleDeletePermanently(id: string) {
 function handleEmptyTrash() {
   emptyTrash();
 }
+
+function handleCsImport() {
+  handleImport();
+}
+
+function handleCsExport() {
+  handleExport();
+}
+
+function handleCsOpenTrash() {
+  showTrashModal.value = true;
+}
+
+onMounted(() => {
+  loadLibrary();
+  window.addEventListener('cs-import', handleCsImport);
+  window.addEventListener('cs-export', handleCsExport);
+  window.addEventListener('cs-open-trash', handleCsOpenTrash);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('cs-import', handleCsImport);
+  window.removeEventListener('cs-export', handleCsExport);
+  window.removeEventListener('cs-open-trash', handleCsOpenTrash);
+});
 </script>
 
 <template>
@@ -109,21 +134,32 @@ function handleEmptyTrash() {
   <div v-else-if="errorMsg" style="padding: 24px; text-align: center; color: #ef4444;">
     {{ errorMsg }}
   </div>
-  <CommandBrowser
-    ref="browserRef"
-    v-else
-    :commands="commands"
-    :trashed-commands="trashedCommands"
-    :selected-id="selectedId"
-    :responsive="{ scaleOverride }"
-    @select="onSelect"
-    @create="onCreate"
-    @import="handleImport"
-    @export="handleExport"
-    @update:command="saveCommand"
-    @delete="handleDelete"
-    @restore-trash="handleRestoreTrash"
-    @delete-permanently="handleDeletePermanently"
-    @empty-trash="handleEmptyTrash"
-  />
+  <div v-else>
+    <CommandBrowser
+      ref="(el: any) => { (window as any).__browserRef = el; }"
+      :commands="commands"
+      :trashed-commands="trashedCommands"
+      :selected-id="selectedId"
+      :responsive="{ scaleOverride }"
+      @select="onSelect"
+      @create="onCreate"
+      @update:command="saveCommand"
+      @delete="handleDelete"
+    />
+    <BottomStatusBar />
+  </div>
+  <Transition name="cs-trash-fade">
+    <div v-if="showTrashModal" class="cs-trash-overlay" @click.self="showTrashModal = false">
+      <CommandTrash
+        :trashed-commands="trashedCommands"
+        @restore="handleRestoreTrash"
+        @delete-permanently="handleDeletePermanently"
+        @empty-trash="handleEmptyTrash"
+        @close="showTrashModal = false"
+      />
+    </div>
+  </Transition>
 </template>
+
+<style scoped>
+</style>
