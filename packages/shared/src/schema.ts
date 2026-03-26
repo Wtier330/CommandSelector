@@ -1,5 +1,7 @@
 export type CommandEngine = "cmd" | "cmd+powershell";
 
+export type ExecMode = "cmd" | "powershell" | "cmd2powershell";
+
 export type ParamType = "text" | "path" | "number" | "enum" | "boolean";
 
 export type ParamValidation =

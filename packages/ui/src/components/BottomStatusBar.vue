@@ -7,6 +7,17 @@ const showModal = ref(false);
 function handleGithubClick() {
   showModal.value = true;
 }
+
+async function handleOpenUrl(url: string) {
+  try {
+    // 尝试使用 Tauri opener 插件
+    const opener = await import("@tauri-apps/plugin-opener");
+    await opener.openUrl(url);
+  } catch {
+    // 降级到 window.open
+    window.open(url, "_blank");
+  }
+}
 </script>
 
 <template>
@@ -24,7 +35,7 @@ function handleGithubClick() {
     </button>
     <span class="cs-statusbar-text">CommandSelector - 快捷生成并复制你的运维指令</span>
   </div>
-  <ProjectInfoModal :is-open="showModal" @close="showModal = false" />
+  <ProjectInfoModal :is-open="showModal" @close="showModal = false" @open-url="handleOpenUrl" />
 </template>
 
 <style scoped>

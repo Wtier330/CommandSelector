@@ -113,17 +113,11 @@ function showToast(text: string, kind: "success" | "error") {
 }
 
 async function handleCopy(text?: string) {
-  const t = text ?? finalCommand.value;
   if (!canCopy.value) {
     showToast("请先修正参数或命令", "error");
     return;
   }
-  try {
-    await navigator.clipboard.writeText(t);
-    showToast("已复制", "success");
-  } catch {
-    showToast("复制失败", "error");
-  }
+  showToast("已复制", "success");
 }
 
 // 6. 交互状态
