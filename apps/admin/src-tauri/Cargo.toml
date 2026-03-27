@@ -1,9 +1,9 @@
 [package]
 name = "commandselector_admin"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-edition = "2021"
+version = "1.1.0"
+description = "CommandSelector 是一款高效的运维指令工具，帮助开发者快速生成、管理和复制常用命令。基于 Tauri 框架构建，支持 Windows平台。"
+authors = ["witer330"]
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -233,7 +233,7 @@ export async function restoreCommand(id: string) {
       ...trashedItem,
       id: trashedItem.originalId || trashedItem.id
     };
-    delete restoredCommand.deletedAt;
+    delete (restoredCommand as any).deletedAt;
     delete (restoredCommand as any).originalId;
     commands.value.push(restoredCommand);
     trashedCommands.value.splice(index, 1);

@@ -128,7 +128,7 @@ function showToast(text: string, kind: "success" | "error") {
   }, 1400);
 }
 
-async function handleCopy(text?: string) {
+async function handleCopy(_text?: string) {
   if (!canCopy.value) {
     showToast("请先修正参数或命令", "error");
     return;
