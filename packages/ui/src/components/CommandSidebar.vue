@@ -9,6 +9,7 @@ defineProps<{
   selectedId: string | null;
   keyword: string;
   selectedCategories: string[];
+  trashedCommands?: CommandEntry[];
 }>();
 
 const emit = defineEmits<{
@@ -16,10 +17,76 @@ const emit = defineEmits<{
   (e: "update:selectedCategories", value: string[]): void;
   (e: "select", id: string): void;
   (e: "create"): void;
+  (e: "import", command: CommandEntry): void;
+  (e: "restore-trash", id: string): void;
+  (e: "delete-permanently", id: string): void;
+  (e: "empty-trash"): void;
 }>();
+
+// 导入弹窗状态
+const showImportDialog = ref(false);
+const importJsonText = ref("");
+const importError = ref("");
 
 function selectCommand(id: string) {
   emit("select", id);
+}
+
+function openImportDialog() {
+  showImportDialog.value = true;
+  importJsonText.value = "";
+  importError.value = "";
+}
+
+function closeImportDialog() {
+  showImportDialog.value = false;
+  importJsonText.value = "";
+  importError.value = "";
+}
+
+function handleImport() {
+  const text = importJsonText.value.trim();
+  if (!text) {
+    importError.value = "请输入命令的 JSON 内容";
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(text);
+
+    // 基础格式校验
+    if (!parsed.name || typeof parsed.name !== "string") {
+      importError.value = "缺少必填字段: name（命令名称）";
+      return;
+    }
+    if (!parsed.template || typeof parsed.template !== "string") {
+      importError.value = "缺少必填字段: template（命令模板）";
+      return;
+    }
+    if (!parsed.id || typeof parsed.id !== "string") {
+      importError.value = "缺少必填字段: id（命令ID）";
+      return;
+    }
+
+    // 确保有默认值
+    const command: CommandEntry = {
+      id: parsed.id,
+      name: parsed.name,
+      template: parsed.template,
+      description: parsed.description || "",
+      category: parsed.category || "",
+      engine: parsed.engine || "cmd",
+      platform: parsed.platform || "windows",
+      params: parsed.params || [],
+      tags: parsed.tags || [],
+      usage: parsed.usage || ""
+    };
+
+    emit("import", command);
+    closeImportDialog();
+  } catch (e) {
+    importError.value = "JSON 格式错误: " + (e as Error).message;
+  }
 }
 </script>
 
@@ -61,6 +128,13 @@ function selectCommand(id: string) {
           >
             添加
           </button>
+          <button
+            class="cs-btn cs-btn-outline cs-btn-sm"
+            type="button"
+            @click="openImportDialog"
+          >
+            导入
+          </button>
         </div>
       </div>
     </div>
@@ -84,8 +158,118 @@ function selectCommand(id: string) {
       </button>
     </div>
   </div>
+
+  <!-- 导入对话框 -->
+  <div v-if="showImportDialog" class="cs-dialog-overlay" @click.self="closeImportDialog">
+    <div class="cs-dialog">
+      <div class="cs-dialog-header">
+        <div class="cs-dialog-title">导入命令</div>
+        <button class="cs-dialog-close" type="button" @click="closeImportDialog">&times;</button>
+      </div>
+      <div class="cs-dialog-body">
+        <div class="cs-dialog-desc">请粘贴命令的 JSON 内容：</div>
+        <textarea
+          v-model="importJsonText"
+          class="cs-input cs-textarea"
+          rows="10"
+          placeholder='{\n  "id": "example-cmd",\n  "name": "示例命令",\n  "template": "ping {{target}}",\n  "description": "描述",\n  "category": "分类",\n  "params": []\n}'
+        ></textarea>
+        <div v-if="importError" class="cs-dialog-error">{{ importError }}</div>
+      </div>
+      <div class="cs-dialog-footer">
+        <button class="cs-btn cs-btn-outline" type="button" @click="closeImportDialog">取消</button>
+        <button class="cs-btn cs-btn-primary" type="button" @click="handleImport">确定</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
 @import "../styles/sidebar.css";
+
+.cs-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.cs-dialog {
+  background: white;
+  border-radius: 8px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.cs-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.cs-dialog-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.cs-dialog-close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.cs-dialog-close:hover {
+  background: #f3f4f6;
+}
+
+.cs-dialog-body {
+  padding: 20px;
+}
+
+.cs-dialog-desc {
+  margin-bottom: 8px;
+  color: #374151;
+  font-size: 14px;
+}
+
+.cs-textarea {
+  width: 100%;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.cs-dialog-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.cs-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+}
 </style>

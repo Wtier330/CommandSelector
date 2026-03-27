@@ -113,6 +113,10 @@ function handleCsOpenTrash() {
   showTrashModal.value = true;
 }
 
+async function handleImportCommand(command: any) {
+  await saveCommand(command);
+}
+
 onMounted(() => {
   loadLibrary();
   window.addEventListener('cs-import', handleCsImport);
@@ -145,6 +149,7 @@ onUnmounted(() => {
       @create="onCreate"
       @update:command="saveCommand"
       @delete="handleDelete"
+      @import:command="handleImportCommand"
     />
     <BottomStatusBar />
   </div>

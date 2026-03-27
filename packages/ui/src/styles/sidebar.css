@@ -294,6 +294,11 @@
   color: #dc2626;
 }
 
+.cs-btn-export-entry:hover {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
 .cs-btn-dark {
   background: var(--cs-primary);
   color: #ffffff;

@@ -28,9 +28,27 @@ const emit = defineEmits<{
   (e: "restore-trash", id: string): void;
   (e: "delete-permanently", id: string): void;
   (e: "empty-trash"): void;
+  (e: "import"): void;
+  (e: "export"): void;
+  (e: "import:command", command: CommandEntry): void;
 }>();
 
 const { commands, trashedCommands } = toRefs(props);
+
+function handleImportCommand(command: CommandEntry) {
+  emit("import:command", command);
+  showToast("导入成功", "success");
+}
+
+function handleExportCommand() {
+  if (!selected.value) return;
+  const json = JSON.stringify(selected.value, null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    showToast("已复制 JSON 到剪贴板", "success");
+  }).catch(() => {
+    showToast("复制失败", "error");
+  });
+}
 
 // 1. 响应式布局
 const rootEl = ref<HTMLElement | null>(null);
@@ -207,6 +225,7 @@ defineExpose({
             @restore-trash="$emit('restore-trash', $event)"
             @delete-permanently="$emit('delete-permanently', $event)"
             @empty-trash="$emit('empty-trash')"
+            @import="handleImportCommand"
           />
         </aside>
 
@@ -238,6 +257,19 @@ defineExpose({
                       <h1 class="cs-title">{{ selected.name }}</h1>
                     </div>
                     <div class="cs-actions">
+                    <button
+                      class="cs-btn-icon cs-btn-export-entry"
+                      type="button"
+                      title="导出 JSON"
+                      @click="handleExportCommand"
+                    >
+                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                      <span>导出</span>
+                    </button>
                     <button
                       class="cs-btn-icon cs-btn-edit-entry"
                       type="button"
@@ -366,15 +398,16 @@ defineExpose({
               </section>
             </div>
           </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
-    </div>
-
     <!-- Mobile Drawer -->
     <div v-if="navOpen" class="cs-overlay" @click="navOpen = false">
       <div class="cs-drawer" @click.stop>
         <div class="cs-drawer-head">
+          <button class="cs-btn cs-btn-outline cs-btn-sm" type="button" @click="navOpen = false">关闭</button>
+        </div>
         <div class="cs-drawer-body">
           <CommandSidebar
             :categories="categories"
@@ -387,9 +420,10 @@ defineExpose({
             @create="$emit('create')"
             @import="$emit('import')"
             @export="$emit('export')"
-          />
-        </div>
-            @export="$emit('export')"
+            @import-command="handleImportCommand"
+            @restore-trash="$emit('restore-trash', $event)"
+            @delete-permanently="$emit('delete-permanently', $event)"
+            @empty-trash="$emit('empty-trash')"
           />
         </div>
       </div>
