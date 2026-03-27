@@ -172,6 +172,7 @@ function handleImport() {
           v-model="importJsonText"
           class="cs-input cs-textarea"
           rows="10"
+          :class="{ 'cs-textarea-xl': true }"
           placeholder='{\n  "id": "example-cmd",\n  "name": "示例命令",\n  "template": "ping {{target}}",\n  "description": "描述",\n  "category": "分类",\n  "params": []\n}'
         ></textarea>
         <div v-if="importError" class="cs-dialog-error">{{ importError }}</div>
@@ -251,8 +252,43 @@ function handleImport() {
 .cs-textarea {
   width: 100%;
   font-family: "Consolas", "Monaco", monospace;
-  font-size: 13px;
+  font-size: var(--cs-textarea-font-size, 13px);
+  min-height: var(--cs-textarea-min-height, 96px);
+  max-height: var(--cs-textarea-max-height, 480px);
+  line-height: var(--cs-textarea-line-height, 1.5);
+  padding: var(--cs-textarea-padding-y, 10px) var(--cs-textarea-padding-x, 12px);
   resize: vertical;
+  border: 1px solid var(--cs-border, #e5e7eb);
+  border-radius: 6px;
+  background: #f8fafc;
+  color: var(--cs-text, #0f172a);
+  box-sizing: border-box;
+  overflow-y: auto;
+  transition: all 0.2s ease;
+}
+
+.cs-textarea:focus {
+  background: #fff;
+  border-color: var(--cs-blue-200, #bfdbfe);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.cs-textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cs-textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cs-textarea::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.cs-textarea::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .cs-dialog-error {

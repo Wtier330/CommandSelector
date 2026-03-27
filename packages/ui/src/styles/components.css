@@ -111,27 +111,113 @@
   font-weight: 500;
   color: var(--cs-muted-2);
 }
+
+/* Textarea: 默认尺寸与样式 */
 .cs-textarea {
   resize: vertical;
-  padding: 10px 12px;
+  padding: var(--cs-textarea-padding-y) var(--cs-textarea-padding-x);
   font-family: inherit;
   height: auto;
-  min-height: 40px;
-  line-height: 1.5;
+  min-height: var(--cs-textarea-min-height);
+  max-height: var(--cs-textarea-max-height);
+  line-height: var(--cs-textarea-line-height);
   width: 100%;
   box-sizing: border-box;
   border: 1px solid var(--cs-border);
   border-radius: 6px;
   background: #f8fafc;
-  font-size: 13px;
+  font-size: var(--cs-textarea-font-size);
   color: var(--cs-text);
   margin-bottom: 2px;
+  overflow-y: auto;
+  transition: all 0.2s ease;
 }
+
+/* Textarea: 聚焦状态 */
 .cs-textarea:focus {
   background: #fff;
   border-color: var(--cs-blue-200);
   outline: none;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Textarea: 占位符样式 */
+.cs-textarea::placeholder {
+  color: var(--cs-muted);
+  opacity: 0.7;
+}
+
+/* Textarea: 滚动条样式 */
+.cs-textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cs-textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cs-textarea::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.cs-textarea::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Textarea: 响应式断点规则 */
+
+/* 小屏幕 (< 768px) */
+@media (max-width: 767px) {
+  .cs-textarea {
+    font-size: 12px;
+    min-height: 80px;  /* 2.5行 */
+    max-height: 320px; /* 10行 */
+  }
+}
+
+/* 中等屏幕 (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .cs-textarea {
+    min-height: 88px;  /* 2.75行 */
+    max-height: 400px; /* 12.5行 */
+  }
+}
+
+/* 大屏幕 (>= 1024px) - 默认值 */
+@media (min-width: 1024px) {
+  .cs-textarea {
+    /* 使用 CSS 变量默认值 */
+  }
+}
+
+/* 超大屏幕 (>= 1536px) */
+@media (min-width: 1536px) {
+  .cs-textarea {
+    font-size: 14px;
+    min-height: 104px; /* 3.25行 */
+    max-height: 520px; /* 16.25行 */
+  }
+}
+
+/* Textarea 变体尺寸类 */
+.cs-textarea-sm {
+  --cs-textarea-min-height: 64px;  /* 2行 */
+  --cs-textarea-max-height: 256px; /* 8行 */
+}
+
+.cs-textarea-md {
+  /* 使用默认值 */
+}
+
+.cs-textarea-lg {
+  --cs-textarea-min-height: 128px; /* 4行 */
+  --cs-textarea-max-height: 640px; /* 20行 */
+}
+
+.cs-textarea-xl {
+  --cs-textarea-min-height: 160px; /* 5行 */
+  --cs-textarea-max-height: 800px; /* 25行 */
 }
 .cs-template-edit-section {
   padding-top: 24px;

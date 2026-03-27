@@ -24,6 +24,16 @@
   --cs-blue-100: #dbeafe;
   --cs-blue-200: #bfdbfe;
   --cs-blue-800: #1e3a8a;
+
+  /* Textarea 尺寸变量 */
+  --cs-textarea-min-rows: 3;
+  --cs-textarea-max-rows: 15;
+  --cs-textarea-min-height: 96px;  /* 3行 * 32px */
+  --cs-textarea-max-height: 480px; /* 15行 * 32px */
+  --cs-textarea-line-height: 1.5;
+  --cs-textarea-font-size: 13px;
+  --cs-textarea-padding-x: 12px;
+  --cs-textarea-padding-y: 10px;
   
   --cs-statusbar-border: #E5E5E5;
   
