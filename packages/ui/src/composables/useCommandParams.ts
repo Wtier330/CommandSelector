@@ -93,6 +93,11 @@ export function useCommandParams(selectedCommand: Ref<CommandEntry | null>) {
   const finalValidation = computed(() => validateCommandText(finalCommand.value));
   const canCopy = computed(() => !!selectedCommand.value && finalValidation.value.ok && !hasParamErrors.value);
 
+  const powershellTemplate = computed(() => {
+    const tpl = selectedCommand.value?.powershellTemplate ?? "";
+    return applyTemplate(tpl, paramValues.value);
+  });
+
   return {
     paramDefs,
     paramValues,
@@ -101,5 +106,6 @@ export function useCommandParams(selectedCommand: Ref<CommandEntry | null>) {
     finalCommand,
     finalValidation,
     canCopy,
+    powershellTemplate,
   };
 }

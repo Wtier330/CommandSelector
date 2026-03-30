@@ -4,6 +4,7 @@ import { useCommandFormat } from "../composables/useCommandFormat";
 
 const props = defineProps<{
   finalCommand: string;
+  powershellTemplate?: string;
   canCopy: boolean;
   validationOk: boolean;
   validationReasons: string[];
@@ -14,11 +15,17 @@ const emit = defineEmits<{
 }>();
 
 const finalCommandRef = ref(props.finalCommand);
-const { execMode, runAsAdmin, silentMode, formattedCommand, modeLabels, modeDescriptions } = useCommandFormat(finalCommandRef);
+const powershellTemplateRef = ref(props.powershellTemplate);
+const { execMode, runAsAdmin, silentMode, formattedCommand, modeLabels, modeDescriptions } = useCommandFormat(finalCommandRef, powershellTemplateRef);
 
 // 接收 props 中的 finalCommand 并传递给 ref
 watch(() => props.finalCommand, (val) => {
   finalCommandRef.value = val;
+}, { immediate: true });
+
+// 接收 props 中的 powershellTemplate 并传递给 ref
+watch(() => props.powershellTemplate, (val) => {
+  powershellTemplateRef.value = val;
 }, { immediate: true });
 
 async function handleCopy() {

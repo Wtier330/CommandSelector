@@ -41,6 +41,7 @@ export interface CommandEntry {
   tags?: string[];
   engine?: CommandEngine;
   template: string;
+  powershellTemplate?: string;
   params: ParamDefinition[];
   platform?: "windows" | "macos" | "linux" | "any";
   usage?: string;

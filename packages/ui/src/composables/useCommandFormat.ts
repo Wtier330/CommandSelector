@@ -1,20 +1,29 @@
 import { computed, ref, type Ref } from "vue";
 import type { ExecMode } from "@commandselector/shared";
 
-export function useCommandFormat(finalCommand: Ref<string>) {
+export function useCommandFormat(finalCommand: Ref<string>, powershellTemplate?: Ref<string | undefined>) {
   const execMode = ref<ExecMode>("cmd");
   const runAsAdmin = ref(true);
   const silentMode = ref(true);
 
   const formattedCommand = computed(() => {
-    const cmd = finalCommand.value.trim();
+    // 根据执行模式选择正确的模板
+    let cmd = "";
+    if (execMode.value === "powershell" && powershellTemplate?.value) {
+      cmd = powershellTemplate.value.trim();
+    } else {
+      cmd = finalCommand.value.trim();
+    }
+
     if (!cmd) return "";
 
     switch (execMode.value) {
       case "powershell":
-        return convertToPowerShell(cmd);
+        return cmd;
       case "cmd2powershell":
-        return convertToCmd2PowerShell(cmd, runAsAdmin.value, silentMode.value);
+        // cmd2powershell 模式下，优先使用 PowerShell 模板内容
+        const psCmd = powershellTemplate?.value?.trim() || cmd;
+        return convertToCmd2PowerShell(psCmd, runAsAdmin.value, silentMode.value);
       case "cmd":
       default:
         return cmd;

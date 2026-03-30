@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { CommandEntry } from "@commandselector/shared";
 import { useLibraryStore } from "../store/library";
@@ -33,6 +33,7 @@ const draft = reactive<CommandEntry>({
   tags: [],
   engine: "cmd",
   template: "",
+  powershellTemplate: "",
   params: [],
   platform: "windows",
   usage: ""
@@ -44,17 +45,14 @@ onMounted(async () => {
     const existing = commands.value.find(c => c.id === id.value);
     if (existing) {
       Object.assign(draft, JSON.parse(JSON.stringify(existing)));
+      // 默认编辑 CMD 模板
+      templateEditMode.value = "cmd";
     } else {
       message.error("找不到该命令");
       router.replace({ name: "commands" });
     }
   }
 });
-
-const engineOptions = [
-  { label: "CMD", value: "cmd" },
-  { label: "混合 (CMD+PowerShell)", value: "cmd+powershell" }
-];
 
 const platformOptions = [
   { label: "Windows", value: "windows" },
@@ -91,13 +89,21 @@ async function handleSave() {
     message.error("命令 ID 不能为空");
     return;
   }
-  if (!draft.name) {
+    if (!draft.name) {
     message.error("命令名称不能为空");
     return;
   }
-  if (!draft.template) {
-    message.error("命令模板不能为空");
-    return;
+  // 根据模板类型验证相应模板
+  if (templateEditMode.value === "powershell") {
+    if (!draft.powershellTemplate) {
+      message.error("PowerShell 模板不能为空");
+      return;
+    }
+  } else {
+    if (!draft.template) {
+      message.error("CMD 模板不能为空");
+      return;
+    }
   }
   await saveCommand(JSON.parse(JSON.stringify(draft)));
   message.success("保存成功");
@@ -106,6 +112,37 @@ async function handleSave() {
 
 function handleCancel() {
   router.back();
+}
+
+const templateEditMode = ref<"cmd" | "powershell" | "cmd+powershell">("cmd");
+
+// 当选择混合模式时，内部使用这个状态来决定编辑哪个模板
+const templateSubMode = ref<"cmd" | "powershell">("cmd");
+
+// 当前编辑的模板内容（计算属性，用于双向绑定）
+const currentTemplateValue = computed({
+  get() {
+    if (templateEditMode.value === 'cmd+powershell' && templateSubMode.value === 'powershell') {
+      return draft.powershellTemplate ?? '';
+    }
+    if (templateEditMode.value === 'powershell') {
+      return draft.powershellTemplate ?? '';
+    }
+    return draft.template;
+  },
+  set(value: string) {
+    if (templateEditMode.value === 'cmd+powershell' && templateSubMode.value === 'powershell') {
+      draft.powershellTemplate = value;
+    } else if (templateEditMode.value === 'powershell') {
+      draft.powershellTemplate = value;
+    } else {
+      draft.template = value;
+    }
+  }
+});
+
+function handleEngineChange() {
+  // 不需要做额外处理，templateEditMode 切换即可
 }
 </script>
 
@@ -139,8 +176,11 @@ function handleCancel() {
                   <n-form-item label="分类">
                     <n-input v-model:value="draft.category" placeholder="如：系统维护" />
                   </n-form-item>
-                  <n-form-item label="执行引擎">
-                    <n-select v-model:value="draft.engine" :options="engineOptions" />
+                  <n-form-item label="模板类型">
+                    <n-select v-model:value="templateEditMode" :options="[
+                      { label: '仅 CMD 模板', value: 'cmd' },
+                      { label: '仅 PowerShell 模板', value: 'powershell' }
+                    ]" @update:value="handleEngineChange" />
                   </n-form-item>
                   <n-form-item label="适用平台">
                     <n-select v-model:value="draft.platform" :options="platformOptions" />
@@ -155,12 +195,13 @@ function handleCancel() {
             <!-- 命令模板 -->
             <div>
               <n-divider title-placement="left">命令模板</n-divider>
-              <n-form-item label="模板内容" required>
+
+              <n-form-item :label="templateEditMode === 'powershell' ? 'PowerShell 模板内容' : 'CMD 模板内容'" required>
                 <n-input
-                  v-model:value="draft.template"
+                  v-model:value="currentTemplateValue"
                   type="textarea"
                   :autosize="{ minRows: 4, maxRows: 10 }"
-                  placeholder="使用 {{参数名}} 作为占位符，如：ping {{target}} -n {{count}}"
+                  :placeholder="templateEditMode === 'powershell' ? '使用 {{参数名}} 作为占位符，如：Test-Path {{path}}' : '使用 {{参数名}} 作为占位符，如：ping {{target}} -n {{count}}'"
                   style="font-family: monospace;"
                 />
               </n-form-item>

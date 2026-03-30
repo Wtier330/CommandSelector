@@ -114,6 +114,7 @@ const {
   finalCommand,
   finalValidation,
   canCopy,
+  powershellTemplate,
 } = useCommandParams(selected);
 
 function updateParam(key: string, value: string | boolean) {
@@ -149,11 +150,18 @@ const usageCollapsible = computed(() => {
 
 const isCommandEditing = ref(false);
 const draftCommand = ref<CommandEntry | null>(null);
+const templateEditMode = ref<"cmd" | "powershell">("cmd");
 
 function startCommandEdit() {
   if (!selected.value) return;
   draftCommand.value = JSON.parse(JSON.stringify(selected.value));
+  // 默认编辑 CMD 模板
+  templateEditMode.value = "cmd";
   isCommandEditing.value = true;
+}
+
+function handleEngineChange() {
+  // 不需要做额外处理，templateEditMode 切换即可
 }
 
 function cancelCommandEdit() {
@@ -322,10 +330,10 @@ defineExpose({
                       <input v-model="draftCommand.category" class="cs-input cs-input-sm" placeholder="例如: 系统维护" />
                     </label>
                     <label class="cs-field-col">
-                      <span class="cs-field-label">执行引擎</span>
-                      <select v-model="draftCommand.engine" class="cs-input cs-input-sm">
-                        <option value="cmd">CMD</option>
-                        <option value="cmd+powershell">混合 (CMD+PowerShell)</option>
+                      <span class="cs-field-label">模板类型</span>
+                      <select v-model="templateEditMode" class="cs-input cs-input-sm" @change="handleEngineChange">
+                        <option value="cmd">仅 CMD 模板</option>
+                        <option value="powershell">仅 PowerShell 模板</option>
                       </select>
                     </label>
                     <label class="cs-field-col">
@@ -353,6 +361,7 @@ defineExpose({
               <section class="cs-view-section cs-preview-section">
                 <CommandPreview
                   :final-command="finalCommand"
+                  :powershell-template="powershellTemplate"
                   :can-copy="canCopy"
                   :validation-ok="finalValidation.ok"
                   :validation-reasons="finalValidation.reasons"
@@ -362,12 +371,15 @@ defineExpose({
 
               <!-- 2.5 模板编辑 (Only in edit mode) -->
               <section v-if="isCommandEditing && draftCommand" class="cs-view-section cs-template-edit-section">
-                <h2 class="cs-section-title-text cs-params-header">编辑模板 <span style="color:#ef4444">*</span></h2>
+                <h2 class="cs-section-title-text cs-params-header">
+                  {{ templateEditMode === 'cmd' ? '编辑 CMD 模板' : '编辑 PowerShell 模板' }}
+                  <span style="color:#ef4444">*</span>
+                </h2>
                 <textarea
-                  v-model="draftCommand.template"
+                  v-model="draftCommand[templateEditMode === 'powershell' ? 'powershellTemplate' : 'template']"
                   class="cs-input cs-textarea"
                   rows="3"
-                  placeholder="使用 {{参数名}} 作为占位符，如：ping {{target}} -n {{count}}"
+                  :placeholder="templateEditMode === 'powershell' ? '使用 {{参数名}} 作为占位符，如：Test-Path {{path}}' : '使用 {{参数名}} 作为占位符，如：ping {{target}} -n {{count}}'"
                 ></textarea>
               </section>
 
