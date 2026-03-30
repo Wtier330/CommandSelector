@@ -36,7 +36,12 @@ const emit = defineEmits<{
 const { commands, trashedCommands } = toRefs(props);
 
 function handleImportCommand(command: CommandEntry) {
-  emit("import:command", command);
+  // 为导入的命令生成新的ID，避免ID冲突
+  const newCommand = {
+    ...command,
+    id: `cmd-${Date.now()}`
+  };
+  emit("import:command", newCommand);
   showToast("导入成功", "success");
 }
 

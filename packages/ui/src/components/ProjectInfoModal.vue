@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from "vue";
+// @ts-ignore
+const APP_VERSION = __APP_VERSION__ || "1.0.0";
 
 defineProps<{
   isOpen: boolean;
@@ -48,7 +49,7 @@ function handleOpenDocs() {
             </div>
             <div class="cs-project-info">
               <h4 class="cs-project-name">CommandSelector</h4>
-              <p class="cs-project-version">版本 v1.0.0</p>
+              <p class="cs-project-version">版本 v{{ APP_VERSION }}</p>
             </div>
           </div>
 

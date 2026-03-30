@@ -7,7 +7,8 @@
     "tauri": "node scripts/ensure-port-free.mjs 3002 && pnpm --filter @commandselector/admin tauri dev",
     "build": "pnpm --filter @commandselector/admin build",
     "typecheck": "pnpm -r --filter ./apps/** typecheck",
-    "test": "node --test --experimental-strip-types"
+    "test": "node --test --experimental-strip-types",
+    "sync-version": "node sync-version.js"
   },
   "dependencies": {
     "@tauri-apps/plugin-dialog": "^2.6.0",
