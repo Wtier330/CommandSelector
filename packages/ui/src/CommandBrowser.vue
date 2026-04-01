@@ -11,6 +11,7 @@ import ParameterForm from "./components/ParameterForm.vue";
 import UsageInstruction from "./components/UsageInstruction.vue";
 import ToastNotification from "./components/ToastNotification.vue";
 import BottomStatusBar from "./components/BottomStatusBar.vue";
+import CategorySelect from "./components/CategorySelect.vue";
 
 const props = defineProps<{
   commands: CommandEntry[];
@@ -327,7 +328,10 @@ defineExpose({
                     </label>
                     <label class="cs-field-col">
                       <span class="cs-field-label">分类</span>
-                      <input v-model="draftCommand.category" class="cs-input cs-input-sm" placeholder="例如: 系统维护" />
+                      <CategorySelect
+                        :categories="categories"
+                        v-model="draftCommand.category"
+                      />
                     </label>
                     <label class="cs-field-col">
                       <span class="cs-field-label">模板类型</span>

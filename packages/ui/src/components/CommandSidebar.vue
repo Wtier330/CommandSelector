@@ -150,9 +150,9 @@ function handleImport() {
       >
         <div class="cs-item-top">
           <div class="cs-item-title">{{ c.name }}</div>
-          <span v-if="c.engine" class="cs-badge">
+          <!-- <span v-if="c.engine" class="cs-badge">
             {{ c.engine === 'cmd' ? 'CMD' : 'PS' }}
-          </span>
+          </span> -->
         </div>
         <div v-if="c.description" class="cs-item-desc">{{ c.description }}</div>
       </button>
