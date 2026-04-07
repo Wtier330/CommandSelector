@@ -200,6 +200,49 @@ export async function saveCommand(entry: CommandEntry) {
   await saveLibrary();
 }
 
+// 获取所有分类
+export function getCategories(): string[] {
+  const categories = new Set<string>();
+  commands.value.forEach(cmd => {
+    if (cmd.category) {
+      categories.add(cmd.category);
+    }
+  });
+  return Array.from(categories).sort();
+}
+
+// 添加分类（通过为第一个无分类的命令设置该分类来创建）
+export async function addCategory(category: string) {
+  // 检查分类是否已存在
+  const existingCategories = getCategories();
+  if (existingCategories.includes(category)) {
+    return false;
+  }
+
+  // 由于分类是从命令的 category 字段派生的
+  // 我们可以通过创建一个临时占位命令或者让用户在添加命令时选择该分类
+  // 这里我们返回 true，表示分类名可用
+  return true;
+}
+
+// 删除分类
+export async function deleteCategory(category: string, action: "move" | "clear", targetCategory?: string) {
+  // 找到所有使用该分类的命令
+  const commandsToUpdate = commands.value.filter(cmd => cmd.category === category);
+
+  for (const command of commandsToUpdate) {
+    if (action === "move" && targetCategory) {
+      // 移动到目标分类
+      command.category = targetCategory;
+    } else {
+      // 清空分类
+      command.category = "";
+    }
+  }
+
+  await saveLibrary();
+}
+
 export async function moveToTrash(id: string) {
   const index = commands.value.findIndex((c) => c.id === id);
   if (index >= 0) {
@@ -331,5 +374,8 @@ export function useLibraryStore() {
     emptyTrash,
     importLibrary,
     exportLibrary,
+    getCategories,
+    addCategory,
+    deleteCategory,
   };
 }

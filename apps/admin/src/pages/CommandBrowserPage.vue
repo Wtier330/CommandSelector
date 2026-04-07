@@ -8,7 +8,7 @@ import { isTauri } from "@tauri-apps/api/core";
 const router = useRouter();
 const route = useRoute();
 
-const { commands, trashedCommands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary, saveCommand, moveToTrash, restoreCommand, deletePermanently, emptyTrash } = useLibraryStore();
+const { commands, trashedCommands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary, saveCommand, moveToTrash, restoreCommand, deletePermanently, emptyTrash, addCategory, deleteCategory } = useLibraryStore();
 
 const showTrashModal = ref(false);
 
@@ -117,6 +117,14 @@ async function handleImportCommand(command: any) {
   await saveCommand(command);
 }
 
+function handleAddCategory(category: string) {
+  addCategory(category);
+}
+
+function handleDeleteCategory(category: string, action: "move" | "clear", targetCategory?: string) {
+  deleteCategory(category, action, targetCategory);
+}
+
 onMounted(() => {
   loadLibrary();
   window.addEventListener('cs-import', handleCsImport);
@@ -150,6 +158,8 @@ onUnmounted(() => {
       @update:command="saveCommand"
       @delete="handleDelete"
       @import:command="handleImportCommand"
+      @add-category="handleAddCategory"
+      @delete-category="handleDeleteCategory"
     />
     <BottomStatusBar />
   </div>

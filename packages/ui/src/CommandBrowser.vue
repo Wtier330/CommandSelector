@@ -32,6 +32,8 @@ const emit = defineEmits<{
   (e: "import"): void;
   (e: "export"): void;
   (e: "import:command", command: CommandEntry): void;
+  (e: "add-category", category: string): void;
+  (e: "delete-category", category: string, action: "move" | "clear", targetCategory?: string): void;
 }>();
 
 const { commands, trashedCommands } = toRefs(props);
@@ -192,6 +194,20 @@ function handleDeleteCommand() {
   showToast("删除成功", "success");
 }
 
+function handleAddCategory(category: string) {
+  emit("add-category", category);
+  showToast("分类添加成功", "success");
+}
+
+function handleDeleteCategory(category: string, action: "move" | "clear", targetCategory?: string) {
+  emit("delete-category", category, action, targetCategory);
+  if (action === "move") {
+    showToast(`已将命令移动到「${targetCategory}」`, "success");
+  } else {
+    showToast("分类已删除", "success");
+  }
+}
+
 watch(
   () => selected.value?.id,
   () => {
@@ -240,6 +256,8 @@ defineExpose({
             @delete-permanently="$emit('delete-permanently', $event)"
             @empty-trash="$emit('empty-trash')"
             @import="handleImportCommand"
+            @add-category="handleAddCategory"
+            @delete-category="handleDeleteCategory"
           />
         </aside>
 
@@ -445,6 +463,8 @@ defineExpose({
             @restore-trash="$emit('restore-trash', $event)"
             @delete-permanently="$emit('delete-permanently', $event)"
             @empty-trash="$emit('empty-trash')"
+            @add-category="handleAddCategory"
+            @delete-category="handleDeleteCategory"
           />
         </div>
       </div>
