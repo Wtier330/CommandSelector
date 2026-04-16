@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 import type { CommandEntry } from "@commandselector/shared";
 
 const props = defineProps<{
@@ -14,6 +14,24 @@ const emit = defineEmits<{
 }>();
 
 const showConfirmEmpty = ref(false);
+
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === "Escape") {
+    if (showConfirmEmpty.value) {
+      showConfirmEmpty.value = false;
+    } else {
+      emit("close");
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("keydown", handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeyDown);
+});
 
 const groupedCommands = computed(() => {
   const groups: Record<string, any[]> = {};

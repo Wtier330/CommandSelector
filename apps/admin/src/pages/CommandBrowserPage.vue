@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { CommandBrowser, BottomStatusBar, CommandTrash } from "@commandselector/ui";
+import { CommandBrowser, CommandTrash, BottomStatusBar } from "../../../../packages/ui/src";
 import { useLibraryStore } from "../store/library";
 import { isTauri } from "@tauri-apps/api/core";
 
 const router = useRouter();
 const route = useRoute();
 
-const { commands, trashedCommands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary, saveCommand, moveToTrash, restoreCommand, deletePermanently, emptyTrash, addCategory, deleteCategory } = useLibraryStore();
+const { commands, trashedCommands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary, saveCommand, moveToTrash, restoreCommand, deletePermanently, emptyTrash, addCategory, deleteCategory, librarySource, lastUpdateTime } = useLibraryStore();
 
 const showTrashModal = ref(false);
 
@@ -125,55 +125,69 @@ function handleDeleteCategory(category: string, action: "move" | "clear", target
   deleteCategory(category, action, targetCategory);
 }
 
+function handleRequestSystemInfo() {
+  window.dispatchEvent(new CustomEvent("cs-system-info-response", {
+    detail: {
+      librarySource: librarySource.value || "",
+      lastUpdateTime: lastUpdateTime.value || 0,
+      commandCount: commands.value.length
+    }
+  }));
+}
+
 onMounted(() => {
   loadLibrary();
   window.addEventListener('cs-import', handleCsImport);
   window.addEventListener('cs-export', handleCsExport);
   window.addEventListener('cs-open-trash', handleCsOpenTrash);
+  window.addEventListener('cs-request-system-info', handleRequestSystemInfo);
 });
 
 onUnmounted(() => {
   window.removeEventListener('cs-import', handleCsImport);
   window.removeEventListener('cs-export', handleCsExport);
   window.removeEventListener('cs-open-trash', handleCsOpenTrash);
+  window.removeEventListener('cs-request-system-info', handleRequestSystemInfo);
 });
 </script>
 
 <template>
-  <div v-if="!isLoaded && !errorMsg" style="padding: 24px; text-align: center; color: #666;">
-    正在加载命令库数据...
-  </div>
-  <div v-else-if="errorMsg" style="padding: 24px; text-align: center; color: #ef4444;">
-    {{ errorMsg }}
-  </div>
-  <div v-else>
-    <CommandBrowser
-      ref="(el: any) => { (window as any).__browserRef = el; }"
-      :commands="commands"
-      :trashed-commands="trashedCommands"
-      :selected-id="selectedId"
-      :responsive="{ scaleOverride }"
-      @select="onSelect"
-      @create="onCreate"
-      @update:command="saveCommand"
-      @delete="handleDelete"
-      @import:command="handleImportCommand"
-      @add-category="handleAddCategory"
-      @delete-category="handleDeleteCategory"
-    />
-    <BottomStatusBar />
-  </div>
-  <Transition name="cs-trash-fade">
-    <div v-if="showTrashModal" class="cs-trash-overlay" @click.self="showTrashModal = false">
-      <CommandTrash
-        :trashed-commands="trashedCommands"
-        @restore="handleRestoreTrash"
-        @delete-permanently="handleDeletePermanently"
-        @empty-trash="handleEmptyTrash"
-        @close="showTrashModal = false"
-      />
+  <div>
+    <div v-if="!isLoaded && !errorMsg" style="padding: 24px; text-align: center; color: #666;">
+      正在加载命令库数据...
     </div>
-  </Transition>
+    <div v-else-if="errorMsg" style="padding: 24px; text-align: center; color: #ef4444;">
+      {{ errorMsg }}
+    </div>
+    <div v-else>
+      <CommandBrowser
+        ref="(el: any) => { (window as any).__browserRef = el; }"
+        :commands="commands"
+        :trashed-commands="trashedCommands"
+        :selected-id="selectedId"
+        :responsive="{ scaleOverride }"
+        @select="onSelect"
+        @create="onCreate"
+        @update:command="saveCommand"
+        @delete="handleDelete"
+        @import:command="handleImportCommand"
+        @add-category="handleAddCategory"
+        @delete-category="handleDeleteCategory"
+      />
+      <BottomStatusBar />
+    </div>
+    <Transition name="cs-trash-fade">
+      <div v-if="showTrashModal" class="cs-trash-overlay" @click.self="showTrashModal = false">
+        <CommandTrash
+          :trashed-commands="trashedCommands"
+          @restore="handleRestoreTrash"
+          @delete-permanently="handleDeletePermanently"
+          @empty-trash="handleEmptyTrash"
+          @close="showTrashModal = false"
+        />
+      </div>
+    </Transition>
+  </div>
 </template>
 
 <style scoped>

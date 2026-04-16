@@ -3,7 +3,7 @@
 .cs-view-panel {
   background: var(--cs-card);
   border: 1px solid var(--cs-border);
-  border-radius: 14px;
+  border-radius: var(--claude-radius-xl);
   display: flex;
   flex-direction: column;
   box-shadow: var(--cs-shadow-sm);
@@ -26,7 +26,7 @@
 /* Header Section */
 .cs-header-section {
   padding-top: 32px;
-  background: #fcfcfd;
+  background: var(--claude-parchment);
 }
 
 /* Code Area */
@@ -48,8 +48,8 @@
   gap: 8px;
   margin-bottom: 16px;
   padding: 4px;
-  background: #f1f5f9;
-  border-radius: 10px;
+  background: var(--claude-border-warm);
+  border-radius: var(--claude-radius-md);
 }
 
 .cs-exec-mode-btn {
@@ -62,18 +62,18 @@
   padding: 8px 12px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--claude-radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
   min-height: 56px;
 }
 
 .cs-exec-mode-btn:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(250, 249, 245, 0.5);
 }
 
 .cs-exec-mode-btn.is-active {
-  background: #ffffff;
+  background: var(--claude-ivory);
   border-color: var(--cs-border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -97,8 +97,8 @@
   gap: 16px;
   margin-bottom: 16px;
   padding: 12px;
-  background: #f8fafc;
-  border-radius: 8px;
+  background: var(--claude-parchment);
+  border-radius: var(--claude-radius-md);
 }
 
 .cs-checkbox-option {
@@ -130,6 +130,7 @@
 
 .cs-section-title-text {
   font-size: 16px;
+  font-family: var(--claude-font-sans);
   font-weight: 600;
   color: var(--cs-text);
   margin: 0;
@@ -144,7 +145,7 @@
   justify-content: center;
   padding: 0 16px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: var(--claude-radius-md);
   font-size: 13px;
   font-weight: 600;
   transition: all 0.2s;
@@ -152,7 +153,7 @@
 }
 
 .cs-copy-btn-outline:hover:not(:disabled) {
-  background: #f8fafc;
+  background: var(--claude-parchment);
 }
 
 .cs-copy-btn-outline:active:not(:disabled) {
@@ -175,7 +176,7 @@
 .cs-code-container {
   position: relative;
   background: var(--cs-primary);
-  border-radius: 12px;
+  border-radius: var(--claude-radius-lg);
   border: none;
   overflow: hidden;
   flex: 1;
@@ -205,7 +206,7 @@
 }
 
 .cs-code-clickable:hover {
-  background: var(--cs-primary-hover);
+  background: var(--claude-terracotta-hover);
 }
 
 .cs-code-clickable:focus {
@@ -254,6 +255,7 @@
 
 .cs-label {
   font-size: 14px;
+  font-family: var(--claude-font-sans);
   font-weight: 600;
   color: var(--cs-text);
   margin-bottom: 10px;
@@ -265,7 +267,7 @@
 }
 
 .cs-input-param {
-  background: #f1f5f9;
+  background: var(--claude-parchment);
   height: 40px;
   padding-left: 16px;
   border: 1px solid var(--cs-border);
@@ -276,10 +278,10 @@
 }
 
 .cs-input-param:focus {
-  background: #ffffff;
+  background: var(--claude-ivory);
   outline: none;
   border-color: var(--cs-blue-200);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
 }
 
 .cs-check {
@@ -305,9 +307,9 @@
 
 .cs-usage-section {
   padding: 20px 24px;
-  background: var(--cs-blue-50);
-  border: 1px solid var(--cs-blue-200);
-  border-radius: 14px;
+  background: var(--claude-parchment);
+  border: 1px solid var(--claude-border-warm);
+  border-radius: var(--claude-radius-xl);
   display: flex;
   align-items: flex-start;
   gap: 16px;
@@ -338,7 +340,7 @@
 
 .cs-usage-head:hover .cs-section-title,
 .cs-usage-head:hover .cs-chev {
-  color: var(--cs-blue-800);
+  color: var(--claude-terracotta-hover);
 }
 
 .cs-section-title {
@@ -355,9 +357,9 @@
 .cs-usage-icon {
   width: 24px;
   height: 24px;
-  background: var(--cs-blue-100);
+  background: var(--claude-border-warm);
   border-radius: 50%;
-  color: var(--cs-blue);
+  color: var(--claude-terracotta);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -365,7 +367,7 @@
 }
 
 .cs-chev {
-  color: var(--cs-blue);
+  color: var(--claude-terracotta);
   transition: transform 0.2s;
   display: flex;
   margin-left: auto;
@@ -374,7 +376,7 @@
 .cs-usage-body {
   margin-top: 8px;
   font-size: 13px;
-  color: var(--cs-blue-800);
+  color: var(--claude-terracotta);
   line-height: 1.6;
   white-space: pre-wrap;
   background: transparent;

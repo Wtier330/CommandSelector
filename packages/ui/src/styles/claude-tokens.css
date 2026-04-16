@@ -1,0 +1,48 @@
+/* Claude Design Tokens */
+:root {
+  /* 颜色系统 - 暖色调 */
+  --claude-parchment: #f5f4ed;       /* 主背景：羊皮纸色 */
+  --claude-ivory: #faf9f5;           /* 卡片背景：象牙白 */
+  --claude-text-primary: #141413;    /* 主文本：近黑色 */
+  --claude-text-secondary: #5e5d59;  /* 次要文本：橄榄灰 */
+  --claude-text-tertiary: #87867f;   /* 三级文本：石灰色 */
+  --claude-terracotta: #c96442;      /* 品牌色：陶土色 */
+  --claude-terracotta-hover: #b05a3a; /* 品牌色悬停 */
+  --claude-border: #f0eee6;          /* 边框色：奶油色 */
+  --claude-border-warm: #e8e6dc;     /* 边框色：暖沙色 */
+  --claude-dark-surface: #30302e;    /* 暗色表面 */
+  --claude-focus: #3898ec;           /* 焦点色：蓝色（唯一冷色） */
+
+  /* 字体系统 */
+  --claude-font-serif: 'Noto Serif', 'Merriweather', Georgia, serif;
+  --claude-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --claude-font-mono: 'JetBrains Mono', Consolas, monospace;
+
+  /* 字号系统 */
+  --claude-font-base: 14px;
+  --claude-font-title: 20px;
+  --claude-font-heading-lg: 16px;
+  --claude-font-heading-md: 14px;
+  --claude-font-body: 14px;
+  --claude-font-caption: 13px;
+  --claude-font-label: 12px;
+
+  /* 圆角系统 */
+  --claude-radius-sm: 8px;   /* 按钮、小卡片 */
+  --claude-radius-md: 10px;  /* 中等组件 */
+  --claude-radius-lg: 12px;  /* 输入框、大卡片 */
+  --claude-radius-xl: 14px;  /* 容器级 */
+
+  /* 间距系统 (8px 栅格) */
+  --claude-space-1: 4px;
+  --claude-space-2: 8px;
+  --claude-space-3: 12px;
+  --claude-space-4: 16px;
+  --claude-space-5: 24px;
+  --claude-space-6: 32px;
+
+  /* 阴影系统 */
+  --claude-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --claude-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --claude-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+}

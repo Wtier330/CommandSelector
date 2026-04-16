@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from "vue";
+import { defineProps, defineEmits, onMounted, onUnmounted } from "vue";
 
-defineProps<{
+const props = defineProps<{
   isOpen: boolean;
+  librarySource?: string;
+  lastUpdateTime?: number;
+  commandCount?: number;
 }>();
 
 const emit = defineEmits<{
@@ -26,6 +29,20 @@ function handleOpenTrash() {
   emit("openTrash");
   emit("close");
 }
+
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === "Escape" && props.isOpen) {
+    emit("close");
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("keydown", handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeyDown);
+});
 </script>
 
 <template>
@@ -49,7 +66,7 @@ function handleOpenTrash() {
 
             <div class="cs-settings-actions">
               <button class="cs-settings-btn cs-settings-btn-import" @click="handleImport">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                   <polyline points="7 10 12 15 17 10"></polyline>
                   <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -58,7 +75,7 @@ function handleOpenTrash() {
               </button>
 
               <button class="cs-settings-btn cs-settings-btn-export" @click="handleExport">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                   <polyline points="17 8 12 3 7 8"></polyline>
                   <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -73,13 +90,42 @@ function handleOpenTrash() {
             <p class="cs-settings-desc">查看被删除的命令，支持恢复或彻底删除。</p>
 
             <button class="cs-settings-btn cs-settings-btn-trash" @click="handleOpenTrash">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 6h18"></path>
                 <path d="M19 6v14c0 1 -1 2 -2 2H7c-1 0 -2 -1 -2 -2V6"></path>
                 <path d="M8 6V4c0 -1 1 -2 2 -2h4c1 0 2 1 2 2v2"></path>
               </svg>
               <span>打开回收站</span>
             </button>
+          </div>
+
+          <div v-if="librarySource" class="cs-settings-section">
+            <h4 class="cs-settings-title">数据源信息</h4>
+            <p class="cs-settings-desc">查看当前命令库的加载源信息。</p>
+
+            <div class="cs-info-list">
+              <div class="cs-info-item">
+                <span class="cs-info-label">数据源类型：</span>
+                <span class="cs-info-value">
+                  <span v-if="librarySource.includes('AppLocalData')" class="cs-tag cs-success-tag">本地文件</span>
+                  <span v-else-if="librarySource.includes('localStorage')" class="cs-tag cs-info-tag">浏览器存储</span>
+                  <span v-else-if="librarySource.includes('/library.json')" class="cs-tag cs-warning-tag">应用默认</span>
+                  <span v-else class="cs-tag">其他</span>
+                </span>
+              </div>
+              <div class="cs-info-item">
+                <span class="cs-info-label">加载路径：</span>
+                <span class="cs-info-value cs-code">{{ librarySource }}</span>
+              </div>
+              <div v-if="commandCount !== undefined" class="cs-info-item">
+                <span class="cs-info-label">命令数量：</span>
+                <span class="cs-info-value">{{ commandCount }} 条</span>
+              </div>
+              <div v-if="lastUpdateTime" class="cs-info-item">
+                <span class="cs-info-label">最后更新：</span>
+                <span class="cs-info-value">{{ new Date(lastUpdateTime).toLocaleString('zh-CN') }}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -116,11 +162,14 @@ function handleOpenTrash() {
 
 .cs-modal-card {
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 12px;
   width: 100%;
-  max-width: 440px;
+  max-width: 480px;
+  max-height: 85vh;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   animation: cs-slideUp 0.3s ease-out;
 }
 
@@ -136,32 +185,34 @@ function handleOpenTrash() {
 }
 
 .cs-modal-header {
-  padding: 20px 24px;
+  padding: 14px 18px;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
+  min-height: 48px;
 }
 
 .cs-modal-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #1e293b;
 }
 
 .cs-modal-close {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: none;
   background: transparent;
   color: #94a3b8;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .cs-modal-close:hover {
@@ -170,50 +221,57 @@ function handleOpenTrash() {
 }
 
 .cs-modal-body {
-  padding: 24px;
+  padding: 16px 18px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .cs-settings-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.cs-settings-section:last-child {
+  margin-bottom: 0;
 }
 
 .cs-settings-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #1e293b;
 }
 
 .cs-settings-desc {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 13px;
+  line-height: 1.5;
   color: #64748b;
 }
 
 .cs-settings-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 4px;
 }
 
 .cs-settings-btn {
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 24px 16px;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 12px;
   border: 2px solid transparent;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #f8fafc;
   color: #475569;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .cs-settings-btn:hover {
@@ -236,18 +294,18 @@ function handleOpenTrash() {
 .cs-settings-btn-trash {
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 24px 16px;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 12px;
   border: 2px solid transparent;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #fef3c7;
   color: #b91c1c;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .cs-settings-btn-trash:hover {
@@ -260,24 +318,86 @@ function handleOpenTrash() {
   flex-shrink: 0;
 }
 
+.cs-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.cs-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cs-info-label {
+  color: #6b7280;
+  font-weight: 500;
+  min-width: 75px;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.cs-info-value {
+  color: #1e293b;
+  font-size: 13px;
+  flex: 1;
+  word-break: break-all;
+}
+
+.cs-info-value.cs-code {
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+  background: #f1f5f9;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+.cs-tag {
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.cs-success-tag {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.cs-info-tag {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.cs-warning-tag {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 .cs-modal-footer {
-  padding: 16px 24px;
+  padding: 12px 18px;
   border-top: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .cs-modal-btn {
-  padding: 8px 20px;
+  padding: 7px 18px;
   background: #f1f5f9;
   color: #475569;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 7px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .cs-modal-btn:hover {

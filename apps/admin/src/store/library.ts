@@ -10,11 +10,16 @@ interface TrashedCommand extends CommandEntry {
 import { readTextFile, writeTextFile, BaseDirectory } from "@tauri-apps/plugin-fs";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import { isTauri } from "@tauri-apps/api/core";
+import { appLocalDataDir, join } from "@tauri-apps/api/path";
 
 const commands = ref<CommandEntry[]>([]);
 const trashedCommands = ref<TrashedCommand[]>([]);
 const isLoaded = ref(false);
 const errorMsg = ref("");
+
+// 数据源信息
+const librarySource = ref<string>("");
+const lastUpdateTime = ref<number>(0);
 
 const TRASH_FILE = "trash.json";
 
@@ -105,6 +110,9 @@ export async function loadLibrary() {
           },
           { attempts: 3, baseDelayMs: 200 }
         );
+        // 获取 AppLocalData 的绝对路径
+        const appLocalDataPath = await appLocalDataDir();
+        librarySource.value = await join(appLocalDataPath, LIBRARY_FILE);
       } catch (error) {
         localError = error;
       }
@@ -118,6 +126,7 @@ export async function loadLibrary() {
           },
           { attempts: 3, baseDelayMs: 200 }
         );
+        librarySource.value = "localStorage (cs_library_data)";
       } catch (error) {
         localError = error;
       }
@@ -134,6 +143,7 @@ export async function loadLibrary() {
           { attempts: 3, baseDelayMs: 200 }
         );
         shouldSave = true;
+        librarySource.value = "/library.json (应用默认)";
       } catch (error) {
         remoteError = error;
       }
@@ -150,6 +160,8 @@ export async function loadLibrary() {
     }
 
     commands.value = data;
+    lastUpdateTime.value = Date.now();
+
     if (shouldSave) {
       await saveLibrary();
     }
@@ -365,6 +377,8 @@ export function useLibraryStore() {
     trashedCommands,
     isLoaded,
     errorMsg,
+    librarySource,
+    lastUpdateTime,
     loadLibrary,
     saveLibrary,
     saveCommand,

@@ -1,8 +1,10 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from "module";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
-import pkg from './package.json' assert { type: 'json' };
+const require = createRequire(import.meta.url);
+const pkg = require("./package.json") as { version: string };
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;

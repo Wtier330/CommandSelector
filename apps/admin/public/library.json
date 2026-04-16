@@ -4,19 +4,26 @@
     "name": "清理临时文件",
     "description": "删除系统临时目录中的文件以释放空间",
     "category": "系统维护",
-    "tags": ["磁盘清理", "维护", "临时文件"],
+    "tags": [
+      "磁盘清理",
+      "维护",
+      "临时文件"
+    ],
     "engine": "cmd",
     "template": "del /q /f /s %TEMP%\\* && rd /s /q %TEMP% && mkdir %TEMP%",
     "params": [],
     "platform": "windows",
     "usage": "此命令会删除当前用户的临时文件夹中的所有文件和子文件夹，然后重新创建临时文件夹。\n注意：某些正在使用的临时文件可能无法删除。"
   },
-    {
+  {
     "id": "clean-recycle",
     "name": "清空回收站",
     "description": "删除回收站中的所有文件",
     "category": "磁盘管理",
-    "tags": ["磁盘清理", "回收站"],
+    "tags": [
+      "磁盘清理",
+      "回收站"
+    ],
     "engine": "powershell",
     "template": "Clear-RecycleBin -Force",
     "params": [],
@@ -28,7 +35,10 @@
     "name": "清理预读缓存",
     "description": "删除 Windows 预读文件以优化系统性能",
     "category": "系统维护",
-    "tags": ["性能优化", "缓存"],
+    "tags": [
+      "性能优化",
+      "缓存"
+    ],
     "engine": "cmd",
     "template": "del /q /f /s C:\\Windows\\Prefetch\\*",
     "params": [],
@@ -40,7 +50,10 @@
     "name": "清理缩略图缓存",
     "description": "删除缩略图缓存文件",
     "category": "系统维护",
-    "tags": ["缓存", "磁盘清理"],
+    "tags": [
+      "缓存",
+      "磁盘清理"
+    ],
     "engine": "cmd",
     "template": "del /q /f /s %LOCALAPPDATA%\\Microsoft\\Windows\\Explorer\\*",
     "params": [],
@@ -52,7 +65,11 @@
     "name": "查询端口占用进程",
     "description": "通过端口号查询占用该端口的进程信息",
     "category": "网络工具",
-    "tags": ["网络", "进程", "TCP/UDP"],
+    "tags": [
+      "网络",
+      "进程",
+      "TCP/UDP"
+    ],
     "engine": "cmd",
     "template": "netstat -ano | findstr :{{port}}",
     "params": [
@@ -63,7 +80,10 @@
         "required": true,
         "defaultValue": 8080,
         "hint": "用于查询指定端口被哪个进程占用",
-        "validation": { "kind": "regex", "pattern": "^[0-9]{1,5}$" }
+        "validation": {
+          "kind": "regex",
+          "pattern": "^[0-9]{1,5}$"
+        }
       }
     ],
     "platform": "windows",
@@ -74,7 +94,10 @@
     "name": "查询服务状态",
     "description": "查询指定 Windows 服务的运行状态",
     "category": "服务管理",
-    "tags": ["服务", "状态查询"],
+    "tags": [
+      "服务",
+      "状态查询"
+    ],
     "engine": "cmd",
     "template": "sc query {{service}}",
     "params": [
@@ -95,7 +118,12 @@
     "name": "查看网络配置详情",
     "description": "显示所有网络适配器的完整 TCP/IP 配置信息",
     "category": "网络工具",
-    "tags": ["网络", "IP", "MAC", "DNS"],
+    "tags": [
+      "网络",
+      "IP",
+      "MAC",
+      "DNS"
+    ],
     "engine": "cmd",
     "template": "ipconfig /all",
     "params": [],
@@ -107,7 +135,11 @@
     "name": "Ping 连通性测试",
     "description": "向目标主机发送 ICMP 回显请求以测试网络连通性",
     "category": "网络工具",
-    "tags": ["网络", "连通性", "Ping"],
+    "tags": [
+      "网络",
+      "连通性",
+      "Ping"
+    ],
     "engine": "cmd",
     "template": "ping {{target}} -n {{count}}",
     "params": [
@@ -126,7 +158,10 @@
         "required": true,
         "defaultValue": 4,
         "hint": "要发送的回显请求数",
-        "validation": { "kind": "regex", "pattern": "^[1-990]+$" }
+        "validation": {
+          "kind": "regex",
+          "pattern": "^[1-990]+$"
+        }
       }
     ],
     "platform": "windows",
@@ -137,7 +172,11 @@
     "name": "清除 DNS 缓存",
     "description": "清除本地 DNS 解析器缓存",
     "category": "网络工具",
-    "tags": ["网络", "DNS", "修复"],
+    "tags": [
+      "网络",
+      "DNS",
+      "修复"
+    ],
     "engine": "cmd",
     "template": "ipconfig /flushdns",
     "params": [],
@@ -149,7 +188,10 @@
     "name": "查找特定进程",
     "description": "列出当前运行的进程，并筛选特定名称",
     "category": "进程管理",
-    "tags": ["进程", "任务管理"],
+    "tags": [
+      "进程",
+      "任务管理"
+    ],
     "engine": "cmd",
     "template": "tasklist | findstr /i \"{{process_name}}\"",
     "params": [
@@ -170,7 +212,10 @@
     "name": "按名称结束进程",
     "description": "强制结束指定名称的所有进程",
     "category": "进程管理",
-    "tags": ["进程", "强制结束"],
+    "tags": [
+      "进程",
+      "强制结束"
+    ],
     "engine": "cmd",
     "template": "taskkill /f /im {{process_name}}.exe",
     "params": [
@@ -191,7 +236,11 @@
     "name": "获取系统详细信息",
     "description": "显示关于计算机及其操作系统的详细配置信息",
     "category": "系统维护",
-    "tags": ["系统", "硬件", "OS"],
+    "tags": [
+      "系统",
+      "硬件",
+      "OS"
+    ],
     "engine": "cmd",
     "template": "systeminfo",
     "params": [],
@@ -203,7 +252,11 @@
     "name": "磁盘检查与修复",
     "description": "检查磁盘并显示状态报告",
     "category": "磁盘管理",
-    "tags": ["磁盘", "修复", "扫描"],
+    "tags": [
+      "磁盘",
+      "修复",
+      "扫描"
+    ],
     "engine": "cmd",
     "template": "chkdsk {{drive_letter}}: {{fix_flag}}",
     "params": [
@@ -214,7 +267,10 @@
         "required": true,
         "defaultValue": "C",
         "hint": "例如 C, D, E",
-        "validation": { "kind": "regex", "pattern": "^[A-Za-z]$" }
+        "validation": {
+          "kind": "regex",
+          "pattern": "^[A-Za-z]$"
+        }
       },
       {
         "key": "fix_flag",
@@ -223,9 +279,18 @@
         "required": true,
         "defaultValue": "",
         "options": [
-          { "label": "仅扫描", "value": "" },
-          { "label": "修复错误 (/f)", "value": "/f" },
-          { "label": "查找坏扇区 (/r)", "value": "/r" }
+          {
+            "label": "仅扫描",
+            "value": ""
+          },
+          {
+            "label": "修复错误 (/f)",
+            "value": "/f"
+          },
+          {
+            "label": "查找坏扇区 (/r)",
+            "value": "/r"
+          }
         ]
       }
     ],
@@ -237,7 +302,10 @@
     "name": "启动服务",
     "description": "启动指定的 Windows 服务",
     "category": "服务管理",
-    "tags": ["服务", "启动"],
+    "tags": [
+      "服务",
+      "启动"
+    ],
     "engine": "cmd",
     "template": "sc start {{service}}",
     "params": [
@@ -258,7 +326,10 @@
     "name": "停止服务",
     "description": "停止指定的 Windows 服务",
     "category": "服务管理",
-    "tags": ["服务", "停止"],
+    "tags": [
+      "服务",
+      "停止"
+    ],
     "engine": "cmd",
     "template": "sc stop {{service}}",
     "params": [
@@ -279,7 +350,10 @@
     "name": "禁用服务",
     "description": "禁用指定的 Windows 服务",
     "category": "服务管理",
-    "tags": ["服务", "禁用"],
+    "tags": [
+      "服务",
+      "禁用"
+    ],
     "engine": "cmd",
     "template": "sc config {{service}} start= disabled",
     "params": [
@@ -300,7 +374,10 @@
     "name": "启用服务",
     "description": "将服务设置为自动启动",
     "category": "服务管理",
-    "tags": ["服务", "启用"],
+    "tags": [
+      "服务",
+      "启用"
+    ],
     "engine": "cmd",
     "template": "sc config {{service}} start= auto",
     "params": [
@@ -321,7 +398,10 @@
     "name": "磁盘使用情况",
     "description": "查看所有磁盘分区的使用情况",
     "category": "磁盘管理",
-    "tags": ["磁盘", "空间"],
+    "tags": [
+      "磁盘",
+      "空间"
+    ],
     "engine": "cmd",
     "template": "wmic logicaldisk get size,freespace,caption",
     "params": [],
@@ -333,7 +413,10 @@
     "name": "磁盘碎片整理",
     "description": "对指定磁盘进行碎片整理",
     "category": "磁盘管理",
-    "tags": [ "磁盘", "优化"],
+    "tags": [
+      "磁盘",
+      "优化"
+    ],
     "engine": "cmd",
     "template": "defrag {{drive_letter}}: {{analyze_flag}}",
     "params": [
@@ -352,9 +435,18 @@
         "required": true,
         "defaultValue": "/A",
         "options": [
-          { "label": "仅分析", "value": "/A" },
-          { "label": "整理碎片", "value": "/O" },
-          { "label": "强制整理", "value": "/F" }
+          {
+            "label": "仅分析",
+            "value": "/A"
+          },
+          {
+            "label": "整理碎片",
+            "value": "/O"
+          },
+          {
+            "label": "强制整理",
+            "value": "/F"
+          }
         ]
       }
     ],
@@ -366,7 +458,10 @@
     "name": "格式化磁盘",
     "description": "格式化指定的磁盘分区",
     "category": "磁盘管理",
-    "tags": ["磁盘", "格式化"],
+    "tags": [
+      "磁盘",
+      "格式化"
+    ],
     "engine": "cmd",
     "template": "format {{drive_letter}}: /fs:{{filesystem}} /q /y",
     "params": [
@@ -385,9 +480,18 @@
         "required": true,
         "defaultValue": "NTFS",
         "options": [
-          { "label": "NTFS", "value": "NTFS" },
-          { "label": "exFAT", "value": "exFAT" },
-          { "label": "FAT32", "value": "FAT32" }
+          {
+            "label": "NTFS",
+            "value": "NTFS"
+          },
+          {
+            "label": "exFAT",
+            "value": "exFAT"
+          },
+          {
+            "label": "FAT32",
+            "value": "FAT32"
+          }
         ]
       }
     ],
@@ -399,7 +503,10 @@
     "name": "当前用户信息",
     "description": "显示当前登录用户的详细信息",
     "category": "用户管理",
-    "tags": ["用户", "权限"],
+    "tags": [
+      "用户",
+      "权限"
+    ],
     "engine": "cmd",
     "template": "whoami /all",
     "params": [],
@@ -411,7 +518,10 @@
     "name": "创建本地用户",
     "description": "创建新的本地用户账户",
     "category": "用户管理",
-    "tags": ["用户", "账户"],
+    "tags": [
+      "用户",
+      "账户"
+    ],
     "engine": "cmd",
     "template": "net user {{username}} {{password}} /add",
     "params": [
@@ -440,7 +550,10 @@
     "name": "删除本地用户",
     "description": "删除指定的本地用户账户",
     "category": "用户管理",
-    "tags": ["用户", "账户"],
+    "tags": [
+      "用户",
+      "账户"
+    ],
     "engine": "cmd",
     "template": "net user {{username}} /delete",
     "params": [
@@ -461,7 +574,10 @@
     "name": "查看管理员组成员",
     "description": "显示管理员组的所有成员",
     "category": "用户管理",
-    "tags": ["用户", "权限"],
+    "tags": [
+      "用户",
+      "权限"
+    ],
     "engine": "cmd",
     "template": "net localgroup administrators",
     "params": [],
@@ -473,7 +589,10 @@
     "name": "添加用户到管理员组",
     "description": "将指定用户添加到管理员组",
     "category": "用户管理",
-    "tags": ["用户", "权限"],
+    "tags": [
+      "用户",
+      "权限"
+    ],
     "engine": "cmd",
     "template": "net localgroup administrators {{username}} /add",
     "params": [
@@ -494,7 +613,10 @@
     "name": "查看防火墙规则",
     "description": "列出所有防火墙入站规则",
     "category": "防火墙管理",
-    "tags": ["防火墙", "安全"],
+    "tags": [
+      "防火墙",
+      "安全"
+    ],
     "engine": "powershell",
     "template": "Get-NetFirewallRule -Direction Inbound",
     "params": [],
@@ -506,7 +628,10 @@
     "name": "添加防火墙端口规则",
     "description": "在防火墙中开放指定端口",
     "category": "防火墙管理",
-    "tags": ["防火墙", "安全"],
+    "tags": [
+      "防火墙",
+      "安全"
+    ],
     "engine": "cmd",
     "template": "netsh advfirewall firewall add rule name={{rule_name}} dir=in action=allow protocol={{protocol}} localport={{port}}",
     "params": [
@@ -525,8 +650,14 @@
         "required": true,
         "defaultValue": "TCP",
         "options": [
-          { "label": "TCP", "value": "TCP" },
-          { "label": "UDP", "value": "UDP" }
+          {
+            "label": "TCP",
+            "value": "TCP"
+          },
+          {
+            "label": "UDP",
+            "value": "UDP"
+          }
         ]
       },
       {
@@ -546,7 +677,10 @@
     "name": "删除防火墙规则",
     "description": "删除指定的防火墙规则",
     "category": "防火墙管理",
-    "tags": ["防火墙", "安全"],
+    "tags": [
+      "防火墙",
+      "安全"
+    ],
     "engine": "cmd",
     "template": "netsh advfirewall firewall delete rule name={{rule_name}}",
     "params": [
@@ -567,7 +701,10 @@
     "name": "查看防火墙状态",
     "description": "查看防火墙各配置文件的当前状态",
     "category": "防火墙管理",
-    "tags": ["防火墙", "安全"],
+    "tags": [
+      "防火墙",
+      "安全"
+    ],
     "engine": "cmd",
     "template": "netsh advfirewall show allprofiles state",
     "params": [],
@@ -579,7 +716,10 @@
     "name": "查看事件日志",
     "description": "列出系统事件日志",
     "category": "日志管理",
-    "tags": ["日志", "系统"],
+    "tags": [
+      "日志",
+      "系统"
+    ],
     "engine": "powershell",
     "template": "Get-EventLog -List",
     "params": [],
@@ -591,7 +731,10 @@
     "name": "查看系统日志",
     "description": "查看最近 10 条系统日志",
     "category": "日志管理",
-    "tags": ["日志", "系统"],
+    "tags": [
+      "日志",
+      "系统"
+    ],
     "engine": "powershell",
     "template": "Get-EventLog -LogName System -Newest {{count}}",
     "params": [
@@ -612,7 +755,10 @@
     "name": "查看应用日志",
     "description": "查看最近 10 条应用程序日志",
     "category": "日志管理",
-    "tags": ["日志", "应用"],
+    "tags": [
+      "日志",
+      "应用"
+    ],
     "engine": "powershell",
     "template": "Get-EventLog -LogName Application -Newest {{count}}",
     "params": [
@@ -633,7 +779,10 @@
     "name": "清空事件日志",
     "description": "清空指定的事件日志",
     "category": "日志管理",
-    "tags": ["日志", "清理"],
+    "tags": [
+      "日志",
+      "清理"
+    ],
     "engine": "cmd",
     "template": "wevtutil cl {{log_name}}",
     "params": [
@@ -654,7 +803,10 @@
     "name": "性能监控",
     "description": "实时监控系统性能指标",
     "category": "性能监控",
-    "tags": ["性能", "监控"],
+    "tags": [
+      "性能",
+      "监控"
+    ],
     "engine": "cmd",
     "template": "typeperf \"\\Processor(_Total)因为% Processor Time\" \"\\Memory\\Available MBytes\" \"\\PhysicalDisk(_Total)因为% Disk Time\"",
     "params": [],
@@ -666,7 +818,10 @@
     "name": "内存使用详情",
     "description": "查看系统内存使用情况",
     "category": "性能监控",
-    "tags": ["性能", "内存"],
+    "tags": [
+      "性能",
+      "内存"
+    ],
     "engine": "powershell",
     "template": "Get-WmiObject -Class Win32_OperatingSystem | Select-Object @{Name=\"TotalMemory(GB)\";Expression={[math]::Round($_.TotalVisibleMemorySize/1MB,2)}},@{Name=\"FreeMemory(GB)\";Expression={[math]::Round($_.FreePhysicalMemory/1MB,2)}},@{Name=\"UsedMemory(GB)\";Expression={[math]::Round(($_.TotalVisibleMemorySize-$_.FreePhysicalMemory)/1MB,2)}}",
     "params": [],
@@ -678,7 +833,10 @@
     "name": "CPU 信息",
     "description": "查看 CPU 详细信息",
     "category": "系统维护",
-    "tags": ["系统", "硬件"],
+    "tags": [
+      "系统",
+      "硬件"
+    ],
     "engine": "cmd",
     "template": "wmic cpu get name,numberOfCores,numberOfLogicalProcessors,maxclockspeed",
     "params": [],
@@ -690,7 +848,10 @@
     "name": "查看路由表",
     "description": "显示当前的路由表",
     "category": "网络工具",
-    "tags": ["网络", "路由"],
+    "tags": [
+      "网络",
+      "路由"
+    ],
     "engine": "cmd",
     "template": "rout print -4",
     "params": [],
@@ -702,7 +863,10 @@
     "name": "添加路由",
     "description": "添加静态路由",
     "category": "网络工具",
-    "tags": ["网络", "路由"],
+    "tags": [
+      "网络",
+      "路由"
+    ],
     "engine": "cmd",
     "template": "rout add {{destination}} mask {{subnet_mask}} {{gateway}} {{metric_flag}}",
     "params": [
@@ -747,7 +911,10 @@
     "name": "查看 ARP 表",
     "description": "显示 ARP 缓存表",
     "category": "网络工具",
-    "tags": ["网络", "ARP"],
+    "tags": [
+      "网络",
+      "ARP"
+    ],
     "engine": "cmd",
     "template": "arp -a",
     "params": [],
@@ -759,7 +926,10 @@
     "name": "DNS 值查询",
     "description": "查询域名的 DNS 记录",
     "category": "网络工具",
-    "tags": ["网络", "DNS"],
+    "tags": [
+      "网络",
+      "DNS"
+    ],
     "engine": "cmd",
     "template": "nslookup {{domain}} {{dns_server}}",
     "params": [
@@ -788,7 +958,10 @@
     "name": "路由跟踪",
     "description": "跟踪到目标主机的路由路径",
     "category": "网络工具",
-    "tags": ["网络", "路由跟踪"],
+    "tags": [
+      "网络",
+      "路由跟踪"
+    ],
     "engine": "cmd",
     "template": "tracert {{target}}",
     "params": [
@@ -809,7 +982,10 @@
     "name": "重置网络配置",
     "description": "重置网络协议栈到默认状态",
     "category": "网络工具",
-    "tags": ["网络", "修复"],
+    "tags": [
+      "网络",
+      "修复"
+    ],
     "engine": "cmd",
     "template": "netsh winsock reset && netsh int ip reset",
     "params": [],
@@ -821,7 +997,9 @@
     "name": "进程详细列表",
     "description": "显示所有运行进程的详细信息",
     "category": "进程管理",
-    "tags": ["进程"],
+    "tags": [
+      "进程"
+    ],
     "engine": "cmd",
     "template": "tasklist /v",
     "params": [],
@@ -833,7 +1011,9 @@
     "name": "进程高级信息",
     "description": "使用 WMIC 查看进程详细信息",
     "category": "进程管理",
-    "tags": ["进程"],
+    "tags": [
+      "进程"
+    ],
     "engine": "cmd",
     "template": "wmic process get name,processid,pagefileusage,workingsetsize,commandline",
     "params": [],
@@ -845,7 +1025,9 @@
     "name": "查看计划任务",
     "description": "列出系统中的所有计划任务",
     "category": "系统维护",
-    "tags": ["计划任务"],
+    "tags": [
+      "计划任务"
+    ],
     "engine": "cmd",
     "template": "schtasks /query /fo LIST",
     "params": [],
@@ -857,7 +1039,9 @@
     "name": "运行计划任务",
     "description": "立即运行指定的计划任务",
     "category": "系统维护",
-    "tags": ["计划任务"],
+    "tags": [
+      "计划任务"
+    ],
     "engine": "cmd",
     "template": "schtasks /run /tn \"{{task_name}}\"",
     "params": [
@@ -878,7 +1062,10 @@
     "name": "定时关机",
     "description": "设置定时关机",
     "category": "系统维护",
-    "tags": ["关机", "计划"],
+    "tags": [
+      "关机",
+      "计划"
+    ],
     "engine": "cmd",
     "template": "shutdown /s /t {{seconds}}",
     "params": [
@@ -899,7 +1086,10 @@
     "name": "取消关机",
     "description": "取消计划的关机或重启",
     "category": "系统维护",
-    "tags": ["关机", "取消"],
+    "tags": [
+      "关机",
+      "取消"
+    ],
     "engine": "cmd",
     "template": "shutdown /a",
     "params": [],
@@ -911,7 +1101,9 @@
     "name": "立即重启",
     "description": "立即重启计算机",
     "category": "系统维护",
-    "tags": ["重启"],
+    "tags": [
+      "重启"
+    ],
     "engine": "cmd",
     "template": "shutdown /r /t 0",
     "params": [],
@@ -923,7 +1115,9 @@
     "name": "注销当前用户",
     "description": "注销当前登录的用户",
     "category": "系统维护",
-    "tags": ["注销"],
+    "tags": [
+      "注销"
+    ],
     "engine": "cmd",
     "template": "shutdown /l",
     "params": [],
@@ -935,7 +1129,10 @@
     "name": "远程文件复制",
     "description": "将文件复制到远程计算机",
     "category": "文件操作",
-    "tags": ["文件", "网络"],
+    "tags": [
+      "文件",
+      "网络"
+    ],
     "engine": "cmd",
     "template": "copy {{source}} \\\\{{remote_host}}\\{{share_path}}\\{{dest_name}}",
     "params": [
@@ -980,7 +1177,10 @@
     "name": "Robocopy 备份",
     "description": "使用 Robocopy 进行文件备份",
     "category": "文件操作",
-    "tags": ["文件", "备份"],
+    "tags": [
+      "文件",
+      "备份"
+    ],
     "engine": "cmd",
     "template": "robocopy \"{{source}}\" \"{{destination}}\" /E /XO /R:2 /W:5",
     "params": [
@@ -1009,7 +1209,10 @@
     "name": "获取文件所有权",
     "description": "获取文件或文件夹的所有权",
     "category": "文件操作",
-    "tags": ["文件", "权限"],
+    "tags": [
+      "文件",
+      "权限"
+    ],
     "engine": "cmd",
     "template": "takeown /f \"{{path}}\" /r /d",
     "params": [
@@ -1030,7 +1233,10 @@
     "name": "授予文件权限",
     "description": "授予用户对文件或文件夹的完全控制权限",
     "category": "文件操作",
-    "tags": ["文件", "权限"],
+    "tags": [
+      "文件",
+      "权限"
+    ],
     "engine": "cmd",
     "template": "icacls \"{{path}}\" /grant {{username}}:(F) /t",
     "params": [
@@ -1059,7 +1265,10 @@
     "name": "查找大文件",
     "description": "查找指定目录中超过指定大小的文件",
     "category": "文件操作",
-    "tags": ["文件", "搜索"],
+    "tags": [
+      "文件",
+      "搜索"
+    ],
     "engine": "powershell",
     "template": "Get-ChildItem -Path \"{{path}}\" -Recurse -File | Where-Object {$_.Length -gt {{size_mb}}MB} | Sort-Object -Property Length -Descending | Select-Object -First {{count}}",
     "params": [
@@ -1096,7 +1305,10 @@
     "name": "查找旧文件",
     "description": "查找指定目录中超过指定天数的文件",
     "category": "文件操作",
-    "tags": ["文件", "搜索"],
+    "tags": [
+      "文件",
+      "搜索"
+    ],
     "engine": "powershell",
     "template": "Get-ChildItem -Path \"{{path}}\" -Recurse -File | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-{{days}})} | Sort-Object -Property LastWriteTime | Select-Object -First {{count}}",
     "params": [
@@ -1133,7 +1345,10 @@
     "name": "注册表备份",
     "description": "导出注册表项进行备份",
     "category": "系统维护",
-    "tags": ["注册表", "备份"],
+    "tags": [
+      "注册表",
+      "备份"
+    ],
     "engine": "cmd",
     "template": "reg export \"{{key}}\" \"{{backup_path}}\" /y",
     "params": [
@@ -1162,7 +1377,10 @@
     "name": "注册表恢复",
     "description": "从备份文件恢复注册表",
     "category": "系统维护",
-    "tags": ["注册表", "恢复"],
+    "tags": [
+      "注册表",
+      "恢复"
+    ],
     "engine": "cmd",
     "template": "reg import \"{{backup_path}}\"",
     "params": [
@@ -1183,7 +1401,10 @@
     "name": "列出已安装的驱动",
     "description": "显示系统中所有已安装的驱动程序",
     "category": "系统维护",
-    "tags": ["驱动", "硬件"],
+    "tags": [
+      "驱动",
+      "硬件"
+    ],
     "engine": "cmd",
     "template": "driverquery",
     "params": [],
@@ -1195,7 +1416,10 @@
     "name": "驱动详细信息",
     "description": "显示指定驱动的详细信息",
     "category": "系统维护",
-    "tags": ["驱动", "硬件"],
+    "tags": [
+      "驱动",
+      "硬件"
+    ],
     "engine": "cmd",
     "template": "sc query {{driver_name}}",
     "params": [
@@ -1216,7 +1440,10 @@
     "name": "查看已安装补丁",
     "description": "列出所有已安装的系统更新和补丁",
     "category": "系统维护",
-    "tags": ["系统", "补丁"],
+    "tags": [
+      "系统",
+      "补丁"
+    ],
     "engine": "cmd",
     "template": "wmic qfe get hotfixid,installedon,description",
     "params": [],
@@ -1228,7 +1455,10 @@
     "name": "查看 Windows 产品密钥",
     "description": "查看当前 Windows 系统的产品密钥（部分）",
     "category": "系统维护",
-    "tags": ["系统", "密钥"],
+    "tags": [
+      "系统",
+      "密钥"
+    ],
     "engine": "cmd",
     "template": "wmic os get ProductKey",
     "params": [],
@@ -1240,7 +1470,10 @@
     "name": "查看系统序列号",
     "description": "查看计算机硬件序列号",
     "category": "系统维护",
-    "tags": ["系统", "硬件"],
+    "tags": [
+      "系统",
+      "硬件"
+    ],
     "engine": "cmd",
     "template": "wmic bios get serialnumber",
     "params": [],
@@ -1252,7 +1485,10 @@
     "name": "列出已安装软件",
     "description": "列出系统中所有已安装的软件",
     "category": "系统维护",
-    "tags": ["系统", "软件"],
+    "tags": [
+      "系统",
+      "软件"
+    ],
     "engine": "cmd",
     "template": "wmic product get name,version,vendor",
     "params": [],
@@ -1264,7 +1500,10 @@
     "name": "磁盘几何信息",
     "description": "显示磁盘的几何结构和分区信息",
     "category": "磁盘管理",
-    "tags": ["磁盘", "分区"],
+    "tags": [
+      "磁盘",
+      "分区"
+    ],
     "engine": "cmd",
     "template": "diskpart\nlist disk\nselect disk {{disk_number}}\nlist partition",
     "params": [
@@ -1285,7 +1524,10 @@
     "name": "查看挂载点",
     "description": "显示所有挂载点和卷信息",
     "category": "磁盘管理",
-    "tags": ["磁盘", "挂载"],
+    "tags": [
+      "磁盘",
+      "挂载"
+    ],
     "engine": "cmd",
     "template": "mountvol",
     "params": [],
@@ -1297,7 +1539,10 @@
     "name": "创建文件夹",
     "description": "创建新的文件夹",
     "category": "文件操作",
-    "tags": ["文件", "创建"],
+    "tags": [
+      "文件",
+      "创建"
+    ],
     "engine": "cmd",
     "template": "mkdir \"{{path}}\"",
     "params": [
@@ -1318,7 +1563,10 @@
     "name": "删除文件夹",
     "description": "删除文件夹及其所有内容",
     "category": "文件操作",
-    "tags": ["文件", "删除"],
+    "tags": [
+      "文件",
+      "删除"
+    ],
     "engine": "cmd",
     "template": "rd /s /q \"{{path}}\"",
     "params": [
@@ -1339,7 +1587,10 @@
     "name": "加密文件",
     "description": "使用 EFS 加密文件或文件夹",
     "category": "文件操作",
-    "tags": ["文件", "加密"],
+    "tags": [
+      "文件",
+      "加密"
+    ],
     "engine": "cmd",
     "template": "cipher /e \"{{path}}\"",
     "params": [
@@ -1360,7 +1611,10 @@
     "name": "解密文件",
     "description": "解密 EFS 加密的文件或文件夹",
     "category": "文件操作",
-    "tags": ["文件", "加密"],
+    "tags": [
+      "文件",
+      "加密"
+    ],
     "engine": "cmd",
     "template": "cipher /d \"{{path}}\"",
     "params": [
@@ -1381,7 +1635,10 @@
     "name": "压缩文件",
     "description": "使用 NTFS 压缩压缩文件或文件夹",
     "category": "文件操作",
-    "tags": ["文件", "压缩"],
+    "tags": [
+      "文件",
+      "压缩"
+    ],
     "engine": "cmd",
     "template": "compact /c \"{{path}}\"",
     "params": [
@@ -1402,7 +1659,10 @@
     "name": "解压文件",
     "description": "解压缩 NTFS 压缩的文件或文件夹",
     "category": "文件操作",
-    "tags": ["文件", "压缩"],
+    "tags": [
+      "文件",
+      "压缩"
+    ],
     "engine": "cmd",
     "template": "compact /u \"{{path}}\"",
     "params": [
@@ -1423,7 +1683,10 @@
     "name": "强制更新组策略",
     "description": "立即更新计算机和用户的组策略设置",
     "category": "系统维护",
-    "tags": ["系统", "组策略"],
+    "tags": [
+      "系统",
+      "组策略"
+    ],
     "engine": "cmd",
     "template": "gpupdate /force",
     "params": [],
@@ -1435,7 +1698,10 @@
     "name": "WMI 查询",
     "description": "使用 WMI 查询系统信息",
     "category": "系统维护",
-    "tags": ["系统", "WMI"],
+    "tags": [
+      "系统",
+      "WMI"
+    ],
     "engine": "cmd",
     "template": "wmic {{class}} get {{properties}}",
     "params": [
@@ -1464,7 +1730,10 @@
     "name": "查看电源方案",
     "description": "列出系统中的所有电源方案",
     "category": "系统维护",
-    "tags": ["系统", "电源"],
+    "tags": [
+      "系统",
+      "电源"
+    ],
     "engine": "cmd",
     "template": "powercfg /list",
     "params": [],
@@ -1476,7 +1745,10 @@
     "name": "查看当前电源方案",
     "description": "显示当前活动的电源方案",
     "category": "系统维护",
-    "tags": ["系统", "电源"],
+    "tags": [
+      "系统",
+      "电源"
+    ],
     "engine": "cmd",
     "template": "powercfg /getactivescheme",
     "params": [],
@@ -1488,7 +1760,10 @@
     "name": "设置电源方案",
     "description": "切换到指定的电源方案",
     "category": "系统维护",
-    "tags": ["系统", "电源"],
+    "tags": [
+      "系统",
+      "电源"
+    ],
     "engine": "cmd",
     "template": "powercfg /setactive {{scheme_guid}}",
     "params": [
@@ -1509,7 +1784,11 @@
     "name": "生成电源效率报告",
     "description": "生成系统电源效率诊断报告",
     "category": "系统维护",
-    "tags": ["系统", "电源", "诊断"],
+    "tags": [
+      "系统",
+      "电源",
+      "诊断"
+    ],
     "engine": "cmd",
     "template": "powercfg /batteryreport",
     "params": [],
@@ -1521,7 +1800,10 @@
     "name": "磁盘读写测试",
     "description": "测试磁盘读写速度",
     "category": "性能监控",
-    "tags": ["性能", "磁盘"],
+    "tags": [
+      "性能",
+      "磁盘"
+    ],
     "engine": "powershell",
     "template": "$disk = {{drive_letter}}\n$testFile = \"$disk\\test.dat\"\n1..5 | ForEach-Object {Measure-Command {Set-Content -Path $testFile -Value (New-Object byte[] 1GB) -Force} | Select-Object -ExpandProperty TotalSeconds} | Measure-Object -Average | Select-Object @{N='WriteSpeed_GB/s';E={[math]::Round(1/$_.Average,2)}}",
     "params": [
@@ -1542,7 +1824,10 @@
     "name": "查看网络适配器状态",
     "description": "显示所有网络适配器的状态",
     "category": "网络工具",
-    "tags": ["网络", "适配器"],
+    "tags": [
+      "网络",
+      "适配器"
+    ],
     "engine": "powershell",
     "template": "Get-NetAdapter | Select-Object Name,Status,LinkSpeed,InterfaceDescription",
     "params": [],
@@ -1554,7 +1839,10 @@
     "name": "网络流量监控",
     "description": "实时监控网络适配器流量",
     "category": "性能监控",
-    "tags": ["性能", "网络"],
+    "tags": [
+      "性能",
+      "网络"
+    ],
     "engine": "powershell",
     "template": "Get-Counter \"\\Network Interface(*)\\Bytes Received/sec\",\"\\Network Interface(*)\\Bytes Sent/sec\" -SampleInterval 5 -MaxSamples 3",
     "params": [],
@@ -1566,7 +1854,10 @@
     "name": "查看 SMB 共享",
     "description": "列出所有 SMB 文件共享",
     "category": "网络工具",
-    "tags": ["网络", "SMB"],
+    "tags": [
+      "网络",
+      "SMB"
+    ],
     "engine": "cmd",
     "template": "net share",
     "params": [],
@@ -1578,7 +1869,10 @@
     "name": "查看 SMB 会话",
     "description": "列出所有活跃的 SMB 会话",
     "category": "网络工具",
-    "tags": ["网络", "SMB"],
+    "tags": [
+      "网络",
+      "SMB"
+    ],
     "engine": "cmd",
     "template": "net session",
     "params": [],
@@ -1590,7 +1884,10 @@
     "name": "创建 SMB 共享",
     "description": "创建新的 SMB 文文件共享",
     "category": "网络工具",
-    "tags": ["网络", "SMB"],
+    "tags": [
+      "网络",
+      "SMB"
+    ],
     "engine": "cmd",
     "template": "net share {{share_name}}={{share_path}} /grant:{{user}},{{permission}}",
     "params": [
@@ -1625,9 +1922,18 @@
         "required": true,
         "defaultValue": "READ",
         "options": [
-          { "label": "读取", "value": "READ" },
-          { "label": "完全控制", "value": "FULL" },
-          { "label": "更改", "value": "CHANGE" }
+          {
+            "label": "读取",
+            "value": "READ"
+          },
+          {
+            "label": "完全控制",
+            "value": "FULL"
+          },
+          {
+            "label": "更改",
+            "value": "CHANGE"
+          }
         ]
       }
     ],
@@ -1639,7 +1945,10 @@
     "name": "列出证书",
     "description": "列出个人存储中的所有证书",
     "category": "安全",
-    "tags": ["安全", "证书"],
+    "tags": [
+      "安全",
+      "证书"
+    ],
     "engine": "powershell",
     "template": "Get-ChildItem -Path Cert:\\CurrentUser\\My",
     "params": [],
@@ -1651,7 +1960,10 @@
     "name": "查看 BitLocker 状态",
     "description": "查看所有驱动器的 BitLocker 加密状态",
     "category": "安全",
-    "tags": ["安全", "加密"],
+    "tags": [
+      "安全",
+      "加密"
+    ],
     "engine": "cmd",
     "template": "manage-bde -status {{drive_letter}}:",
     "params": [
@@ -1672,7 +1984,10 @@
     "name": "查看审核策略",
     "description": "显示系统的审核策略设置",
     "category": "安全",
-    "tags": ["安全", "审计"],
+    "tags": [
+      "安全",
+      "审计"
+    ],
     "engine": "cmd",
     "template": "auditpol /get /category:*",
     "params": [],
@@ -1684,7 +1999,10 @@
     "name": "查看用户权限",
     "description": "显示指定用户的所有权限",
     "category": "用户管理",
-    "tags": ["用户", "权限"],
+    "tags": [
+      "用户",
+      "权限"
+    ],
     "engine": "powershell",
     "template": "Get-LocalUser | Where-Object {$_.Name -like \"*{{user_pattern}}*\"} | Select-Object Name,Enabled,LastLogon",
     "params": [
@@ -1701,32 +2019,14 @@
     "usage": "显示匹配模式的本地用户及其状态和最后登录时间。"
   },
   {
-    "id": "shadow-copy-list",
-    "name": "查看卷影副本",
-    "description": "列出指定卷的所有卷影副本",
-    "category": "磁盘管理",
-    "tags": ["磁盘", "备份"],
-    "engine": "cmd",
-    "template": "vssadmin list shadows /for={{drive_letter}}:",
-    "params": [
-      {
-        "key": "drive_letter",
-        "label": "盘符",
-        "type": "text",
-        "required": true,
-        "defaultValue": "C",
-        "hint": "输入盘符"
-      }
-    ],
-    "platform": "windows",
-    "usage": "显示指定卷的所有卷影副本（系统还原点）。需要管理员权限。"
-  },
-  {
     "id": "system-restore-list",
     "name": "查看系统还原点",
     "description": "列出所有可用的系统还原点",
     "category": "系统维护",
-    "tags": ["系统", "还原"],
+    "tags": [
+      "系统",
+      "还原"
+    ],
     "engine": "powershell",
     "template": "Get-ComputerRestorePoint",
     "params": [],
@@ -1738,7 +2038,10 @@
     "name": "创建系统还原点",
     "description": "手动创建系统还原点",
     "category": "系统维护",
-    "tags": ["系统", "还原"],
+    "tags": [
+      "系统",
+      "还原"
+    ],
     "engine": "powershell",
     "template": "Checkpoint-Computer -Description \"{{description}}\"",
     "params": [
@@ -1759,7 +2062,10 @@
     "name": "查看页面文件配置",
     "description": "显示系统页面文件的配置信息",
     "category": "性能监控",
-    "tags": ["性能", "内存"],
+    "tags": [
+      "性能",
+      "内存"
+    ],
     "engine": "cmd",
     "template": "wmic pagefile get name,initialsize,maximumsize",
     "params": [],
@@ -1771,7 +2077,10 @@
     "name": "查看服务依赖关系",
     "description": "显示指定服务所依赖的其他服务",
     "category": "服务管理",
-    "tags": ["服务", "依赖"],
+    "tags": [
+      "服务",
+      "依赖"
+    ],
     "engine": "cmd",
     "template": "sc enumdepend {{service}}",
     "params": [
@@ -1792,7 +2101,10 @@
     "name": "过滤事件日志",
     "description": "根据关键字筛选事件日志",
     "category": "日志管理",
-    "tags": ["日志", "筛选"],
+    "tags": [
+      "日志",
+      "筛选"
+    ],
     "engine": "powershell",
     "template": "Get-EventLog -LogName {{log_name}} | Where-Object {$_.Message -like \"*{{keyword}}*\"} | Select-Object -First {{count}}",
     "params": [
@@ -1803,9 +2115,18 @@
         "required": true,
         "defaultValue": "Application",
         "options": [
-          { "label": "应用程序", "value": "Application" },
-          { "label": "系统", "value": "System" },
-          { "label": "安全", "value": "Security" }
+          {
+            "label": "应用程序",
+            "value": "Application"
+          },
+          {
+            "label": "系统",
+            "value": "System"
+          },
+          {
+            "label": "安全",
+            "value": "Security"
+          }
         ]
       },
       {
@@ -1833,7 +2154,9 @@
     "name": "创建计划任务",
     "description": "创建简单的计划任务",
     "category": "系统维护",
-    "tags": ["计划任务"],
+    "tags": [
+      "计划任务"
+    ],
     "engine": "cmd",
     "template": "schtasks /create /tn \"{{task_name}}\" /tr {{command}} /sc {{schedule}} /st {{time}}",
     "params": [
@@ -1860,10 +2183,22 @@
         "required": true,
         "defaultValue": "DAILY",
         "options": [
-          { "label": "每天", "value": "DAILY" },
-          { "label": "每周", "value": "WEEKLY" },
-          { "label": "每月", "value": "MONTHLY" },
-          { "label": "一次性", "value": "ONCE" }
+          {
+            "label": "每天",
+            "value": "DAILY"
+          },
+          {
+            "label": "每周",
+            "value": "WEEKLY"
+          },
+          {
+            "label": "每月",
+            "value": "MONTHLY"
+          },
+          {
+            "label": "一次性",
+            "value": "ONCE"
+          }
         ]
       },
       {
@@ -1883,7 +2218,10 @@
     "name": "查看环境变量",
     "description": "显示所有当前环境变量",
     "category": "系统维护",
-    "tags": ["系统", "环境"],
+    "tags": [
+      "系统",
+      "环境"
+    ],
     "engine": "cmd",
     "template": "set",
     "params": [],
@@ -1895,7 +2233,10 @@
     "name": "查看 PATH 变量",
     "description": "显示系统 PATH 环境变量",
     "category": "系统维护",
-    "tags": ["系统", "环境"],
+    "tags": [
+      "系统",
+      "环境"
+    ],
     "engine": "cmd",
     "template": "echo %PATH%",
     "params": [],
@@ -1907,7 +2248,10 @@
     "name": "查看 Windows 版本",
     "description": "显示 Windows 操作系统版本信息",
     "category": "系统维护",
-    "tags": ["系统", "版本"],
+    "tags": [
+      "系统",
+      "版本"
+    ],
     "engine": "cmd",
     "template": "ver",
     "params": [],
@@ -1919,11 +2263,88 @@
     "name": "查看系统运行时间",
     "description": "显示系统已运行的时间",
     "category": "系统维护",
-    "tags": ["系统", "运行时间"],
+    "tags": [
+      "系统",
+      "运行时间"
+    ],
     "engine": "powershell",
     "template": "(Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime",
     "params": [],
     "platform": "windows",
     "usage": "显示系统上次启动到当前的时间差。"
+  },
+  {
+    "id": "cmd-1774770118239",
+    "name": "查看补丁详细信息",
+    "template": "wmic qfe list full",
+    "description": "查看补丁详细信息",
+    "category": "系统维护",
+    "engine": "cmd",
+    "platform": "windows",
+    "params": [],
+    "tags": [
+      "维护"
+    ],
+    "usage": "查看windows系统补丁详细信息"
+  },
+  {
+    "id": "cmd-1774834490709",
+    "name": "查看补丁简化信息",
+    "template": "wmic qfe list brief",
+    "description": "查看补丁简化信息",
+    "category": "系统维护",
+    "engine": "cmd",
+    "platform": "windows",
+    "params": [],
+    "tags": [
+      "维护"
+    ],
+    "usage": "查看windows系统补丁简化信息"
+  },
+  {
+    "id": "cmd-1775010339640",
+    "name": "句柄检查",
+    "description": "检查句柄内容",
+    "category": "进程管理",
+    "tags": [],
+    "engine": "cmd",
+    "template": "wmic process get ProcessId,Name,HandleCount",
+    "params": [],
+    "platform": "windows",
+    "usage": "检查句柄内容",
+    "powershellTemplate": "Get-Process | Select-Object ProcessId, ProcessName, HandleCount"
+  },
+  {
+    "id": "cmd-1775010444409",
+    "name": "查某一进程句柄",
+    "description": "查某一进程句柄",
+    "category": "进程管理",
+    "tags": [],
+    "engine": "cmd",
+    "template": "wmic process where \"Name='{{processname}}.exe'\" get ProcessId,Name,HandleCount {{processname}}",
+    "params": [
+      {
+        "key": "processname",
+        "label": "进程名",
+        "type": "text",
+        "required": false,
+        "defaultValue": "wzbarserver",
+        "hint": ""
+      }
+    ],
+    "platform": "windows",
+    "usage": "查某一进程句柄"
+  },
+  {
+    "id": "cmd-1775010577026",
+    "name": "查看出网公网 IP",
+    "description": "查看出网公网 IP",
+    "category": "网络工具",
+    "tags": [],
+    "engine": "cmd",
+    "template": "curl ipinfo.io",
+    "params": [],
+    "platform": "windows",
+    "usage": "查看出网公网 IP"
   }
 ]

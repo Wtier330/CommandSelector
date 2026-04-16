@@ -164,30 +164,30 @@ function handleEngineChange() {
               <n-divider title-placement="left">基本信息</n-divider>
               <n-space vertical>
                 <n-form-item label="唯一 ID (英文/连字符)" required>
-                  <n-input v-model:value="draft.id" placeholder="如：clean-temp" :disabled="!isNew" />
+                  <n-input :value="draft.id" @update:value="draft.id = $event" placeholder="如：clean-temp" :disabled="!isNew" />
                 </n-form-item>
                 <n-form-item label="命令名称" required>
-                  <n-input v-model:value="draft.name" placeholder="如：清理临时文件" />
+                  <n-input v-model="draft.name" placeholder="如：清理临时文件" />
                 </n-form-item>
                 <n-form-item label="描述">
-                  <n-input v-model:value="draft.description" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" />
+                  <n-input v-model="draft.description" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" />
                 </n-form-item>
                 <n-space item-style="flex: 1;">
                   <n-form-item label="分类">
-                    <n-input v-model:value="draft.category" placeholder="如：系统维护" />
+                    <n-input v-model="draft.category" placeholder="如：系统维护" />
                   </n-form-item>
                   <n-form-item label="模板类型">
-                    <n-select v-model:value="templateEditMode" :options="[
+                    <n-select v-model="templateEditMode" :options="[
                       { label: '仅 CMD 模板', value: 'cmd' },
                       { label: '仅 PowerShell 模板', value: 'powershell' }
                     ]" @update:value="handleEngineChange" />
                   </n-form-item>
                   <n-form-item label="适用平台">
-                    <n-select v-model:value="draft.platform" :options="platformOptions" />
+                    <n-select v-model="draft.platform" :options="platformOptions" />
                   </n-form-item>
                 </n-space>
                 <n-form-item label="标签">
-                  <n-dynamic-tags v-model:value="draft.tags" />
+                  <n-dynamic-tags v-model="draft.tags" />
                 </n-form-item>
               </n-space>
             </div>
@@ -198,7 +198,7 @@ function handleEngineChange() {
 
               <n-form-item :label="templateEditMode === 'powershell' ? 'PowerShell 模板内容' : 'CMD 模板内容'" required>
                 <n-input
-                  v-model:value="currentTemplateValue"
+                  v-model="currentTemplateValue"
                   type="textarea"
                   :autosize="{ minRows: 4, maxRows: 10 }"
                   :placeholder="templateEditMode === 'powershell' ? '使用 {{参数名}} 作为占位符，如：Test-Path {{path}}' : '使用 {{参数名}} 作为占位符，如：ping {{target}} -n {{count}}'"
@@ -206,7 +206,7 @@ function handleEngineChange() {
                 />
               </n-form-item>
               <n-form-item label="使用说明">
-                <n-input v-model:value="draft.usage" type="textarea" :autosize="{ minRows: 2, maxRows: 6 }" placeholder="补充说明或注意事项" />
+                <n-input v-model="draft.usage" type="textarea" :autosize="{ minRows: 2, maxRows: 6 }" placeholder="补充说明或注意事项" />
               </n-form-item>
             </div>
 
@@ -223,13 +223,13 @@ function handleEngineChange() {
                   <n-space vertical>
                     <n-space item-style="flex: 1;">
                       <n-form-item label="参数键 (Key)" required>
-                        <n-input v-model:value="param.key" placeholder="如：target" />
+                        <n-input v-model="param.key" placeholder="如：target" />
                       </n-form-item>
                       <n-form-item label="显示名称" required>
-                        <n-input v-model:value="param.label" placeholder="如：目标地址" />
+                        <n-input v-model="param.label" placeholder="如：目标地址" />
                       </n-form-item>
                       <n-form-item label="类型">
-                        <n-select v-model:value="param.type" :options="paramTypeOptions" />
+                        <n-select v-model="param.type" :options="paramTypeOptions" /> 
                       </n-form-item>
                     </n-space>
                     
@@ -239,10 +239,10 @@ function handleEngineChange() {
                         <n-checkbox v-else :checked="Boolean(param.defaultValue)" @update:checked="param.defaultValue = $event">默认启用</n-checkbox>
                       </n-form-item>
                       <n-form-item label="提示说明">
-                        <n-input v-model:value="param.hint" placeholder="输入框占位提示" />
-                      </n-form-item>
+                        <n-input v-model="param.hint" placeholder="输入框占位提示" />
+                      </n-form-item>  
                       <n-form-item label="是否必填">
-                        <n-checkbox v-model:checked="param.required">必填</n-checkbox>
+                        <n-checkbox v-model="param.required">必填</n-checkbox>
                       </n-form-item>
                     </n-space>
                   </n-space>

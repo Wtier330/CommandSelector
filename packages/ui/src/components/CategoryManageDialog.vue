@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import type { CommandEntry } from "@commandselector/shared";
 
 const props = defineProps<{
@@ -82,136 +82,158 @@ const availableCategories = computed(() => {
   if (!deleteConfirmDialog.value) return [];
   return props.categories.filter(cat => cat !== deleteConfirmDialog.value?.category);
 });
+
+// ESC 键关闭
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === "Escape") {
+    if (deleteConfirmDialog.value) {
+      closeDeleteConfirm();
+    } else {
+      emit("close");
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("keydown", handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeyDown);
+});
 </script>
 
 <template>
-  <div class="cs-dialog-overlay" @click.self="emit('close')">
-    <div class="cs-dialog">
-      <div class="cs-dialog-header">
-        <div class="cs-dialog-title">管理分类</div>
-        <button class="cs-dialog-close" type="button" @click="emit('close')">&times;</button>
-      </div>
-      <div class="cs-dialog-body">
-        <!-- 添加新分类 -->
-        <div class="cs-add-category">
-          <span class="cs-add-label">添加新分类</span>
-          <div class="cs-add-row">
-            <input
-              v-model="newCategoryInput"
-              class="cs-input cs-input-sm"
-              placeholder="输入分类名称"
-              @keyup.enter="handleAddCategory"
-            />
-            <button
-              class="cs-btn cs-btn-primary cs-btn-sm"
-              type="button"
-              @click="handleAddCategory"
-            >
-              添加
-            </button>
-          </div>
-          <div v-if="addError" class="cs-error-text">{{ addError }}</div>
+  <teleport to="body">
+    <!-- 主对话框 -->
+    <div v-if="!deleteConfirmDialog" class="cs-dialog-overlay" @click.self="emit('close')">
+      <div class="cs-dialog">
+        <div class="cs-dialog-header">
+          <div class="cs-dialog-title">管理分类</div>
+          <button class="cs-dialog-close" type="button" @click="emit('close')">&times;</button>
         </div>
+        <div class="cs-dialog-body">
+          <!-- 添加新分类 -->
+          <div class="cs-add-category">
+            <span class="cs-add-label">添加新分类</span>
+            <div class="cs-add-row">
+              <input
+                v-model="newCategoryInput"
+                class="cs-input cs-input-sm"
+                placeholder="输入分类名称"
+                @keyup.enter="handleAddCategory"
+              />
+              <button
+                class="cs-btn cs-btn-primary cs-btn-sm"
+                type="button"
+                @click="handleAddCategory"
+              >
+                添加
+              </button>
+            </div>
+            <div v-if="addError" class="cs-error-text">{{ addError }}</div>
+          </div>
 
-        <!-- 分类列表 -->
-        <div class="cs-category-list">
-          <div class="cs-category-list-title">现有分类 ({{ categories.length }})</div>
-          <div v-if="categories.length === 0" class="cs-empty-text">暂无分类</div>
-          <div v-else class="cs-category-items">
-            <div
-              v-for="cat in categories"
-              :key="cat"
-              class="cs-category-item"
-            >
-              <span class="cs-category-name">{{ cat }}</span>
-              <div class="cs-category-meta">
-                <span class="cs-category-count">{{ categoryCommandCount[cat] || 0 }} 条命令</span>
-                <button
-                  class="cs-btn cs-btn-icon cs-btn-danger"
-                  type="button"
-                  :title="categoryCommandCount[cat] > 0 ? '删除分类' : '删除空分类'"
-                  @click="openDeleteConfirm(cat)"
-                >
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
+          <!-- 分类列表 -->
+          <div class="cs-category-list">
+            <div class="cs-category-list-title">现有分类 ({{ categories.length }})</div>
+            <div v-if="categories.length === 0" class="cs-empty-text">暂无分类</div>
+            <div v-else class="cs-category-items">
+              <div
+                v-for="cat in categories"
+                :key="cat"
+                class="cs-category-item"
+              >
+                <span class="cs-category-name">{{ cat }}</span>
+                <div class="cs-category-meta">
+                  <span class="cs-category-count">{{ categoryCommandCount[cat] || 0 }} 条命令</span>
+                  <button
+                    class="cs-btn cs-btn-icon cs-btn-danger"
+                    type="button"
+                    :title="categoryCommandCount[cat] > 0 ? '删除分类' : '删除空分类'"
+                    @click="openDeleteConfirm(cat)"
+                  >
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="cs-dialog-footer">
-        <button class="cs-btn cs-btn-outline" type="button" @click="emit('close')">关闭</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 删除确认对话框 -->
-  <div v-if="deleteConfirmDialog" class="cs-dialog-overlay" @click.self="closeDeleteConfirm">
-    <div class="cs-dialog cs-dialog-confirm">
-      <div class="cs-dialog-header">
-        <div class="cs-dialog-title">确认删除分类</div>
-        <button class="cs-dialog-close" type="button" @click="closeDeleteConfirm">&times;</button>
-      </div>
-      <div class="cs-dialog-body">
-        <div class="cs-confirm-warning">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12" y2="16"></line>
-          </svg>
-          <span>该分类下有 {{ deleteConfirmDialog.affectedCommands.length }} 条命令</span>
-        </div>
-        <div class="cs-confirm-desc">删除分类「{{ deleteConfirmDialog.category }}」后，请选择如何处理这些命令：</div>
-
-        <div class="cs-confirm-options">
-          <label class="cs-confirm-option">
-            <input
-              type="radio"
-              v-model="deleteAction"
-              value="move"
-            />
-            <div class="cs-option-content">
-              <span class="cs-option-label">移动到其他分类</span>
-              <select
-                v-model="targetCategory"
-                class="cs-input cs-input-sm"
-                :disabled="deleteAction !== 'move'"
-              >
-                <option value="">请选择目标分类</option>
-                <option v-for="cat in availableCategories" :key="cat" :value="cat">{{ cat }}</option>
-              </select>
-            </div>
-          </label>
-
-          <label class="cs-confirm-option">
-            <input
-              type="radio"
-              v-model="deleteAction"
-              value="clear"
-            />
-            <div class="cs-option-content">
-              <span class="cs-option-label">清空分类</span>
-              <span class="cs-option-desc">命令的分类字段将被清空</span>
-            </div>
-          </label>
+        <div class="cs-dialog-footer">
+          <button class="cs-btn cs-btn-outline" type="button" @click="emit('close')">关闭</button>
         </div>
       </div>
-      <div class="cs-dialog-footer">
-        <button class="cs-btn cs-btn-outline" type="button" @click="closeDeleteConfirm">取消</button>
-        <button
-          class="cs-btn cs-btn-danger"
-          type="button"
-          :disabled="!deleteAction || (deleteAction === 'move' && !targetCategory)"
-          @click="confirmDelete"
-        >
-          确认删除
-        </button>
+    </div>
+
+    <!-- 删除确认对话框 -->
+    <div v-else class="cs-dialog-overlay" @click.self="closeDeleteConfirm">
+      <div class="cs-dialog cs-dialog-confirm">
+        <div class="cs-dialog-header">
+          <div class="cs-dialog-title">确认删除分类</div>
+          <button class="cs-dialog-close" type="button" @click="closeDeleteConfirm">&times;</button>
+        </div>
+        <div class="cs-dialog-body">
+          <div class="cs-confirm-warning">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12" y2="16"></line>
+            </svg>
+            <span>该分类下有 {{ deleteConfirmDialog.affectedCommands.length }} 条命令</span>
+          </div>
+          <div class="cs-confirm-desc">删除分类「{{ deleteConfirmDialog.category }}」后，请选择如何处理这些命令：</div>
+
+          <div class="cs-confirm-options">
+            <label class="cs-confirm-option">
+              <input
+                type="radio"
+                v-model="deleteAction"
+                value="move"
+              />
+              <div class="cs-option-content">
+                <span class="cs-option-label">移动到其他分类</span>
+                <select
+                  v-model="targetCategory"
+                  class="cs-input cs-input-sm"
+                  :disabled="deleteAction !== 'move'"
+                >
+                  <option value="">请选择目标分类</option>
+                  <option v-for="cat in availableCategories" :key="cat" :value="cat">{{ cat }}</option>
+                </select>
+              </div>
+            </label>
+
+            <label class="cs-confirm-option">
+              <input
+                type="radio"
+                v-model="deleteAction"
+                value="clear"
+              />
+              <div class="cs-option-content">
+                <span class="cs-option-label">清空分类</span>
+                <span class="cs-option-desc">命令的分类字段将被清空</span>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div class="cs-dialog-footer">
+          <button class="cs-btn cs-btn-outline" type="button" @click="closeDeleteConfirm">取消</button>
+          <button
+            class="cs-btn cs-btn-danger"
+            type="button"
+            :disabled="!deleteAction || (deleteAction === 'move' && !targetCategory)"
+            @click="confirmDelete"
+          >
+            确认删除
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  </teleport>
 </template>
 
 <style scoped>

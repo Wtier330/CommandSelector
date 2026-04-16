@@ -33,3 +33,9 @@ lerna-debug.log*
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
+
+# doc
+.claude
+.trae
+.vercel
+doc

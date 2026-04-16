@@ -7,9 +7,9 @@
   transform: translateX(-50%);
   z-index: 60;
   padding: 10px 16px;
-  border-radius: 8px;
-  background: rgba(15, 23, 42, 0.95);
-  color: #ffffff;
+  border-radius: var(--claude-radius-sm);
+  background: rgba(20, 20, 19, 0.95);
+  color: var(--claude-ivory);
   font-size: 13px;
   font-weight: 500;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
@@ -19,7 +19,7 @@
 }
 
 .cs-toast.error {
-  background: rgba(185, 28, 28, 0.95);
+  background: rgba(181, 51, 51, 0.95);
 }
 
 .cs-toast-icon {
@@ -35,10 +35,10 @@
   align-items: center;
   justify-content: center;
   padding: 40px 24px;
-  border-radius: 14px;
+  border-radius: var(--claude-radius-lg);
   border: 2px dashed var(--cs-border);
   color: var(--cs-muted);
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(250, 249, 245, 0.5);
   min-height: 300px;
 }
 
@@ -57,7 +57,7 @@
 .cs-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(20, 20, 19, 0.4);
   z-index: 50;
   display: flex;
   backdrop-filter: blur(2px);
@@ -124,8 +124,8 @@
   width: 100%;
   box-sizing: border-box;
   border: 1px solid var(--cs-border);
-  border-radius: 6px;
-  background: #f8fafc;
+  border-radius: var(--claude-radius-md);
+  background: var(--claude-parchment);
   font-size: var(--cs-textarea-font-size);
   color: var(--cs-text);
   margin-bottom: 2px;
@@ -135,10 +135,10 @@
 
 /* Textarea: 聚焦状态 */
 .cs-textarea:focus {
-  background: #fff;
+  background: var(--claude-ivory);
   border-color: var(--cs-blue-200);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
 }
 
 /* Textarea: 占位符样式 */
@@ -233,7 +233,7 @@
   gap: 8px;
   margin-bottom: 16px;
   padding: 4px;
-  background: #f1f5f9;
+  background: var(--claude-border-warm);
   border-radius: 8px;
 }
 
@@ -243,7 +243,7 @@
   background: transparent;
 ;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--claude-radius-md);
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
@@ -252,11 +252,11 @@
 }
 
 .cs-template-tab:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(250, 249, 245, 0.5);
 }
 
 .cs-template-tab.is-active {
-  background: #ffffff;
+  background: var(--claude-ivory);
   border-color: var(--cs-border);
   color: var(--cs-text);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -274,11 +274,11 @@
   font-size: 13px;
   border-radius: 6px;
   border: 1px solid var(--cs-border);
-  background: #f8fafc;
+  background: var(--claude-parchment);
 }
 .cs-input-sm:focus {
-  background: #fff;
+  background: var(--claude-ivory);
   border-color: var(--cs-blue-200);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
 }

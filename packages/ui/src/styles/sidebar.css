@@ -19,7 +19,7 @@
   left: 20px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--claude-text-tertiary);
   display: flex;
 }
 
@@ -40,12 +40,12 @@
 }
 
 .cs-input::placeholder {
-  color: #94a3b8;
+  color: var(--claude-text-tertiary);
 }
 
 .cs-input:focus {
   border-color: var(--cs-blue-200);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
 }
 
 @media (max-width: 960px) {
@@ -109,21 +109,22 @@
 }
 
 .cs-nav-item {
-  height: 32px;
-  border-radius: 10px;
+  height: 36px;
+  border-radius: var(--claude-radius-md);
   border: none;
   background: transparent;
   text-align: left;
   padding: 0 14px;
   cursor: pointer;
   color: var(--cs-muted-2);
+  font-family: var(--claude-font-sans);
   font-size: 13px;
   font-weight: 400;
   transition: all 0.2s;
 }
 
 .cs-nav-item:hover {
-  background: rgba(15, 23, 42, 0.04);
+  background: rgba(20, 20, 19, 0.04);
 }
 
 .cs-nav-item.is-active {
@@ -172,7 +173,8 @@
 
 .cs-item-title {
   font-size: 14px;
-  font-weight: 600;
+  font-family: var(--claude-font-sans);
+  font-weight: 500;
   color: var(--cs-text);
   white-space: nowrap;
   overflow: hidden;
@@ -199,23 +201,23 @@
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #e0f2fe;
-  color: #0369a1;
-  border: 1px solid #bae6fd;
+  background: var(--claude-parchment);
+  color: var(--claude-text-secondary);
+  border: 1px solid var(--claude-border-warm);
   flex: 0 0 auto;
   font-weight: 400;
 }
 
 
 .cs-item.is-selected .cs-badge {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--claude-parchment);
+  color: var(--claude-text-secondary);
 }
 
 .cs-btn {
-  height: 32px;
+  height: 36px;
   padding: 0 14px;
-  border-radius: 8px;
+  border-radius: var(--claude-radius-sm);
   border: 1px solid var(--cs-border);
   cursor: pointer;
   font-weight: 500;
@@ -230,8 +232,8 @@
 }
 
 .cs-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--claude-parchment);
+  border-color: var(--claude-border-warm);
 }
 
 .cs-btn:active {
@@ -264,9 +266,9 @@
 }
 
 .cs-btn-icon {
-  height: 32px;
+  height: 36px;
   padding: 0 12px;
-  border-radius: 8px;
+  border-radius: var(--claude-radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
   font-weight: 500;
@@ -281,7 +283,7 @@
 }
 
 .cs-btn-icon:hover {
-  background: #f1f5f9;
+  background: var(--claude-border-warm);
   color: var(--cs-text);
 }
 
@@ -359,8 +361,8 @@
   font-size: 12px;
   padding: 2px 12px;
   border-radius: 999px;
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--claude-border-warm);
+  color: var(--claude-text-secondary);
   border: none;
   height: 22px;
   display: inline-flex;
@@ -375,8 +377,8 @@
 .cs-tag-lg {
   padding: 0 12px;
   font-size: 12px;
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--claude-border-warm);
+  color: var(--claude-text-secondary);
   border: none;
   border-radius: 999px;
   height: 24px;

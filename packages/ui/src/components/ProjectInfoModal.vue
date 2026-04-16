@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { defineProps, defineEmits, onMounted, onUnmounted } from "vue";
+
 // @ts-ignore
 const APP_VERSION = __APP_VERSION__ || "1.0.0";
 
-defineProps<{
+const props = defineProps<{
   isOpen: boolean;
 }>();
 
@@ -22,6 +24,20 @@ function handleOpenIssues() {
 function handleOpenDocs() {
   emit("openUrl", "https://github.com/Wtier330/CommandSelector/wiki");
 }
+
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === "Escape" && props.isOpen) {
+    emit("close");
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("keydown", handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeyDown);
+});
 </script>
 
 <template>
