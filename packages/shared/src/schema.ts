@@ -58,3 +58,45 @@ export interface Library {
   meta: LibraryMeta;
   commands: CommandEntry[];
 }
+
+// 脚本类型
+export type ScriptType = "bat" | "ps1";
+
+// 脚本文件元数据
+export interface ScriptFileMeta {
+  id: string;
+  name: string;
+  type: ScriptType;
+  path: string;
+  size: number;
+  createdAt: string;
+  updatedAt: string;
+  description?: string;
+  // 解析的元数据（从注释中提取）
+  metadata?: ParsedScriptMetadata;
+  // 同步状态
+  syncStatus?: 'synced' | 'modified' | 'file-missing';
+}
+
+// 脚本注释元数据类型
+export interface ParsedScriptMetadata {
+  name: string;
+  description: string;
+  category: string;
+  tags: string[];
+  requires?: string;
+  platform?: string;
+  version?: string;
+  author?: string;
+  date?: string;
+  usage?: string;
+  params: { name: string; desc: string }[];
+  examples: string[];
+  notes?: string;
+}
+
+// 脚本库
+export interface ScriptLibrary {
+  meta: LibraryMeta;
+  scripts: ScriptFileMeta[];
+}

@@ -3,6 +3,8 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { CommandEntry } from "@commandselector/shared";
 import { useLibraryStore } from "../store/library";
+import { save, open } from "@tauri-apps/plugin-dialog";
+import { isTauri } from "@tauri-apps/api/core";
 import {
   NButton,
   NCard,
@@ -84,6 +86,40 @@ function removeParam(index: number) {
   draft.params.splice(index, 1);
 }
 
+async function handleExportAsScript() {
+  if (!draft.id) {
+    message.error("命令 ID 不能为空");
+    return;
+  }
+  const content = draft.powershellTemplate || draft.template;
+  const scriptType = draft.powershellTemplate ? "ps1" : "bat";
+  const defaultPath = `${draft.name}.${scriptType}`;
+
+  if (isTauri()) {
+    const savePath = await save({
+      defaultPath,
+      filters: [{
+        name: scriptType === "bat" ? "批处理脚本" : "PowerShell 脚本",
+        extensions: [scriptType]
+      }]
+    });
+    if (!savePath) return;
+    await import("@tauri-apps/plugin-fs").then((fs) => fs.writeTextFile(savePath as string, content));
+    message.success("导出成功");
+  } else {
+    const blob = new Blob([content], {
+      type: scriptType === "bat" ? "text/plain" : "application/x-powershell"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = defaultPath;
+    a.click();
+    URL.revokeObjectURL(url);
+    message.success("导出成功");
+  }
+}
+
 async function handleSave() {
   if (!draft.id) {
     message.error("命令 ID 不能为空");
@@ -152,8 +188,10 @@ function handleEngineChange() {
       <n-card :title="isNew ? '新建命令' : `编辑命令：${id}`" size="small">
         <template #header-extra>
           <n-space>
+n            
             <n-button @click="handleCancel">取消</n-button>
             <n-button type="primary" @click="handleSave">保存</n-button>
+            
           </n-space>
         </template>
         

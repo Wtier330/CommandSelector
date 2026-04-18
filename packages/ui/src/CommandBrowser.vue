@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, toRefs } from "vue";
-import type { CommandEntry } from "@commandselector/shared";
+import type { CommandEntry, ScriptFileMeta } from "@commandselector/shared";
 import { useResponsiveLayout, type ResponsiveOptions } from "./composables/useResponsiveLayout";
 import { useCommandFilter } from "./composables/useCommandFilter";
 import { useCommandParams } from "./composables/useCommandParams";
@@ -18,6 +18,9 @@ const props = defineProps<{
   trashedCommands?: CommandEntry[];
   selectedId?: string;
   responsive?: ResponsiveOptions;
+  // 新增脚本相关 props
+  scripts?: ScriptFileMeta[];
+  currentMode?: 'command' | 'script';
 }>();
 
 const emit = defineEmits<{
@@ -34,9 +37,34 @@ const emit = defineEmits<{
   (e: "import:command", command: CommandEntry): void;
   (e: "add-category", category: string): void;
   (e: "delete-category", category: string, action: "move" | "clear", targetCategory?: string): void;
+  (e: "open-script-manage"): void;
+  (e: "update:mode", value: 'command' | 'script'): void;
+  // 新增脚本相关 events
+  (e: "edit-script", id: string): void;
+  (e: "run-script", id: string): void;
+  (e: "more-script", id: string): void;
 }>();
 
 const { commands, trashedCommands } = toRefs(props);
+
+// 当前模式（优先使用外部传入，否则使用 localStorage）
+const internalMode = ref<'command' | 'script'>(props.currentMode ?? (() => {
+  try {
+    return (localStorage.getItem('cs-current-mode') as 'command' | 'script') || 'command';
+  } catch {
+    return 'command';
+  }
+})());
+
+// 暴露当前模式给父组件
+watch(internalMode, (newMode) => {
+  try {
+    localStorage.setItem('cs-current-mode', newMode);
+  } catch {
+    // localStorage 不可用时忽略
+  }
+  emit('update:mode', newMode);
+}, { immediate: true });
 
 function handleImportCommand(command: CommandEntry) {
   // 为导入的命令生成新的ID，避免ID冲突
@@ -246,40 +274,47 @@ defineExpose({
           <CommandSidebar
             :categories="categories"
             :filtered-commands="filteredCommands"
+            :scripts="scripts || []"
             :selected-id="selected?.id ?? null"
             :trashed-commands="trashedCommands"
-            v-model:keyword="keyword"
-            v-model:selected-categories="selectedCategories"
+            :mode="internalMode"
+            :keyword="keyword"
+            :selected-categories="selectedCategories"
+            @update:keyword="keyword = $event"
+            @update:selected-categories="selectedCategories = $event"
+            @update:mode="internalMode = $event"
             @select="handleSelect"
             @create="$emit('create')"
             @restore-trash="$emit('restore-trash', $event)"
             @delete-permanently="$emit('delete-permanently', $event)"
             @empty-trash="$emit('empty-trash')"
             @import="handleImportCommand"
-            @add-category="handleAddCategory"
-            @delete-category="handleDeleteCategory"
+            @addCategory="handleAddCategory"
+            @deleteCategory="handleDeleteCategory"
+            @edit-script="$emit('edit-script', $event)"
+            @run-script="$emit('run-script', $event)"
           />
         </aside>
 
         <!-- Main Content Area -->
         <main ref="mainEl" class="cs-main">
-          <!-- Mobile Top Bar -->
+          <!-- 移动端顶部栏 -->
           <div v-if="isNarrow" class="cs-narrow-top">
             <button class="cs-btn cs-btn-outline cs-btn-sm" type="button" @click="navOpen = true">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-              命令列表
+              {{ internalMode === 'command' ? '命令列表' : '脚本列表' }}
             </button>
             <div class="cs-narrow-title">{{ selected?.name ?? "请选择命令" }}</div>
           </div>
 
-          <!-- Empty State -->
-          <div v-if="!selected" class="cs-empty">
+          <!-- 空状态 -->
+          <div v-if="internalMode === 'command' && !selected" class="cs-empty">
             <div class="cs-empty-icon">⌘</div>
             <div class="cs-empty-text">请在左侧选择一条命令以开始配置</div>
           </div>
 
-          <!-- Content State -->
-          <div v-else class="cs-content">
+          <!-- 命令内容状态 -->
+          <div v-else-if="internalMode === 'command'" class="cs-content">
             <div class="cs-view-panel">
               <!-- 1. 命令标题 -->
               <header v-if="selected || isCommandEditing" class="cs-view-section cs-header-section">
@@ -437,11 +472,18 @@ defineExpose({
               </section>
             </div>
           </div>
+
+          <!-- 脚本模式提示 -->
+          <div v-else class="cs-script-placeholder">
+            <div class="cs-empty-icon">📄</div>
+            <div class="cs-empty-text">脚本模式开发中...</div>
+            <div class="cs-empty-hint">请切换回命令模式继续使用</div>
+          </div>
           </main>
         </div>
       </div>
     </div>
-    <!-- Mobile Drawer -->
+    <!-- 移动端抽屉 -->
     <div v-if="navOpen" class="cs-overlay" @click="navOpen = false">
       <div class="cs-drawer" @click.stop>
         <div class="cs-drawer-head">
@@ -451,10 +493,15 @@ defineExpose({
           <CommandSidebar
             :categories="categories"
             :filtered-commands="filteredCommands"
+            :scripts="scripts || []"
             :selected-id="selected?.id ?? null"
             :trashed-commands="trashedCommands"
-            v-model:keyword="keyword"
-            v-model:selected-categories="selectedCategories"
+            :mode="internalMode"
+            :keyword="keyword"
+            :selected-categories="selectedCategories"
+            @update:keyword="keyword = $event"
+            @update:selected-categories="selectedCategories = $event"
+            @update:mode="internalMode = $event"
             @select="handleSelect"
             @create="$emit('create')"
             @import="$emit('import')"
@@ -465,6 +512,8 @@ defineExpose({
             @empty-trash="$emit('empty-trash')"
             @add-category="handleAddCategory"
             @delete-category="handleDeleteCategory"
+            @edit-script="$emit('edit-script', $event)"
+            @run-script="$emit('run-script', $event)"
           />
         </div>
       </div>
@@ -481,6 +530,32 @@ defineExpose({
 @import "./styles/variables.css";
 @import "./styles/layout.css";
 @import "./styles/components.css";
+
+/* 脚本占位样式 */
+.cs-script-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+.cs-script-placeholder .cs-empty-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
+
+.cs-script-placeholder .cs-empty-text {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.cs-script-placeholder .cs-empty-hint {
+  font-size: 14px;
+  color: var(--cs-text-muted, #6b7280);
+}
 
 /* Breakpoint specific adjustments that need global scope */
 .cs-root[data-bp="M"] .cs-tags-tags-lg,

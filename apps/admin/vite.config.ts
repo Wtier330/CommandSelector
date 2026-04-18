@@ -17,6 +17,18 @@ export default defineConfig(async () => ({
   resolve: { alias: { '@': path.resolve(fileURLToPath(new URL('.', import.meta.url)), '../../packages/ui/src') } },
   plugins: [vue()],
 
+  // 预构建 Monaco Editor 以避免 403 错误
+  optimizeDeps: {
+    exclude: ['monaco-editor'],
+    include: [
+      'monaco-editor/esm/vs/editor/editor.worker',
+      'monaco-editor/esm/vs/language/json/json.worker',
+      'monaco-editor/esm/vs/language/css/css.worker',
+      'monaco-editor/esm/vs/language/html/html.worker',
+      'monaco-editor/esm/vs/language/typescript/ts.worker',
+    ],
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors
@@ -34,7 +46,7 @@ export default defineConfig(async () => ({
         }
       : undefined,
     fs: {
-      allow: ["..", "../../packages/shared", "../../packages/ui"],
+      allow: ["..", "../../packages/shared", "../../packages/ui", "node_modules"],
     },
     watch: {
       // 3. tell Vite to ignore watching `src-tauri`
