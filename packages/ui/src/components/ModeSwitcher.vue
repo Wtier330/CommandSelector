@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   modelValue: 'command' | 'script';
 }>();
 
@@ -56,7 +56,7 @@ const modes = [
 }
 
 .cs-mode-btn:hover:not(.is-active) {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255,255,255, 0.5);
 }
 
 .cs-mode-btn.is-active {

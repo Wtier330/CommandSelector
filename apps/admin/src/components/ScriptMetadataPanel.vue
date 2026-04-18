@@ -2,7 +2,7 @@
 import type { ParsedScriptMetadata } from "@commandselector/ui";
 import type { MetadataStatus } from "@commandselector/ui";
 
-const props = defineProps<{
+defineProps<{
   metadata: ParsedScriptMetadata | null;
   metadataStatus: MetadataStatus;
 }>();
@@ -15,10 +15,7 @@ const emit = defineEmits<{
 <template>
   <div class="cs-metadata-section">
     <div class="cs-metadata-header">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 5H7a2 2 0 0 1 2v12a2 2 0 0 2 2h12a2 2 0 0 0 2 2Z" />
-        <line x1="12" y1="9" x2="15" y2="9" stroke-dasharray="3,3" />
-      </svg>
+      <svg t="1776522296882" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="11345" width="20" height="20"><path d="M647.46 689.182l41.365-41.365L925.208 884.2l-41.365 41.366zM866.2 98.2h59.1v591h-59.1zM157 98.2h709.2v59.1H157z" fill="#515151" p-id="11346"></path><path d="M157 866.5h531.9v59.1h-591V98.2H157z" fill="#515151" p-id="11347"></path><path d="M511.6 748.3c-130 0-236.4-106.4-236.4-236.4s106.4-236.4 236.4-236.4S748 381.8 748 511.9 641.6 748.3 511.6 748.3z m0-59.1c100.5 0 177.3-76.8 177.3-177.3 0-100.5-76.8-177.3-177.3-177.3s-177.3 76.8-177.3 177.3c0 100.4 76.8 177.3 177.3 177.3z m0 0" fill="#515151" p-id="11348"></path></svg>
       <span class="cs-metadata-title">元数据预览</span>
       <span
         class="cs-metadata-status"
@@ -113,6 +110,18 @@ const emit = defineEmits<{
   border-radius: 8px;
   padding: 16px;
   background: #f8fafc;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 元数据主体 */
+.cs-metadata-body {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .cs-metadata-header {
@@ -189,6 +198,10 @@ const emit = defineEmits<{
   align-items: center;
   gap: 12px;
   padding: 20px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .cs-metadata-icon {
@@ -212,6 +225,9 @@ const emit = defineEmits<{
   text-decoration: underline;
   cursor: pointer;
   padding: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .cs-btn-link:hover {

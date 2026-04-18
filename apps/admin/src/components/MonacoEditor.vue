@@ -35,6 +35,7 @@ const emit = defineEmits<{
 
 const editorContainer = ref<HTMLElement>();
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
+let resizeObserver: ResizeObserver | null = null;
 
 // 注册批处理脚本语言
 onMounted(() => {
@@ -104,7 +105,8 @@ onMounted(() => {
       glyphMargin: true,
       folding: true,
       scrollBeyondLastLine: false,
-      automaticLayout: true,
+      smoothScrolling: true,
+      automaticLayout: false,
       tabSize: 2,
       insertSpaces: true,
       wordWrap: "on",
@@ -114,7 +116,12 @@ onMounted(() => {
         useShadows: true,
         verticalScrollbarSize: 10,
         horizontalScrollbarSize: 10,
+        verticalHasArrows: false,
+        horizontalHasArrows: false,
+        ignoreHorizontalScrollbarInContentHeight: true,
       },
+      mouseWheelScrollSensitivity: 1,
+      fastScrollSensitivity: 5,
     });
 
     // 监听内容变化
@@ -123,6 +130,14 @@ onMounted(() => {
         emit("update:modelValue", editor.getValue());
       }
     });
+
+    // 使用 ResizeObserver 来响应式调整编辑器大小
+    resizeObserver = new ResizeObserver(() => {
+      if (editor) {
+        editor.layout();
+      }
+    });
+    resizeObserver.observe(editorContainer.value);
   }
 });
 
@@ -158,6 +173,10 @@ onBeforeUnmount(() => {
     editor.dispose();
     editor = null;
   }
+  if (resizeObserver && editorContainer.value) {
+    resizeObserver.disconnect();
+    resizeObserver = null;
+  }
 });
 </script>
 
@@ -165,15 +184,19 @@ onBeforeUnmount(() => {
   <div
     ref="editorContainer"
     class="monaco-editor-container"
-    :style="{ height: height, minHeight: minHeight }"
   ></div>
 </template>
 
 <style scoped>
 .monaco-editor-container {
   width: 100%;
+  max-width: 100%;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   overflow: hidden;
+  flex: 1;
+  min-height: 400px;
+  position: relative;
+  box-sizing: border-box;
 }
 </style>

@@ -14,6 +14,7 @@ import CommandActionsFrom from "./components/CommandActions.vue";
 import CommandEditForm from "./components/CommandEditForm.vue";
 import ToastNotification from "./components/ToastNotification.vue";
 import BottomStatusBar from "./components/BottomStatusBar.vue";
+import ScriptCard from "./components/ScriptCard.vue";
 
 const props = defineProps<{
   commands: CommandEntry[];
@@ -41,7 +42,6 @@ const emit = defineEmits<{
   (e: "open-script-manage"): void;
   (e: "update:mode", value: 'command' | 'script'): void;
   (e: "edit-script", id: string): void;
-  (e: "run-script", id: string): void;
   (e: "more-script", id: string): void;
 }>();
 
@@ -85,6 +85,25 @@ const mainEl = ref<HTMLElement | null>(null);
 
 // 2. 过滤与列表
 const { keyword, selectedCategories, categories, filteredCommands } = useCommandFilter(commands);
+
+// 脚本类型过滤
+const selectedScriptType = ref<'all' | 'bat' | 'ps1'>('all');
+
+// 过滤后的脚本列表
+const filteredScripts = computed(() => {
+  let result = props.scripts || [];
+  if (selectedScriptType.value !== 'all') {
+    result = result.filter(s => s.type === selectedScriptType.value);
+  }
+  if (keyword.value.trim()) {
+    const kw = keyword.value.toLowerCase();
+    result = result.filter(s =>
+      s.name.toLowerCase().includes(kw) ||
+      (s.description?.toLowerCase().includes(kw) ?? false)
+    );
+  }
+  return result;
+});
 
 // 3. 选择逻辑
 const internalSelectedId = ref<string>(props.selectedId ?? "");
@@ -233,9 +252,11 @@ defineExpose({
               :mode="internalMode"
               :keyword="keyword"
               :selected-categories="selectedCategories"
+              :selected-script-type="selectedScriptType"
               @update:keyword="keyword = $event"
               @update:selected-categories="selectedCategories = $event"
               @update:mode="internalMode = $event"
+              @update:selectedScriptType="selectedScriptType = $event"
               @select="handleSelect"
               @create="$emit('create')"
               @restore-trash="$emit('restore-trash', $event)"
@@ -244,8 +265,7 @@ defineExpose({
               @import="handleImportCommand"
               @addCategory="handleAddCategory"
               @deleteCategory="handleDeleteCategory"
-              @edit-script="$emit('edit-script', $event)"
-              @run-script="$emit('run-script', $event)"
+              @open-script-manage="$emit('open-script-manage')"
             />
           </aside>
 
@@ -347,11 +367,21 @@ defineExpose({
               </div>
             </div>
 
-            <!-- 脚本模式提示 -->
-            <div v-else class="cs-script-placeholder">
-              <div class="cs-empty-icon">📄</div>
-              <div class="cs-empty-text">脚本模式开发中...</div>
-              <div class="cs-empty-hint">请切换回命令模式继续使用</div>
+            <!-- 脚本模式：显示脚本卡片网格 -->
+            <div v-else class="cs-script-content">
+              <div class="cs-script-grid">
+                <ScriptCard
+                  v-for="script in filteredScripts"
+                  :key="script.id"
+                  :script="script"
+                  @edit="$emit('edit-script', $event)"
+                />
+              </div>
+              <div v-if="filteredScripts.length === 0" class="cs-empty-state">
+                <div class="cs-empty-icon">📄</div>
+                <div class="cs-empty-text">没有找到脚本</div>
+                <div class="cs-empty-hint">尝试切换过滤条件或搜索其他内容</div>
+              </div>
             </div>
           </main>
         </div>
@@ -387,7 +417,6 @@ defineExpose({
             @add-category="handleAddCategory"
             @delete-category="handleDeleteCategory"
             @edit-script="$emit('edit-script', $event)"
-            @run-script="$emit('run-script', $event)"
           />
         </div>
       </div>
@@ -405,30 +434,46 @@ defineExpose({
 @import "./styles/layout.css";
 @import "./styles/components.css";
 
-/* 脚本占位样式 */
-.cs-script-placeholder {
+/* 脚本网格样式 */
+.cs-script-content {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  height: 100%;
+}
+
+.cs-script-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+.cs-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
+  flex: 1;
 }
 
-.cs-script-placeholder .cs-empty-icon {
+.cs-empty-state .cs-empty-icon {
   font-size: 64px;
   margin-bottom: 24px;
   opacity: 0.5;
 }
 
-.cs-script-placeholder .cs-empty-text {
+.cs-empty-state .cs-empty-text {
   font-size: 18px;
   font-weight: 500;
   margin-bottom: 12px;
+  color: #141413;
 }
 
-.cs-script-placeholder .cs-empty-hint {
+.cs-empty-state .cs-empty-hint {
   font-size: 14px;
-  color: var(--cs-text-muted, #6b7280);
+  color: #5e5d59;
 }
 
 /* Breakpoint specific adjustments that need global scope */

@@ -114,7 +114,6 @@ loadScriptContent();
               <MonacoEditor
                 v-model="scriptContent"
                 :language="monacoLanguage"
-                height="400px"
                 @update:model-value="handleContentChange"
               />
             </div>
@@ -135,6 +134,7 @@ loadScriptContent();
 </template>
 
 <style scoped>
+/* 确保 overlay 不阻止鼠标事件 */
 .cs-dialog-overlay {
   position: fixed;
   inset: 0;
@@ -142,7 +142,7 @@ loadScriptContent();
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
 }
 
 .cs-dialog {
@@ -154,6 +154,7 @@ loadScriptContent();
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  position: relative;
 }
 
 .cs-dialog-header {
@@ -179,7 +180,7 @@ loadScriptContent();
 /* 对话框主体 */
 .cs-dialog-body {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: hidden;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -203,6 +204,8 @@ loadScriptContent();
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* 编辑器区域 */
@@ -210,6 +213,15 @@ loadScriptContent();
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+}
+
+/* 确保 Monaco Editor 外层不拦截滚轮事件 */
+.cs-editor-section > * {
+  overflow: visible !important;
 }
 
 .cs-editor-header {

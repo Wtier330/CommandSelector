@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 
-const props = defineProps<{
+defineProps<{
   stats: { batCount: number; ps1Count: number; total: number };
 }>();
 

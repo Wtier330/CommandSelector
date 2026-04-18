@@ -9,7 +9,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "edit", id: string): void;
-  (e: "run", id: string): void;
   (e: "more", id: string): void;
 }>();
 
@@ -78,12 +77,7 @@ function handleEdit(id: string) {
   emit("edit", id);
 }
 
-// 处理运行
-function handleRun(id: string) {
-  emit("run", id);
-}
-
-// 处理更多操作
+// 处理更多更多操作
 function handleMore(id: string) {
   emit("more", id);
 }
@@ -119,7 +113,7 @@ function handleCategorySelect(category: string) {
         <input
           v-model="searchKeyword"
           class="cs-input"
-          placeholder="搜索脚本..."
+          placeholder="搜索脚本"
         />
       </div>
       <div class="cs-toolbar-right">
@@ -165,7 +159,6 @@ function handleCategorySelect(category: string) {
           :key="script.id"
           :script="script"
           @edit="handleEdit"
-          @run="handleRun"
           @more="handleMore"
         />
       </template>
@@ -186,8 +179,8 @@ function handleCategorySelect(category: string) {
 .cs-script-grid-view {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
+  gap: 20px;
+  padding: 20px;
 }
 
 /* 工具栏 */
@@ -195,9 +188,9 @@ function handleCategorySelect(category: string) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--cs-border, #e5e7eb);
+  border-bottom: 1px solid #f0eee6;
 }
 
 .cs-toolbar-left {
@@ -206,25 +199,26 @@ function handleCategorySelect(category: string) {
 
 .cs-input {
   width: 100%;
-  max-width: 300px;
+  max-width: 320px;
   padding: 8px 12px;
-  border: 1px solid var(--cs-border, #e5e7eb);
-  border-radius: 6px;
+  border: 1px solid #e8e6dc;
+  border-radius: 12px;
   font-size: 14px;
-  background: white;
-  color: var(--cs-text, #111827);
+  background: #faf9f5;
+  color: #141413;
+  transition: all 0.2s ease;
 }
 
 .cs-input:focus {
   outline: none;
-  border-color: var(--cs-blue, #3b82f6);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #3898ec;
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
 }
 
 .cs-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 /* 分类过滤器 */
@@ -241,25 +235,26 @@ function handleCategorySelect(category: string) {
   border-radius: 6px;
   background: transparent;
   font-size: 13px;
-  color: var(--cs-text-muted, #6b7280);
+;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .cs-filter-btn:hover {
-  background: var(--cs-muted, #f3f4f6);
+  background: #e8e6dc;
 }
 
 .cs-filter-btn.active {
-  background: var(--cs-blue, #3b82f6);
-  color: white;
+  background: #e8e6dc;
+  color: #4d4c48;
+  font-weight: 500;
 }
 
 .cs-divider {
   width: 1px;
   height: 20px;
-  background: var(--cs-border, #e5e7eb);
-  margin: 0 4px;
+  background: #e8e6dc;
+  margin: 0 8px;
 }
 
 /* 卡片网格 - 响应式 */
@@ -294,20 +289,23 @@ function handleCategorySelect(category: string) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  color: var(--cs-text-muted, #6b7280);
+  padding: 80px 20px;
+  color: #87867f;
   text-align: center;
 }
 
 .cs-empty-icon {
-  font-size: 48px;
+  font-size: 56px;
   margin-bottom: 16px;
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .cs-empty-text {
-  font-size: 16px;
+  font-family: "Georgia", serif;
+  font-size: 18px;
+  font-weight: 500;
   margin-bottom: 8px;
+  color: #5e5d59;
 }
 
 .cs-empty-hint {

@@ -10,11 +10,13 @@ fn read_script_file(path: String) -> Result<String, String> {
     match std::fs::read_to_string(&path) {
         Ok(content) => Ok(content),
         Err(_) => {
-            // 如果 UTF-8 失败，读取为字节并使用损失性转换
-            // 这可以处理非 UTF-8 编码的文件（如 GBK、CP936 等）
+            // 如果 UTF-8 失败，读取为字节并使用 GB18030（Windows 中文默认编码）解码
             let bytes = std::fs::read(&path)
                 .map_err(|e| format!("无法读取文件: {}", e))?;
-            Ok(String::from_utf8_lossy(&bytes).to_string())
+
+            // 使用 GB18030 解码，这是 Windows 中文系统的默认 ANSI 编码
+            let (decoded, _, _) = encoding_rs::GB18030.decode(&bytes);
+            Ok(decoded.to_string())
         }
     }
 }

@@ -12,7 +12,7 @@
 	const route = useRoute();
 
 	const { commands, trashedCommands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary, saveCommand, moveToTrash, restoreCommand, deletePermanently, emptyTrash, addCategory, deleteCategory, librarySource, lastUpdateTime } = useLibraryStore();
-	const { scripts, loadScripts, getScriptContent, updateScript } = useScriptsStore();
+	const { scripts, loadScripts, updateScript } = useScriptsStore();
 
 	const showTrashModal = ref(false);
 	const showScriptManageModal = ref(false);
@@ -165,17 +165,6 @@
 	  }
 	}
 
-	async function handleRunScript(id: string) {
-	  try {
-		const content = await getScriptContent(id);
-		console.log("Running script:", id, content);
-		// TODO: 实现脚本运行逻辑
-		alert("脚本运行功能开发中...");
-	  } catch (e: any) {
-		console.error("Failed to run script:", e);
-		alert("运行脚本失败: " + e.message);
-	  }
-	}
 
 	async function handleSaveScript(id: string, content: string) {
 		try {
@@ -237,7 +226,6 @@
         @open-script-manage="handleCsOpenScriptManage"
         @update:mode="handleModeChange"
         @edit-script="handleEditScript"
-        @run-script="handleRunScript"
         @more-script="handleMoreScript"
       />
       <BottomStatusBar />

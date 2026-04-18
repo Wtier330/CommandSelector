@@ -7,6 +7,7 @@ import { useScriptFilters } from "../composables/useScriptFilters";
 import CreateScriptDialog from "./CreateScriptDialog.vue";
 import ScriptEditorDialog from "./ScriptEditorDialog.vue";
 import ScriptManageToolbar from "./ScriptManageToolbar.vue";
+import ConfirmDialog from "./ConfirmDialog.vue";
 
 const emit = defineEmits<{
   (e: "close"): void;
@@ -24,6 +25,8 @@ const {
 const showCreateDialog = ref(false);
 const showEditDialog = ref(false);
 const editingScript = ref<ScriptFileMeta | null>(null);
+const showConfirmDialog = ref(false);
+const deletingScript = ref<ScriptFileMeta | null>(null);
 
 const isLoading = ref(false);
 const errorMsg = ref("");
@@ -111,10 +114,15 @@ async function handleSaveScript(id: string, content: string) {
   }
 }
 
-async function handleDeleteScript(script: ScriptFileMeta) {
-  if (!confirm(`确定要删除脚本 "${script.name}" 吗?`)) {
-    return;
-  }
+function handleDeleteScript(script: ScriptFileMeta) {
+  deletingScript.value = script;
+  showConfirmDialog.value = true;
+}
+
+async function handleConfirmDelete() {
+  if (!deletingScript.value) return;
+
+  const script = deletingScript.value;
   isDeleting.value = script.id;
   try {
     await deleteScript(script.id);
@@ -123,7 +131,14 @@ async function handleDeleteScript(script: ScriptFileMeta) {
     alert(`删除失败: ${e.message}`);
   } finally {
     isDeleting.value = null;
+    showConfirmDialog.value = false;
+    deletingScript.value = null;
   }
+}
+
+function handleCancelDelete() {
+  showConfirmDialog.value = false;
+  deletingScript.value = null;
 }
 
 async function handleImportScript() {
@@ -254,6 +269,16 @@ onMounted(() => {
       :scriptType="editingScript.type"
       @close="closeEditDialog"
       @save="handleSaveScript"
+    />
+    <ConfirmDialog
+      v-if="showConfirmDialog && deletingScript"
+      title="删除脚本"
+      :message="`确定要删除脚本 ${deletingScript.name} 吗？删除后无法恢复。`"
+      confirmText="删除"
+      cancelText="取消"
+      type="danger"
+      @confirm="handleConfirmDelete"
+      @cancel="handleCancelDelete"
     />
   </teleport>
 </template>
