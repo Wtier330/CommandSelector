@@ -25,10 +25,7 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
     }
     // ESC 关闭
     if (e.key === "Escape") {
-      if (options.hasChanges?.value) {
-        const confirmed = confirm("有未保存的更改，确定要关闭吗？");
-        if (!confirmed) return;
-      }
+      // 直接调用 onClose，让调用者处理确认逻辑
       options.onClose?.();
     }
   }

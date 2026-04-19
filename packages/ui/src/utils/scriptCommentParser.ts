@@ -166,10 +166,10 @@ export class ScriptCommentParser {
     }
   }
 
-  // 验证并填充默认值
+  // 验证并填充默认值（宽松模式）
   private validateAndFillDefaults(metadata: ParsedScriptMetadata): ParsedScriptMetadata {
     if (!metadata.name || metadata.name.trim() === '') {
-      throw new Error('脚本注释缺少 @name 或 .SYNOPSIS 字段');
+      metadata.name = '未命名脚本';
     }
     if (!metadata.category || metadata.category.trim() === '') {
       metadata.category = '未分类';

@@ -6,13 +6,21 @@ import * as monaco from "monaco-editor";
 if (!(self as any).MonacoEnvironment) {
   (self as any).MonacoEnvironment = {
     getWorker: function (_workerId: string, _: string) {
-      // @ts-ignore
-      return new Worker(
-        new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url).href,
-        {
-          type: 'module'
-        }
-      );
+      try {
+        // @ts-ignore
+        const worker = new Worker(
+          new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url).href,
+          {
+            type: 'module'
+          }
+        );
+        // 添加错误处理，防止 Worker 初始化失败导致控制台报错
+        worker.onerror = () => {};
+        return worker;
+      } catch (e) {
+        // Worker 创建失败时返回 null
+        return null as any;
+      }
     },
     getWorkerUrl: function (_workerId: string, _: string) {
       // @ts-ignore
@@ -36,6 +44,18 @@ const emit = defineEmits<{
 const editorContainer = ref<HTMLElement>();
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
 let resizeObserver: ResizeObserver | null = null;
+
+// 计算编辑器高度（根据内容行数）
+const editorHeight = ref<string>('400px');
+
+// 更新编辑器高度
+function updateEditorHeight(content: string) {
+  const lineCount = content.split('\n').length;
+  const lineHeight = 21; // 与编辑器配置中的 lineHeight 一致
+  const minHeight = 400;
+  const calculatedHeight = lineCount * lineHeight + 40; // 添加一些 padding
+  editorHeight.value = `${Math.max(minHeight, calculatedHeight)}px`;
+}
 
 // 注册批处理脚本语言
 onMounted(() => {
@@ -165,13 +185,12 @@ onMounted(() => {
       wordWrap: "on",
       scrollbar: {
         vertical: "hidden",
-        horizontal: "visible",
-        useShadows: true,
+        horizontal: "auto",
+        useShadows: false,
         verticalScrollbarSize: 0,
         horizontalScrollbarSize: 10,
         verticalHasArrows: false,
         horizontalHasArrows: false,
-        ignoreHorizontalScrollbarInContentHeight: true,
       },
       mouseWheelScrollSensitivity: 0,
       fastScrollSensitivity: 0,
@@ -192,9 +211,14 @@ onMounted(() => {
     // 监听内容变化
     editor.onDidChangeModelContent(() => {
       if (editor) {
-        emit("update:modelValue", editor.getValue());
+        const content = editor.getValue();
+        emit("update:modelValue", content);
+        updateEditorHeight(content);
       }
     });
+
+    // 初始化高度
+    updateEditorHeight(props.modelValue);
 
     // 使用 ResizeObserver 来响应式调整编辑器大小
     resizeObserver = new ResizeObserver(() => {
@@ -249,6 +273,7 @@ onBeforeUnmount(() => {
   <div
     ref="editorContainer"
     class="monaco-editor-container"
+    :style="{ height: editorHeight }"
   ></div>
 </template>
 
@@ -259,25 +284,7 @@ onBeforeUnmount(() => {
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   overflow: hidden;
-  flex: 1;
-  min-height: 400px;
   position: relative;
   box-sizing: border-box;
-  overscroll-behavior: none;
-  overflow-y: hidden;
-}
-
-/* 强制禁用 Monaco Editor 内部的所有滚动 */
-.monaco-editor-container :deep(.monaco-scrollable-element) {
-  overscroll-behavior: none !important;
-  overflow-y: hidden !important;
-}
-
-.monaco-editor-container :deep(.view-lines) {
-  overscroll-behavior: none !important;
-}
-
-.monaco-editor-container :deep(.minimap-slider) {
-  pointer-events: none !important;
 }
 </style>

@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import MonacoEditor from "./MonacoEditor.vue";
 import ScriptMetadataPanel from "./ScriptMetadataPanel.vue";
 import ScriptEditorActions from "./ScriptEditorActions.vue";
+import ConfirmDialog from "./ConfirmDialog.vue";
 import {
   useScriptMetadata,
   useScriptTemplates,
@@ -25,6 +26,7 @@ const scriptType = ref(props.scriptType);
 const isLoading = ref(true);
 const errorMsg = ref("");
 const dialogBodyRef = ref<HTMLElement>();
+const showConfirmDialog = ref(false);
 
 // 使用 composables
 const { metadata, metadataStatus } = useScriptMetadata(scriptContent, scriptType);
@@ -53,6 +55,26 @@ async function loadScriptContent() {
 // 处理保存
 function handleSave() {
   emit("save", props.scriptId, scriptContent.value);
+}
+
+// 处理关闭
+function handleClose() {
+  if (hasChanges.value) {
+    showConfirmDialog.value = true;
+  } else {
+    emit('close');
+  }
+}
+
+// 确认关闭
+function handleConfirmClose() {
+  showConfirmDialog.value = false;
+  emit('close');
+}
+
+// 取消关闭
+function handleCancelClose() {
+  showConfirmDialog.value = false;
 }
 
 // 处理内容变化
@@ -109,7 +131,15 @@ onBeforeUnmount(() => {
 // 键盘快捷键
 useKeyboardShortcuts({
   onSave: handleSave,
-  onClose: () => emit("close"),
+  onClose: () => {
+    // 直接关闭，不在这里检查未保存的更改
+    // 检查在 handleClose 函数中进行
+    if (!hasChanges.value) {
+      emit('close');
+    } else {
+      showConfirmDialog.value = true;
+    }
+  },
   onInsertTemplate: insertCommentTemplate,
   hasChanges: hasChanges
 });
@@ -125,7 +155,7 @@ loadScriptContent();
 
 <template>
   <teleport to="body">
-    <div class="cs-dialog-overlay" @click.self="hasChanges ? undefined : emit('close')">
+    <div class="cs-dialog-overlay" @click.self="handleClose">
       <div class="cs-dialog">
         <div class="cs-dialog-header">
           <div class="cs-dialog-title">
@@ -136,7 +166,7 @@ loadScriptContent();
             :has-changes="hasChanges"
             @insert-template="insertCommentTemplate"
             @save="handleSave"
-            @close="emit('close')"
+            @close="handleClose"
           />
         </div>
 
@@ -167,7 +197,7 @@ loadScriptContent();
         </div>
 
         <div class="cs-dialog-footer">
-          <button class="cs-btn cs-btn-outline" type="button" @click="emit('close')">
+          <button class="cs-btn cs-btn-outline" type="button" @click="handleClose">
             {{ hasChanges ? '取消' : '关闭' }}
           </button>
           <button class="cs-btn cs-btn-primary" type="button" @click="handleSave">
@@ -176,6 +206,17 @@ loadScriptContent();
         </div>
       </div>
     </div>
+
+    <ConfirmDialog
+      v-if="showConfirmDialog"
+      title="未保存的更改"
+      message="确定要关闭吗？关闭后未保存的内容将会丢失。"
+      confirmText="关闭"
+      cancelText="取消"
+      type="warning"
+      @confirm="handleConfirmClose"
+      @cancel="handleCancelClose"
+    />
   </teleport>
 </template>
 
@@ -259,7 +300,6 @@ loadScriptContent();
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 400px;
   min-width: 0;
 }
 

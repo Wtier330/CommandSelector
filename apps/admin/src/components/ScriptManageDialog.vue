@@ -11,15 +11,13 @@ import ConfirmDialog from "./ConfirmDialog.vue";
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "import-command", command: any): void;
 }>();
 
 const {
   scripts,
   loadScripts,
   deleteScript,
-  exportScript,
-  getScriptContent
+  exportScript
 } = useScriptsStore();
 
 const showCreateDialog = ref(false);
@@ -32,7 +30,6 @@ const isLoading = ref(false);
 const errorMsg = ref("");
 const isDeleting = ref<string | null>(null);
 const isExporting = ref<string | null>(null);
-const isImportingCommand = ref<string | null>(null);
 
 // 使用脚本过滤
 const { keyword, selectedType, filteredScripts, stats } = useScriptFilters(scripts);
@@ -154,39 +151,14 @@ async function handleImportScript() {
 async function handleExportScript(script: ScriptFileMeta) {
   isExporting.value = script.id;
   try {
-    await exportScript(script.id);
-    alert("导出成功");
+    const result = await exportScript(script.id);
+    if (result) {
+      alert("导出成功");
+    }
   } catch (e: any) {
     alert(`导出失败: ${e.message}`);
   } finally {
     isExporting.value = null;
-  }
-}
-
-async function handleImportAsCommand(script: ScriptFileMeta) {
-  isImportingCommand.value = script.id;
-  try {
-    const content = await getScriptContent(script.id);
-    const command = {
-      id: `cmd-${Date.now()}`,
-      name: script.name,
-      description: script.description || `从 ${script.type.toUpperCase()} 脚本导入`,
-      category: "批处理脚本",
-      tags: [script.type.toUpperCase()],
-      engine: script.type === "bat" ? "cmd" : "cmd+powershell",
-      template: script.type === "bat" ? content : "",
-      powershellTemplate: script.type === "ps1" ? content : undefined,
-      params: [],
-      platform: "windows",
-      usage: "",
-      updatedAt: script.updatedAt
-    };
-    emit("import-command", command);
-    alert("命令已导入");
-  } catch (e: any) {
-    alert(`导入失败: ${e.message}`);
-  } finally {
-    isImportingCommand.value = null;
   }
 }
 
@@ -248,7 +220,6 @@ onMounted(() => {
               <div class="cs-script-actions">
                 <button class="cs-action-btn" title="编辑" type="button" @click="openEditDialog(script)">✏️</button>
                 <button class="cs-action-btn" title="导出" type="button" :disabled="isExporting === script.id" @click="handleExportScript(script)">📤</button>
-                <button class="cs-action-btn" title="导入为命令" type="button" :disabled="isImportingCommand === script.id" @click="handleImportAsCommand(script)">📋</button>
                 <button class="cs-action-btn cs-action-delete" title="删除" type="button" :disabled="isDeleting === script.id" @click="handleDeleteScript(script)">🗑️</button>
               </div>
             </div>
