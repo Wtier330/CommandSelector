@@ -43,50 +43,99 @@ onMounted(() => {
 
   // 设置批处理脚本的语法高亮
   monaco.languages.setMonarchTokensProvider("batch", {
+    keywords: [
+      "if", "else", "elseif", "exist", "defined", "errorlevel", "cmdextversion",
+      "for", "do", "in", "goto", "call", "exit", "return", "rem", "set",
+      "setlocal", "endlocal", "shift", "pause", "cls", "echo", "type", "copy",
+      "move", "del", "erase", "rd", "rmdir", "md", "mkdir", "cd", "chdir",
+      "dir", "tree", "find", "findstr", "xcopy", "robocopy", "attrib", "icacls",
+      "net", "sc", "tasklist", "taskkill", "ping", "tracert", "ipconfig",
+      "netstat", "nslookup", "route", "arp", "shutdown", "restart", "logoff",
+      "power", "assoc", "ftype", "path", "ver", "vol", "date", "time",
+      "break", "continue", "color", "title", "prompt", "mode", "more", "sort",
+      "timeout", "choice", "start", "cmd", "command", "reg", "wmic", "powershell",
+      "diskpart", "bcdedit", "format", "convert", "fsutil", "whoami",
+      "takeown", "icacls", "chkdsk", "sfc", "dism", "wusa", "robocopy"
+    ],
     tokenizer: {
       root: [
+        // 注释
         [/^@.*$/, "comment.directive"],
         [/^::.*$/, "comment"],
-        [/:|==/, "operators"],
+        [/rem\s.*/i, "comment"],
+
+        // 字符串
+        [/"([^"\\]|\\.)*"/, "string"],
+        [/('[^']*')/, "string"],
+
+        // 运算符
+        [/==|!=|===|!==/, "operator"],
+        [/:|==/, "operator"],
+        [/equ\b|neq\b|lss\b|leq\b|gtr\b|geq\b/, "operator"],
+        [/[\+\-\*\/\^%=<>!&|]/, "operator"],
+
+        // 环境变量
         [/%%[^%]+%%/, "variable.predefined"],
         [/%[^%]+%/, "variable"],
-        [/rem\b.*/i, "comment"],
-        [/goto\s+\w+/i, "keyword"],
-        [/call\s+/, "keyword"],
-        [/set\s+/i, "keyword"],
-        [/if\b/, "keyword"],
-        [/else\b/, "keyword"],
-        [/for\b/, "keyword"],
-        [/do\b/, "keyword"],
-        [/echo\b/, "keyword"],
-        [/exit\b/, "keyword"],
-        [/cd\b/, "keyword"],
-        [/cls\b/, "keyword"],
-        [/pause\b/, "keyword"],
-        [/shift\b/, "keyword"],
-        [/setlocal\b/, "keyword"],
-        [/endlocal\b/, "keyword"],
-        [/not\b/, "keyword"],
-        [/equ\b|neq\b|lss\b|leq\b|gtr\b|geq\b/, "keyword.operator"],
-        [/errorlevel\b/, "variable"],
+
+        // 路径和文件名
+        [/([a-zA-Z]:)?(\\[^\\]+)+\\?/, "string.path"],
+        [/([a-zA-Z]:)?(\/[^\/]+)+\/?/, "string.path"],
+
+        // 关键字
+        [/(goto|call|set|if|for|do|in|echo|exit|pause|cls|rem|shift|setlocal|endlocal|cd|md|rd|del|copy|move|dir|type|ping|net|taskkill|tasklist|start|cmd|powershell|reg|wmic|whoami|takeown|icacls|attrib|timeout|choice|break|continue|color|title|prompt|mode|more|sort|find|findstr|xcopy|robocopy|chkdsk|sfc|dism|shutdown)\b/i, "keyword"],
+
+        // 标签
+        [/:\w+/, "label"],
+
+        // 特殊变量
+        [/errorlevel\b/i, "variable.special"],
+        [/cd\b/i, "keyword"],
+        [/cls\b/i, "keyword"],
+        [/pause\b/i, "keyword"],
+
+        // 数字
+        [/\d+/, "number"],
+
+        // 括号
+        [/[(){}\[\]]/, "delimiter.bracket"],
       ],
     },
   });
 
-  // 设置 PowerShell 的语法高亮（Monaco 已内置）
   // 注册自定义主题
   monaco.editor.defineTheme("vs-custom", {
     base: "vs",
     inherit: true,
     rules: [
-      { token: "comment", foreground: "6A9955" },
+      // 注释
+      { token: "comment", foreground: "6A9955", fontStyle: "italic" },
       { token: "comment.directive", foreground: "6A9955", fontStyle: "italic" },
-      { token: "keyword", foreground: "0000FF" },
+
+      // 关键字
+      { token: "keyword", foreground: "0000FF", fontStyle: "bold" },
+      { token: "keyword.control", foreground: "AF00DB" },
       { token: "keyword.operator", foreground: "AF00DB" },
-      { token: "operators", foreground: "AF00DB" },
-      { token: "variable", foreground: "001080" },
-      { token: "variable.predefined", foreground: "A31515" },
+
+      // 运算符
+      { token: "operator", foreground: "AF00DB" },
+
+      // 字符串
       { token: "string", foreground: "A31515" },
+      { token: "string.path", foreground: "098658" },
+
+      // 变量
+      { token: "variable", foreground: "001080" },
+      { token: "variable.predefined", foreground: "A31515", fontStyle: "bold" },
+      { token: "variable.special", foreground: "D73A49", fontStyle: "bold" },
+
+      // 标签
+      { token: "label", foreground: "880000", fontStyle: "bold" },
+
+      // 分隔符
+      { token: "delimiter.bracket", foreground: "000000" },
+
+      // 数字
       { token: "number", foreground: "098658" },
     ],
     colors: {},
@@ -99,11 +148,15 @@ onMounted(() => {
       language: props.language || "batch",
       theme: "vs-custom",
       readOnly: props.readonly || false,
-      minimap: { enabled: true },
+      minimap: { enabled: false }, // 禁用 minimap
       fontSize: 13,
+      lineHeight: 21,
+      fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
       lineNumbers: "on",
+      lineNumbersMinChars: 3,
       glyphMargin: true,
       folding: true,
+      foldingStrategy: "auto",
       scrollBeyondLastLine: false,
       smoothScrolling: true,
       automaticLayout: false,
@@ -111,17 +164,29 @@ onMounted(() => {
       insertSpaces: true,
       wordWrap: "on",
       scrollbar: {
-        vertical: "visible",
+        vertical: "hidden",
         horizontal: "visible",
         useShadows: true,
-        verticalScrollbarSize: 10,
+        verticalScrollbarSize: 0,
         horizontalScrollbarSize: 10,
         verticalHasArrows: false,
         horizontalHasArrows: false,
         ignoreHorizontalScrollbarInContentHeight: true,
       },
-      mouseWheelScrollSensitivity: 1,
-      fastScrollSensitivity: 5,
+      mouseWheelScrollSensitivity: 0,
+      fastScrollSensitivity: 0,
+      renderWhitespace: "selection",
+      cursorStyle: "line",
+      cursorWidth: 2,
+      selectOnLineNumbers: true,
+      renderLineHighlight: "all",
+      bracketPairColorization: {
+        enabled: true
+      },
+      guides: {
+        bracketPairs: true,
+        indentation: true
+      },
     });
 
     // 监听内容变化
@@ -198,5 +263,21 @@ onBeforeUnmount(() => {
   min-height: 400px;
   position: relative;
   box-sizing: border-box;
+  overscroll-behavior: none;
+  overflow-y: hidden;
+}
+
+/* 强制禁用 Monaco Editor 内部的所有滚动 */
+.monaco-editor-container :deep(.monaco-scrollable-element) {
+  overscroll-behavior: none !important;
+  overflow-y: hidden !important;
+}
+
+.monaco-editor-container :deep(.view-lines) {
+  overscroll-behavior: none !important;
+}
+
+.monaco-editor-container :deep(.minimap-slider) {
+  pointer-events: none !important;
 }
 </style>

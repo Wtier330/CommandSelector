@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import MonacoEditor from "./MonacoEditor.vue";
 import ScriptMetadataPanel from "./ScriptMetadataPanel.vue";
 import ScriptEditorActions from "./ScriptEditorActions.vue";
@@ -24,6 +24,7 @@ const scriptContent = ref("");
 const scriptType = ref(props.scriptType);
 const isLoading = ref(true);
 const errorMsg = ref("");
+const dialogBodyRef = ref<HTMLElement>();
 
 // 使用 composables
 const { metadata, metadataStatus } = useScriptMetadata(scriptContent, scriptType);
@@ -60,6 +61,51 @@ function handleContentChange(value: string) {
   setChanged(true);
 }
 
+// 全局滚轮处理
+let globalWheelHandler: ((e: WheelEvent) => void) | null = null;
+
+onMounted(() => {
+  // 全局拦截滚轮事件
+  globalWheelHandler = (e: WheelEvent) => {
+    // 检查是否在对话框内
+    if (dialogBodyRef.value) {
+      const rect = dialogBodyRef.value.getBoundingClientRect();
+      const isInDialog = e.clientX >= rect.left &&
+                       e.clientX <= rect.right &&
+                       e.clientY >= rect.top &&
+                       e.clientY <= rect.bottom;
+
+      if (isInDialog) {
+        // 检查是否在 Monaco Editor 区域内
+        const target = e.target as HTMLElement;
+        const isInMonaco = target.closest('.monaco-editor-container');
+
+        if (isInMonaco) {
+          // 在 Monaco Editor 内，阻止默认滚动并让对话框主体滚动
+          e.preventDefault();
+          e.stopPropagation();
+
+          // 手动滚动对话框主体
+          if (dialogBodyRef.value) {
+            dialogBodyRef.value.scrollTop += e.deltaY;
+            dialogBodyRef.value.scrollLeft += e.deltaX;
+          }
+        }
+      }
+    }
+  };
+
+  // 使用捕获模式在全局监听
+  document.addEventListener('wheel', globalWheelHandler, { passive: false, capture: true });
+});
+
+onBeforeUnmount(() => {
+  if (globalWheelHandler) {
+    document.removeEventListener('wheel', globalWheelHandler, { capture: true } as any);
+    globalWheelHandler = null;
+  }
+});
+
 // 键盘快捷键
 useKeyboardShortcuts({
   onSave: handleSave,
@@ -94,7 +140,7 @@ loadScriptContent();
           />
         </div>
 
-        <div class="cs-dialog-body">
+        <div ref="dialogBodyRef" class="cs-dialog-body">
           <div v-if="isLoading" class="cs-loading-state">正在加载脚本内容...</div>
           <div v-else-if="errorMsg" class="cs-error-state">{{ errorMsg }}</div>
           <div v-else class="cs-editor-layout">
@@ -180,11 +226,12 @@ loadScriptContent();
 /* 对话框主体 */
 .cs-dialog-body {
   flex: 1;
-  overflow-y: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 0 24px 24px 24px;
+  position: relative;
 }
 
 .cs-loading-state,
@@ -204,8 +251,7 @@ loadScriptContent();
   display: flex;
   flex-direction: column;
   gap: 16px;
-  flex: 1;
-  overflow: hidden;
+  min-width: 0;
 }
 
 /* 编辑器区域 */
@@ -213,15 +259,8 @@ loadScriptContent();
   display: flex;
   flex-direction: column;
   gap: 12px;
-  flex: 1;
-  overflow: hidden;
-  min-height: 0;
-  position: relative;
-}
-
-/* 确保 Monaco Editor 外层不拦截滚轮事件 */
-.cs-editor-section > * {
-  overflow: visible !important;
+  min-height: 400px;
+  min-width: 0;
 }
 
 .cs-editor-header {
