@@ -17,8 +17,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "close"): void;
-  (e: "save", id: string, content: string): void;
+  close: [];
+  save: [id: string, content: string];
 }>();
 
 const scriptContent = ref("");
@@ -31,6 +31,9 @@ const showConfirmDialog = ref(false);
 // 使用 composables
 const { metadata, metadataStatus } = useScriptMetadata(scriptContent, scriptType);
 const { hasChanges, insertCommentTemplate, setChanged } = useScriptTemplates(scriptContent, scriptType);
+
+// 保存状态
+const isSavingState = ref(false);
 
 // Monaco 语言
 const monacoLanguage = computed(() => {
@@ -53,8 +56,19 @@ async function loadScriptContent() {
 }
 
 // 处理保存
-function handleSave() {
-  emit("save", props.scriptId, scriptContent.value);
+async function handleSave() {
+  isSavingState.value = true;
+
+  try {
+    const { updateScript } = await import("../store/scripts");
+    await updateScript(props.scriptId, scriptContent.value);
+    emit('save', props.scriptId, scriptContent.value);
+    emit('close');
+  } catch (e: any) {
+    alert(`保存失败: ${e.message}`);
+  } finally {
+    isSavingState.value = false;
+  }
 }
 
 // 处理关闭
@@ -164,6 +178,7 @@ loadScriptContent();
           </div>
           <ScriptEditorActions
             :has-changes="hasChanges"
+            :is-saving="isSavingState"
             @insert-template="insertCommentTemplate"
             @save="handleSave"
             @close="handleClose"
@@ -173,7 +188,7 @@ loadScriptContent();
         <div ref="dialogBodyRef" class="cs-dialog-body">
           <div v-if="isLoading" class="cs-loading-state">正在加载脚本内容...</div>
           <div v-else-if="errorMsg" class="cs-error-state">{{ errorMsg }}</div>
-          <div v-else class="cs-editor-layout">
+          <div v-else-if="!isLoading && !errorMsg" class="cs-editor-layout">
             <ScriptMetadataPanel
               :metadata="metadata"
               :metadata-status="metadataStatus"
@@ -191,7 +206,7 @@ loadScriptContent();
                 v-model="scriptContent"
                 :language="monacoLanguage"
                 @update:model-value="handleContentChange"
-              />
+"              />
             </div>
           </div>
         </div>
@@ -200,8 +215,13 @@ loadScriptContent();
           <button class="cs-btn cs-btn-outline" type="button" @click="handleClose">
             {{ hasChanges ? '取消' : '关闭' }}
           </button>
-          <button class="cs-btn cs-btn-primary" type="button" @click="handleSave">
-            保存
+          <button
+            class="cs-btn cs-btn-primary"
+            type="button"
+            :disabled="isSavingState"
+            @click="handleSave"
+          >
+            {{ isSavingState ? '保存中...' : '保存' }}
           </button>
         </div>
       </div>
@@ -229,7 +249,7 @@ loadScriptContent();
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 3000;
 }
 
 .cs-dialog {
@@ -273,6 +293,10 @@ loadScriptContent();
   gap: 16px;
   padding: 0 24px 24px 24px;
   position: relative;
+  /* 确保编辑器不会溢出到按钮区域 */
+  max-height: calc(90vh - 80px);
+  /* 确保编辑器不会遮挡按钮 */
+  overflow: auto;
 }
 
 .cs-loading-state,
@@ -301,6 +325,10 @@ loadScriptContent();
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+  position: relative;
+  /* 确保编辑器区域不会遮挡底部按钮 */
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 .cs-editor-header {
@@ -338,6 +366,9 @@ loadScriptContent();
   gap: 12px;
   padding: 16px 24px;
   border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
 }
 
 .cs-btn {
@@ -348,6 +379,8 @@ loadScriptContent();
   cursor: pointer;
   border: 1px solid;
   transition: all 0.2s ease;
+  /* 确保按钮可点击 */
+  pointer-events: auto;
 }
 
 .cs-btn:disabled {

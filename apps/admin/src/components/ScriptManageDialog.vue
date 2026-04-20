@@ -100,17 +100,6 @@ async function handleCreateScript(name: string, type: "bat" | "ps1", content: st
   }
 }
 
-async function handleSaveScript(id: string, content: string) {
-  try {
-    const { updateScript } = useScriptsStore();
-    await updateScript(id, content);
-    await handleLoadScripts();
-    closeEditDialog();
-  } catch (e: any) {
-    alert(`保存失败: ${e.message}`);
-  }
-}
-
 function handleDeleteScript(script: ScriptFileMeta) {
   deletingScript.value = script;
   showConfirmDialog.value = true;
@@ -144,7 +133,7 @@ async function handleImportScript() {
     await importScript();
     await handleLoadScripts();
   } catch (e: any) {
-    alert(`导入失败: ${e.message}`);
+    alert(`导入导入: ${e.message}`);
   }
 }
 
@@ -239,7 +228,7 @@ onMounted(() => {
       :scriptName="editingScript.name"
       :scriptType="editingScript.type"
       @close="closeEditDialog"
-      @save="handleSaveScript"
+      @save="() => handleLoadScripts()"
     />
     <ConfirmDialog
       v-if="showConfirmDialog && deletingScript"
