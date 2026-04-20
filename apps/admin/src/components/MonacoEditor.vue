@@ -1,33 +1,26 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import * as monaco from "monaco-editor";
+import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 
-// 配置 Monaco Editor Worker（只执行一次）
-if (!(self as any).MonacoEnvironment) {
-  (self as any).MonacoEnvironment = {
-    getWorker: function (_workerId: string, _: string) {
-      try {
-        // @ts-ignore
-        const worker = new Worker(
-          new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url).href,
-          {
-            type: 'module'
-          }
-        );
-        // 添加错误处理，防止 Worker 初始化失败导致控制台报错
-        worker.onerror = () => {};
-        return worker;
-      } catch (e) {
-        // Worker 创建失败时返回 null
-        return null as any;
-      }
-    },
-    getWorkerUrl: function (_workerId: string, _: string) {
-      // @ts-ignore
-      return new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url).href;
-    }
-  };
-}
+// 配置 Monaco Environment 以正确加载 Worker
+self.MonacoEnvironment = {
+	getWorker: function (_workerId, label) {
+		return new EditorWorker({
+			name: label,
+	});
+  }
+};
+
+// // 配置 Monaco Environment（禁用 Worker 以避免警告）
+// if (!(self as any).MonacoEnvironment) {
+//   (self as any).MonacoEnvironment = {
+//     getWorker: function () {
+//       // 返回 undefined 让 Monaco 在主线程运行
+//       return undefined;
+//     }
+//   };
+// }
 
 const props = defineProps<{
   modelValue: string;

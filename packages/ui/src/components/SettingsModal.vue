@@ -13,6 +13,7 @@ const emit = defineEmits<{
   (e: "import"): void;
   (e: "export"): void;
   (e: "openTrash"): void;
+  (e: "openAIConfig"): void;
 }>();
 
 function handleImport() {
@@ -27,6 +28,11 @@ function handleExport() {
 
 function handleOpenTrash() {
   emit("openTrash");
+  emit("close");
+}
+
+function handleOpenAIConfig() {
+  emit("openAIConfig");
   emit("close");
 }
 
@@ -96,6 +102,18 @@ onUnmounted(() => {
                 <path d="M8 6V4c0 -1 1 -2 2 -2h4c1 0 2 1 2 2v2"></path>
               </svg>
               <span>打开回收站</span>
+            </button>
+          </div>
+
+          <div class="cs-settings-section">
+            <h4 class="cs-settings-title">AI 功能</h4>
+            <p class="cs-settings-desc">配置 AI 服务用于自动生成脚本元数据。</p>
+
+            <button class="cs-settings-btn cs-settings-btn-ai" @click="handleOpenAIConfig">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path>
+              </svg>
+              <span>AI 配置</span>
             </button>
           </div>
 
@@ -312,6 +330,12 @@ onUnmounted(() => {
   background: #fee2e2;
   border-color: #fecaca;
   color: #ef4444;
+}
+
+.cs-settings-btn-ai:hover {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #d97706;
 }
 
 .cs-settings-btn svg {

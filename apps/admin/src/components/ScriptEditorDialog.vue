@@ -7,7 +7,8 @@ import ConfirmDialog from "./ConfirmDialog.vue";
 import {
   useScriptMetadata,
   useScriptTemplates,
-  useKeyboardShortcuts
+  useKeyboardShortcuts,
+  useAIMetadata
 } from "@commandselector/ui";
 
 const props = defineProps<{
@@ -31,6 +32,16 @@ const showConfirmDialog = ref(false);
 // 使用 composables
 const { metadata, metadataStatus } = useScriptMetadata(scriptContent, scriptType);
 const { hasChanges, insertCommentTemplate, setChanged } = useScriptTemplates(scriptContent, scriptType);
+
+// AI 元数据生成
+const {
+  isGenerating: aiGenerating,
+  error: aiError,
+  isConfigured: aiConfigured,
+  generateMetadata,
+  clearError: clearAIError,
+  loadProviders,
+} = useAIMetadata();
 
 // 保存状态
 const isSavingState = ref(false);
@@ -97,10 +108,66 @@ function handleContentChange(value: string) {
   setChanged(true);
 }
 
+// 处理 AI 生成元数据
+async function handleGenerateMetadata() {
+  clearAIError();
+
+  const metadata = await generateMetadata(
+    scriptContent.value,
+    props.scriptType
+  );
+
+  if (metadata) {
+    // 生成注释块
+    const { getBatCommentTemplateWithPlaceholder, getPs1CommentTemplateWithPlaceholder } =
+      await import("@commandselector/ui");
+
+    const commentTemplate = props.scriptType === 'bat'
+      ? getBatCommentTemplateWithPlaceholder(metadata)
+      : getPs1CommentTemplateWithPlaceholder(metadata);
+
+    // 替换或插入注释块
+    scriptContent.value = replaceOrInsertCommentBlock(
+      scriptContent.value,
+      commentTemplate,
+      props.scriptType
+    );
+    setChanged(true);
+  } else if (aiError.value) {
+    alert(`AI 生成失败: ${aiError.value.message}`);
+  }
+}
+
+// 替换或插入注释块
+function replaceOrInsertCommentBlock(
+  content: string,
+  newComment: string,
+  type: 'bat' | 'ps1'
+): string {
+  if (type === 'bat') {
+    // 查找 BAT 注释块 /* ... */
+    const regex = /\/\*\s*[\s\S]*?\*\/\s*\n?/;
+    if (regex.test(content)) {
+      return content.replace(regex, newComment + '\n\n');
+    }
+  } else {
+    // 查找 PowerShell 注释块 <# ... #>
+    const regex = /<#\s*[\s\S]*?#>\s*\n?/;
+    if (regex.test(content)) {
+      return content.replace(regex, newComment + '\n\n');
+    }
+  }
+  // 如果没有找到注释块，在开头插入
+  return newComment + '\n\n' + content;
+}
+
 // 全局滚轮处理
 let globalWheelHandler: ((e: WheelEvent) => void) | null = null;
 
 onMounted(() => {
+  // 加载 AI 提供商配置
+  loadProviders();
+
   // 全局拦截滚轮事件
   globalWheelHandler = (e: WheelEvent) => {
     // 检查是否在对话框内
@@ -179,9 +246,12 @@ loadScriptContent();
           <ScriptEditorActions
             :has-changes="hasChanges"
             :is-saving="isSavingState"
+            :is-generating="aiGenerating"
+            :is-a-i-configured="aiConfigured"
             @insert-template="insertCommentTemplate"
             @save="handleSave"
             @close="handleClose"
+            @generate-metadata="handleGenerateMetadata"
           />
         </div>
 

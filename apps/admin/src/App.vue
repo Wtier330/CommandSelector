@@ -5,10 +5,12 @@ import { NConfigProvider, NMessageProvider, NDialogProvider, NNotificationProvid
 // 动态组件加载
 const AsyncSettingsModal = ref<any>(null);
 const AsyncProjectInfoModal = ref<any>(null);
+const AsyncAIConfigDialog = ref<any>(null);
 
 // 设置模态框
 const showSettings = ref(false);
 const showProjectInfo = ref(false);
+const showAIConfig = ref(false);
 
 // 定义系统信息
 const systemInfo = ref<{
@@ -28,6 +30,13 @@ async function loadProjectInfoModal() {
   if (!AsyncProjectInfoModal.value) {
     const module = await import("@commandselector/ui");
     AsyncProjectInfoModal.value = module.ProjectInfoModal;
+  }
+}
+
+async function loadAIConfigDialog() {
+  if (!AsyncAIConfigDialog.value) {
+    const module = await import("@commandselector/ui");
+    AsyncAIConfigDialog.value = module.AIConfigDialog;
   }
 }
 
@@ -53,6 +62,10 @@ function handleExport() {
 
 function handleOpenTrash() {
   window.dispatchEvent(new CustomEvent("cs-open-trash"));
+}
+
+function handleOpenAIConfig() {
+  window.dispatchEvent(new CustomEvent("cs-open-ai-config"));
 }
 
 // 监听打开设置
@@ -90,6 +103,12 @@ window.addEventListener("cs-close-project-info", () => {
   showProjectInfo.value = false;
 });
 
+// 监听打开 AI 配置
+window.addEventListener("cs-open-ai-config", async () => {
+  await loadAIConfigDialog();
+  showAIConfig.value = true;
+});
+
 // 监听系统信息更新
 window.addEventListener("cs-system-info-update", ((e: any) => {
   systemInfo.value = e.detail;
@@ -120,6 +139,7 @@ window.addEventListener("cs-system-info-update", ((e: any) => {
       @import="handleImport"
       @export="handleExport"
       @open-trash="handleOpenTrash"
+      @open-a-i-config="handleOpenAIConfig"
     />
     <component
       v-if="AsyncProjectInfoModal"
@@ -127,6 +147,13 @@ window.addEventListener("cs-system-info-update", ((e: any) => {
       :is-open="showProjectInfo"
       @close="showProjectInfo = false"
       @open-url="handleOpenUrl"
+    />
+    <component
+      v-if="AsyncAIConfigDialog"
+      :is="AsyncAIConfigDialog"
+      :is-open="showAIConfig"
+      @close="showAIConfig = false"
+      @save="showAIConfig = false"
     />
   </div>
 </template>

@@ -20,7 +20,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; connect-src 'self' https://ark.cn-beijing.volcesce.com https://api.anthropic.com https://api.openai.com https://openrouter.ai; frame-src 'self'"
     }
   },
   "bundle": {
