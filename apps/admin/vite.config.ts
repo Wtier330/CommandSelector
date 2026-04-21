@@ -17,22 +17,6 @@ export default defineConfig(async () => ({
   resolve: { alias: { '@': path.resolve(fileURLToPath(new URL('.', import.meta.url)), '../../packages/ui/src') } },
   plugins: [vue()],
 
-  // 预构建 Monaco Editor 以避免 403 错误
-  optimizeDeps: {
-    exclude: ['monaco-editor'],
-  },
-
-  // Monaco Editor 资源处理
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'monaco-editor': ['monaco-editor']
-        }
-      }
-    }
-  },
-
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors

@@ -29,21 +29,6 @@ function parseScriptMetadata(content: string, scriptType: ScriptType): ParsedScr
   }
 }
 
-// 异步解析脚本元数据
-async function parseScriptMetadataAsync(script: ScriptFileMeta): Promise<ScriptFileMeta> {
-  try {
-    const content = await getScriptContent(script.id);
-    const metadata = parseScriptMetadata(content, script.type);
-    if (metadata) {
-      return { ...script, metadata };
-    }
-    return script;
-  } catch (e) {
-    console.error("Failed to parse script metadata async:", e);
-    return script;
-  }
-}
-
 const scripts = ref<ScriptFileMeta[]>([]);
 const isLoaded = ref(false);
 const errorMsg = ref("");
@@ -205,7 +190,7 @@ export async function createScript(
       createdAt: timestamp,
       updatedAt: timestamp,
       description,
-      metadata
+      metadata: metadata || undefined
     };
 
     scripts.value.push(scriptMeta);

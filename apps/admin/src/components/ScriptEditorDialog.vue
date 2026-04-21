@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
-import MonacoEditor from "./MonacoEditor.vue";
+import { ref, computed, watch, onMounted } from "vue";
+import CodeMirrorEditor from "./CodeMirrorEditor.vue";
 import ScriptMetadataPanel from "./ScriptMetadataPanel.vue";
 import ScriptEditorActions from "./ScriptEditorActions.vue";
 import ConfirmDialog from "./ConfirmDialog.vue";
@@ -161,52 +161,9 @@ function replaceOrInsertCommentBlock(
   return newComment + '\n\n' + content;
 }
 
-// 全局滚轮处理
-let globalWheelHandler: ((e: WheelEvent) => void) | null = null;
-
 onMounted(() => {
   // 加载 AI 提供商配置
   loadProviders();
-
-  // 全局拦截滚轮事件
-  globalWheelHandler = (e: WheelEvent) => {
-    // 检查是否在对话框内
-    if (dialogBodyRef.value) {
-      const rect = dialogBodyRef.value.getBoundingClientRect();
-      const isInDialog = e.clientX >= rect.left &&
-                       e.clientX <= rect.right &&
-                       e.clientY >= rect.top &&
-                       e.clientY <= rect.bottom;
-
-      if (isInDialog) {
-        // 检查是否在 Monaco Editor 区域内
-        const target = e.target as HTMLElement;
-        const isInMonaco = target.closest('.monaco-editor-container');
-
-        if (isInMonaco) {
-          // 在 Monaco Editor 内，阻止默认滚动并让对话框主体滚动
-          e.preventDefault();
-          e.stopPropagation();
-
-          // 手动滚动对话框主体
-          if (dialogBodyRef.value) {
-            dialogBodyRef.value.scrollTop += e.deltaY;
-            dialogBodyRef.value.scrollLeft += e.deltaX;
-          }
-        }
-      }
-    }
-  };
-
-  // 使用捕获模式在全局监听
-  document.addEventListener('wheel', globalWheelHandler, { passive: false, capture: true });
-});
-
-onBeforeUnmount(() => {
-  if (globalWheelHandler) {
-    document.removeEventListener('wheel', globalWheelHandler, { capture: true } as any);
-    globalWheelHandler = null;
-  }
 });
 
 // 键盘快捷键
@@ -272,7 +229,7 @@ loadScriptContent();
                   <span class="cs-editor-type">{{ scriptType === 'ps1' ? 'PowerShell' : 'BAT' }}</span>
                 </div>
               </div>
-              <MonacoEditor
+              <CodeMirrorEditor
                 v-model="scriptContent"
                 :language="monacoLanguage"
                 @update:model-value="handleContentChange"
