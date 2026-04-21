@@ -1,5 +1,6 @@
 export interface ParsedScriptMetadata {
   name: string;
+  shortDescription?: string;  // 简短描述，用于卡片显示
   description: string;
   category: string;
   tags: string[];
@@ -120,6 +121,10 @@ export class ScriptCommentParser {
       case 'synopsis':
         metadata.name = value.trim();
         break;
+      case 'shortdescription':
+      case 'short':
+        metadata.shortDescription = value.trim();
+        break;
       case 'description':
         metadata.description = value.trim();
         break;
@@ -182,6 +187,7 @@ export class ScriptCommentParser {
   static getBatCommentTemplate(): string {
     return `/**
  * @name
+ * @shortDescription
  * @description
  * @category
  * @tags
@@ -202,6 +208,8 @@ export class ScriptCommentParser {
   static getPs1CommentTemplate(): string {
     return `<#
 .SYNOPSIS
+
+.SHORTDESCRIPTION
 
 .DESCRIPTION
 

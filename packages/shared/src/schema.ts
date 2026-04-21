@@ -81,6 +81,7 @@ export interface ScriptFileMeta {
 // 脚本注释元数据类型
 export interface ParsedScriptMetadata {
   name: string;
+  shortDescription?: string;  // 简短描述，用于卡片显示
   description: string;
   category: string;
   tags: string[];

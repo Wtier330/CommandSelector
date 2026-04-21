@@ -6,6 +6,7 @@ export interface MetadataStatus {
   message: string;
   fields: {
     name: boolean;
+    shortDescription: boolean;
     description: boolean;
     category: boolean;
     tags: boolean;
@@ -48,6 +49,7 @@ export function useScriptMetadata(
         message: "无法解析",
         fields: {
           name: false,
+          shortDescription: false,
           description: false,
           category: false,
           tags: false,
@@ -63,6 +65,7 @@ export function useScriptMetadata(
       message: hasRequired ? "缺少必填字段" : "注释完整",
       fields: {
         name: !!meta.name,
+        shortDescription: !!meta.shortDescription,
         description: !!meta.description,
         category: !!meta.category,
         tags: meta.tags?.length > 0,

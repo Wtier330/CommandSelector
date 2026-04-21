@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import type { ScriptFileMeta, ScriptLibrary, CommandEntry, ScriptType } from "@commandselector/shared";
+import type { ScriptFileMeta, ScriptLibrary, CommandEntry, ScriptType, ParsedScriptMetadata } from "@commandselector/shared";
 
 // Tauri plugins
 import { readTextFile, writeTextFile, BaseDirectory } from "@tauri-apps/plugin-fs";
@@ -8,8 +8,41 @@ import { isTauri } from "@tauri-apps/api/core";
 import { appLocalDataDir, join } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
 
+// 导入注释解析器
+import { parseBatComment, parsePs1Comment } from "@commandselector/ui";
+
 const SCRIPTS_FILE = "scripts.json";
 const SCRIPTS_DIR = "scripts";
+
+// 解析脚本的元数据注释
+function parseScriptMetadata(content: string, scriptType: ScriptType): ParsedScriptMetadata | null {
+  try {
+    if (scriptType === "bat") {
+      return parseBatComment(content);
+    } else if (scriptType === "ps1") {
+      return parsePs1Comment(content);
+    }
+    return null;
+  } catch (e) {
+    console.error("Failed to parse script metadata:", e);
+    return null;
+  }
+}
+
+// 异步解析脚本元数据
+async function parseScriptMetadataAsync(script: ScriptFileMeta): Promise<ScriptFileMeta> {
+  try {
+    const content = await getScriptContent(script.id);
+    const metadata = parseScriptMetadata(content, script.type);
+    if (metadata) {
+      return { ...script, metadata };
+    }
+    return script;
+  } catch (e) {
+    console.error("Failed to parse script metadata async:", e);
+    return script;
+  }
+}
 
 const scripts = ref<ScriptFileMeta[]>([]);
 const isLoaded = ref(false);
@@ -49,13 +82,43 @@ export async function loadScripts() {
       }
     }
 
-    scripts.value = data || [];
+    // 异步解析所有脚本的元数据
+    const parsedScripts = await Promise.all(data.map(async (script) => {
+      try {
+        const content = await getScriptContentById(script.id, script.path);
+        const metadata = parseScriptMetadata(content, script.type);
+        if (metadata) {
+          return { ...script, metadata };
+        }
+        return script;
+      } catch (e) {
+        console.error("Failed to parse metadata for script:", script.name, e);
+        return script;
+      }
+    }));
+
+    scripts.value = parsedScripts || [];
     isLoaded.value = true;
   } catch (e: any) {
     console.error("Failed to load scripts:", e);
     errorMsg.value = e.message || "加载脚本失败";
     scripts.value = [];
     isLoaded.value = true;
+  }
+}
+
+// 获取脚本内容（内部函数，不导出）
+async function getScriptContentById(id: string, path: string): Promise<string> {
+  try {
+    if (isTauri()) {
+      return await invoke("read_script_file", { path });
+    } else {
+      const content = localStorage.getItem(`cs_script_${id}`);
+      return content ?? "";
+    }
+  } catch (e: any) {
+    console.error("Failed to read script content:", e);
+    throw e;
   }
 }
 
@@ -129,6 +192,9 @@ export async function createScript(
       localStorage.setItem(`cs_script_${id}`, content);
     }
 
+    // 解析脚本注释元数据
+    const metadata = parseScriptMetadata(content, type);
+
     // 创建脚本元数据
     const scriptMeta: ScriptFileMeta = {
       id,
@@ -138,7 +204,8 @@ export async function createScript(
       size: content.length,
       createdAt: timestamp,
       updatedAt: timestamp,
-      description
+      description,
+      metadata
     };
 
     scripts.value.push(scriptMeta);
@@ -179,6 +246,12 @@ export async function updateScript(
     script.updatedAt = new Date().toISOString();
     if (description !== undefined) {
       script.description = description;
+    }
+
+    // 解析脚本注释元数据
+    const metadata = parseScriptMetadata(content, script.type);
+    if (metadata) {
+      script.metadata = metadata;
     }
 
     await saveScripts();

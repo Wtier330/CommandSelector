@@ -7,6 +7,7 @@ import type { AIProviderConfig } from '../utils/aiConfig';
 
 export interface AIMetadataResponse {
   name: string;
+  shortDescription?: string;  // 简短描述，用于卡片显示
   description: string;
   category: string;
   tags: string[];
@@ -115,6 +116,7 @@ ${scriptContent}
 请返回以下格式的 JSON（不要包含任何其他文本，不要使用 markdown 代码块）：
 {
   "name": "脚本名称",
+  "shortDescription": "简短功能描述，适合卡片显示，1-2句话，不超过30字",
   "description": "详细的功能描述，50-200字",
   "category": "分类",
   "tags": ["标签1", "标签2"],

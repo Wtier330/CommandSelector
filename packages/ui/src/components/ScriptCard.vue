@@ -10,10 +10,30 @@ const emit = defineEmits<{
   (e: "edit", id: string): void;
 }>();
 
-// 计算脚本摘要描述（从脚本描述中提取）
+// 计算脚本摘要描述（优先使用简短描述）
 const summaryDescription = computed(() => {
-  if (!props.script.description) return "暂无描述信息";
-  return props.script.description;
+  // 优先使用元数据中的简短描述
+  if (props.script.metadata?.shortDescription) {
+    return props.script.metadata.shortDescription;
+  }
+  // 其次使用元数据中的完整描述
+  if (props.script.metadata?.description) {
+    return props.script.metadata.description;
+  }
+  // 最后使用 script.description
+  if (props.script.description) {
+    return props.script.description;
+  }
+  return "暂无描述信息";
+});
+
+// 判断描述是否有有效值
+const hasValidDescription = computed(() => {
+  const desc = props.script.metadata?.shortDescription
+    || props.script.metadata?.description
+    || props.script.description
+    || "";
+  return desc.trim().length > 0;
 });
 
 // 格式化文件大小
@@ -131,7 +151,7 @@ function handleEdit() {
       </div>
 
       <!-- 原按钮位置显示描述摘要 -->
-      <div class="cs-card-description">
+      <div class="cs-card-description" :class="{ 'has-value': hasValidDescription }">
         {{ summaryDescription }}
       </div>
     </div>
@@ -219,6 +239,10 @@ function handleEdit() {
   overflow: hidden;
   text-overflow: ellipsis;
   min-height: 44px;
+}
+
+.cs-card-description.has-value {
+  color: #141413;
 }
 
 .cs-card-meta {

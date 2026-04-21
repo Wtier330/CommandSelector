@@ -184,6 +184,7 @@ export function useAIMetadata() {
 function transformResponse(response: AIMetadataResponse): ParsedScriptMetadata {
   return {
     name: response.name || '未命名脚本',
+    shortDescription: response.shortDescription,
     description: response.description || '脚本描述',
     category: response.category || '未分类',
     tags: Array.isArray(response.tags) ? response.tags : [],

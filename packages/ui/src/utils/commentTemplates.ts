@@ -2,6 +2,7 @@ export function getBatCommentTemplate(): string {
   const today = new Date().toISOString().split('T')[0];
   return `/**
  * @name
+ * @shortDescription
  * @description
  * @category
  * @tags
@@ -22,6 +23,8 @@ export function getPs1CommentTemplate(): string {
   const today = new Date().toISOString().split('T')[0];
   return `<#
 .SYNOPSIS
+
+.SHORTDESCRIPTION
 
 .DESCRIPTION
 
@@ -52,6 +55,7 @@ export function getPs1CommentTemplate(): string {
 
 export function getBatCommentTemplateWithPlaceholder(metadata: {
   name?: string;
+  shortDescription?: string;
   description?: string;
   category?: string;
   tags?: string[];
@@ -59,11 +63,13 @@ export function getBatCommentTemplateWithPlaceholder(metadata: {
   const today = new Date().toISOString().split('T')[0];
   const tagsStr = (metadata?.tags || []).join(', ');
   const nameStr = metadata?.name || '';
+  const shortDescStr = metadata?.shortDescription || '';
   const descStr = metadata?.description || '';
   const catStr = metadata?.category || '未分类';
 
   return `/**
  * @name ${nameStr}
+ * @shortDescription ${shortDescStr}
  * @description ${descStr}
  * @category ${catStr}
  * @tags ${tagsStr}
@@ -82,6 +88,7 @@ export function getBatCommentTemplateWithPlaceholder(metadata: {
 
 export function getPs1CommentTemplateWithPlaceholder(metadata: {
   name?: string;
+  shortDescription?: string;
   description?: string;
   category?: string;
   tags?: string[];
@@ -89,12 +96,16 @@ export function getPs1CommentTemplateWithPlaceholder(metadata: {
   const today = new Date().toISOString().split('T')[0];
   const tagsStr = (metadata?.tags || []).join(', ');
   const nameStr = metadata?.name || '';
+  const shortDescStr = metadata?.shortDescription || '';
   const descStr = metadata?.description || '';
   const catStr = metadata?.category || '未分类';
 
   return `<#
 .SYNOPSIS
     ${nameStr}
+
+.SHORTDESCRIPTION
+    ${shortDescStr}
 
 .DESCRIPTION
     ${descStr}

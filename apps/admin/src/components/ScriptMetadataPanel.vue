@@ -38,7 +38,14 @@ const emit = defineEmits<{
         </div>
 
         <div class="cs-field-group">
-          <label class="cs-field-label">描述</label>
+          <label class="cs-field-label">简短描述</label>
+          <div class="cs-field-value" :class="{ 'has-value': metadata.shortDescription }">
+            {{ metadata.shortDescription || '未设置' }}
+          </div>
+        </div>
+
+        <div class="cs-field-group">
+          <label class="cs-field-label">详细描述</label>
           <div class="cs-field-value" :class="{ 'has-value': metadataStatus.fields && metadataStatus.fields.description }">
             {{ metadata.description || '未设置' }}
           </div>
