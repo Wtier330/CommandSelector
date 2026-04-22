@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    commandselector_admin_lib::run()
+    commandselector_lib::run()
 }

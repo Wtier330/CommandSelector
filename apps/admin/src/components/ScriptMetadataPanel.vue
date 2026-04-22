@@ -113,10 +113,10 @@ const emit = defineEmits<{
 <style scoped>
 /* 元数据预览区 */
 .cs-metadata-section {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #f3f4f6;
   border-radius: 8px;
   padding: 16px;
-  background: #f8fafc;
+  background: #fafbfc;
   flex-shrink: 0;
   width: 100%;
   max-width: 100%;
@@ -135,8 +135,8 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .cs-metadata-title {

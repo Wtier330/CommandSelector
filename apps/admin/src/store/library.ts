@@ -12,6 +12,9 @@ import { save, open } from "@tauri-apps/plugin-dialog";
 import { isTauri } from "@tauri-apps/api/core";
 import { appLocalDataDir, join } from "@tauri-apps/api/path";
 
+// 日志
+import { logger } from "../utils/logger";
+
 const commands = ref<CommandEntry[]>([]);
 const trashedCommands = ref<TrashedCommand[]>([]);
 const isLoaded = ref(false);
@@ -170,7 +173,9 @@ export async function loadLibrary() {
     await loadTrash();
 
     isLoaded.value = true;
+    logger.info('Commands', 'Library loaded', { count: commands.value.length, source: librarySource.value });
   } catch (e: any) {
+    logger.error('Commands', 'Failed to load library', { error: e.message });
     console.error("Failed to load library:", e);
     errorMsg.value = e.message || "加载数据失败";
   }
@@ -206,8 +211,10 @@ export async function saveCommand(entry: CommandEntry) {
   const index = commands.value.findIndex((c) => c.id === entry.id);
   if (index >= 0) {
     commands.value[index] = { ...entry };
+    logger.info('Commands', 'Command updated', { id: entry.id, name: entry.name });
   } else {
     commands.value.push({ ...entry });
+    logger.info('Commands', 'Command created', { id: entry.id, name: entry.name });
   }
   await saveLibrary();
 }
@@ -269,14 +276,17 @@ export async function moveToTrash(id: string) {
     commands.value.splice(index, 1);
     await saveLibrary();
     await saveTrash();
+    logger.info('Commands', 'Command moved to trash', { id, originalId: command.id, name: command.name });
   }
 }
 
 export async function deleteCommand(id: string) {
   const index = commands.value.findIndex((c) => c.id === id);
   if (index >= 0) {
+    const command = commands.value[index];
     commands.value.splice(index, 1);
     await saveLibrary();
+    logger.info('Commands', 'Command deleted', { id, name: command.name });
   }
 }
 
@@ -294,20 +304,25 @@ export async function restoreCommand(id: string) {
     trashedCommands.value.splice(index, 1);
     await saveLibrary();
     await saveTrash();
+    logger.info('Commands', 'Command restored from trash', { id: restoredCommand.id, name: restoredCommand.name });
   }
 }
 
 export async function deletePermanently(id: string) {
   const index = trashedCommands.value.findIndex((c) => c.id === id);
   if (index >= 0) {
+    const command = trashedCommands.value[index];
     trashedCommands.value.splice(index, 1);
     await saveTrash();
+    logger.info('Commands', 'Command permanently deleted', { id, name: command.name });
   }
 }
 
 export async function emptyTrash() {
+  const count = trashedCommands.value.length;
   trashedCommands.value = [];
   await saveTrash();
+  logger.info('Commands', 'Trash emptied', { count });
 }
 
 export async function importLibrary(fileContent?: string): Promise<boolean> {
@@ -332,8 +347,10 @@ export async function importLibrary(fileContent?: string): Promise<boolean> {
     }
     commands.value = data;
     await saveLibrary();
+    logger.info('Commands', 'Library imported', { count: data.length });
     return true;
   } catch (e: any) {
+    logger.error('Commands', 'Library import failed', { error: e.message });
     console.error("Import failed:", e);
     alert(`导入失败: ${e.message}`);
     return false;
@@ -353,6 +370,7 @@ export async function exportLibrary() {
       });
       if (savePath) {
         await writeTextFile(savePath, dataStr);
+        logger.info('Commands', 'Library exported', { path: savePath, count: commands.value.length });
         alert("导出成功");
       }
     } else {
@@ -364,8 +382,10 @@ export async function exportLibrary() {
       a.download = defaultFileName;
       a.click();
       URL.revokeObjectURL(url);
+      logger.info('Commands', 'Library exported (web)', { count: commands.value.length });
     }
   } catch (e: any) {
+    logger.error('Commands', 'Library export failed', { error: e.message });
     console.error("Export failed:", e);
     alert(`导出失败: ${e.message}`);
   }

@@ -19,6 +19,19 @@ function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf-8');
 }
 
+function readToml(filePath) {
+  return fs.readFileSync(filePath, 'utf-8');
+}
+
+function writeToml(filePath, content) {
+  fs.writeFileSync(filePath, content, 'utf-8');
+}
+
+function updateTomlVersion(tomlContent, newVersion) {
+  // 更新 [package] 部分的 version 字段
+  return tomlContent.replace(/(version\s*=\s*")[^"]*(")/, `$1${newVersion}$2`);
+}
+
 function getCurrentVersions() {
   const versions = {};
   console.log('当前版本号：\n');

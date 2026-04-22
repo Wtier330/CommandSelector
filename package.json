@@ -8,7 +8,8 @@
     "build": "pnpm --filter @commandselector/admin build",
     "typecheck": "pnpm -r --filter ./apps/** typecheck",
     "test": "node --test --experimental-strip-types",
-    "sync-version": "node sync-version.js"
+    "sync-version": "node sync-version.js",
+    "view-debug-log": "node scripts/view-debug-log.mjs"
   },
   "dependencies": {
     "@tauri-apps/plugin-dialog": "^2.6.0",

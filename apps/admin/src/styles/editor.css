@@ -1,0 +1,191 @@
+/**
+ * CodeMirror 编辑器全局样式
+ * 确保 CodeMirror 的基础样式在 production build 中正确加载
+ */
+
+/* CodeMirror 基础重置 */
+.cm-editor {
+  outline: none !important;
+  height: 100%;
+}
+
+.cm-scroller {
+  overflow: auto !important;
+}
+
+.cm-content {
+  padding: 0 !important;
+  caret-color: #000;
+}
+
+.cm-gutters {
+  background: #f7f7f7;
+  color: #999;
+  border: none;
+}
+
+.cm-lineNumbers .cm-gutterElement {
+  padding: 0 3px 0 5px;
+  min-width: 2em;
+  text-align: right;
+  color: #999;
+}
+
+.cm-activeLine {
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+.cm-activeLineGutter {
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: inherit;
+}
+
+.cm-selectionBackground {
+  background: #b4d5fe !important;
+}
+
+/* 滚动条样式 */
+.cm-scroller::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.cm-scroller::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 确保编辑器容器样式 */
+.codemirror-editor-container {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+}
+
+.codemirror-editor-container .cm-editor {
+  height: 100%;
+}
+
+/* 括号匹配 */
+.cm-matchingBracket {
+  color: inherit !important;
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.cm-nonmatchingBracket {
+  color: #d22 !important;
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
+/* 搜索高亮 */
+.cm-searchMatch .cm-searchMatchSelected {
+  background-color: #6195ff !important;
+  color: #fff !important;
+}
+
+.cm-searchMatch {
+  background-color: rgba(179, 101, 57, 0.3) !important;
+}
+
+/* 折叠图标 */
+.cm-foldPlaceholder {
+  background-color: #eee;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  color: #999;
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 0.8em;
+}
+
+.cm-foldGutter {
+  width: 1.2em;
+}
+
+.cm-foldGutter-open,
+.cm-foldGutter-folded {
+  cursor: pointer;
+  color: #666;
+}
+
+/* 光标 */
+.cm-cursor {
+  border-left: 2px solid #000;
+  margin-left: -1px;
+}
+
+.cm-cursor.cm-primaryCursor {
+  animation: none;
+}
+
+/* 面板（如搜索面板、自动完成面板） */
+.cm-panel {
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cm-panel.cm-search {
+  padding: 4px 8px;
+}
+
+.cm-textfield {
+  padding: 2px 4px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  outline: none;
+}
+
+.cm-textfield:focus {
+  border-color: #666;
+}
+
+/* 自动完成 */
+.cm-tooltip {
+  border: 1px solid #ddd;
+  background: white;
+  padding: 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cm-tooltip-autocomplete {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cm-completionIcon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.cm-completionLabel {
+  font-family: inherit;
+}
+
+.cm-completionDetail {
+  color: #888;
+  font-size: 0.85em;
+  margin-left: 8px;
+}
+
+.cm-completionSelected {
+  background: #e0e0e0 !important;
+}
+
+/* 行包装 */
+.cm-editor {
+  white-space: pre-wrap;
+  word-break: break-all;
+}

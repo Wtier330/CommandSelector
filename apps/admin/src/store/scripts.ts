@@ -8,6 +8,9 @@ import { isTauri } from "@tauri-apps/api/core";
 import { appLocalDataDir, join } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
 
+// 日志
+import { logger } from "../utils/logger";
+
 // 导入注释解析器
 import { parseBatComment, parsePs1Comment } from "@commandselector/ui";
 
@@ -51,9 +54,11 @@ export async function loadScripts() {
         });
         const library = JSON.parse(fileContent) as ScriptLibrary;
         data = library.scripts || [];
+        logger.info('Scripts', 'Loaded scripts from file', { count: data.length });
       } catch (error) {
         // 文件不存在，初始化为空数组
         data = [];
+        logger.info('Scripts', 'No scripts file found, starting fresh');
       }
     } else {
       try {
@@ -78,6 +83,7 @@ export async function loadScripts() {
         return script;
       } catch (e) {
         console.error("Failed to parse metadata for script:", script.name, e);
+        logger.warn('Scripts', 'Failed to parse metadata', { script: script.name, error: String(e) });
         return script;
       }
     }));
@@ -196,8 +202,10 @@ export async function createScript(
     scripts.value.push(scriptMeta);
     await saveScripts();
 
+    logger.info('Scripts', 'Script created', { id, name, type, path: scriptPath });
     return scriptMeta;
   } catch (e: any) {
+    logger.error('Scripts', 'Failed to create script', { name, error: e.message });
     console.error("Failed to create script:", e);
     throw e;
   }
@@ -240,8 +248,10 @@ export async function updateScript(
     }
 
     await saveScripts();
+    logger.info('Scripts', 'Script updated', { id, size: content.length });
     return true;
   } catch (e: any) {
+    logger.error('Scripts', 'Failed to update script', { id, error: e.message });
     console.error("Failed to update script:", e);
     throw e;
   }
@@ -272,8 +282,10 @@ export async function updateScriptMeta(
     }
 
     await saveScripts();
+    logger.info('Scripts', 'Script metadata updated', { id, updates });
     return true;
   } catch (e: any) {
+    logger.error('Scripts', 'Failed to update script meta', { id, error: e.message });
     console.error("Failed to update script meta:", e);
     throw e;
   }
@@ -299,8 +311,10 @@ export async function deleteScript(id: string): Promise<boolean> {
     scripts.value.splice(index, 1);
     await saveScripts();
 
+    logger.info('Scripts', 'Script deleted', { id, name: script.name, path: script.path });
     return true;
   } catch (e: any) {
+    logger.error('Scripts', 'Failed to delete script', { id, error: e.message });
     console.error("Failed to delete script:", e);
     throw e;
   }
@@ -326,6 +340,8 @@ export async function getScriptContent(id: string): Promise<string> {
 }
 
 export async function importScript(): Promise<ScriptFileMeta | undefined> {
+  let importedPath: string | undefined;
+
   try {
     if (!isTauri()) {
       throw new Error("脚本导入仅在 Tauri 环境中支持");
@@ -343,17 +359,17 @@ export async function importScript(): Promise<ScriptFileMeta | undefined> {
 
     if (!selected) return undefined;
 
-    const path = selected as string;
+    importedPath = selected as string;
 
     // 读取文件内容
-    const content = await invoke("read_script_file", { path });
+    const content = await invoke("read_script_file", { path: importedPath });
 
     // 确定脚本类型
-    const ext = path.toLowerCase();
+    const ext = importedPath.toLowerCase();
     const scriptType: ScriptType = ext.endsWith(".ps1") ? "ps1" : "bat";
 
     // 生成唯一名称
-    const fileName = path.split(/[/\\]/).pop() || "script";
+    const fileName = importedPath.split(/[/\\]/).pop() || "script";
     const baseName = fileName.replace(/\.(bat|cmd|ps1)$/i, "");
     let scriptName = baseName;
     let counter = 1;
@@ -365,8 +381,10 @@ export async function importScript(): Promise<ScriptFileMeta | undefined> {
 
     // 创建新脚本
     const result = await createScript(scriptName, scriptType, content as string);
+    logger.info('Scripts', 'Script imported', { originalPath: importedPath, importedAs: scriptName, type: scriptType });
     return result ?? undefined;
   } catch (e: any) {
+    logger.error('Scripts', 'Failed to import script', { originalPath: importedPath, error: e.message });
     console.error("Failed to import script:", e);
     throw e;
   }
@@ -409,6 +427,7 @@ export async function exportScript(
         src: script.path,
         dst: finalOutputPath
       });
+      logger.info('Scripts', 'Script exported', { id, outputPath: finalOutputPath });
       return finalOutputPath;
     } else {
       // 网页端下载
@@ -427,6 +446,7 @@ export async function exportScript(
       return defaultFileName;
     }
   } catch (e: any) {
+    logger.error('Scripts', 'Failed to export script', { id, error: e.message });
     console.error("Failed to export script:", e);
     throw e;
   }

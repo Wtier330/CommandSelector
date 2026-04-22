@@ -58,4 +58,15 @@ export default defineConfig(async () => ({
       },
     },
   },
+  build: {
+    // 确保内联 CSS 被正确提取
+    cssCodeSplit: false,
+    // 优化依赖预构建
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
 }));
