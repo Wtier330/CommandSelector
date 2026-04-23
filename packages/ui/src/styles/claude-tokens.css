@@ -8,6 +8,7 @@
   --claude-text-tertiary: #87867f;   /* 三级文本：石灰色 */
   --claude-terracotta: #c96442;      /* 品牌色：陶土色 */
   --claude-terracotta-hover: #b05a3a; /* 品牌色悬停 */
+  --claude-error: #b53333;           /* 错误色：深红色 */
   --claude-border: #f0eee6;          /* 边框色：奶油色 */
   --claude-border-warm: #e8e6dc;     /* 边框色：暖沙色 */
   --claude-dark-surface: #30302e;    /* 暗色表面 */

@@ -1,6 +1,9 @@
 /**
  * AI 配置管理模块 - 支持多提供商配置
+ * 配置文件通过 Tauri 加密存储
  */
+
+import { invoke } from '@tauri-apps/api/core';
 
 export type AIProvider = 'anthropic' | 'openai' | 'openrouter' | 'custom';
 
@@ -28,35 +31,36 @@ const PROVIDER_DEFAULTS: Record<AIProvider, string> = {
 };
 
 class AIConfigManager {
-  private readonly CONFIG_KEY = 'cs_ai_config';
+  private cachedConfig: AIMultiConfig | null = null;
 
   /**
    * 获取多提供商配置
    */
-  getMultiConfig(): AIMultiConfig {
+  async getMultiConfig(): Promise<AIMultiConfig> {
+    if (this.cachedConfig) {
+      return this.cachedConfig;
+    }
+
     try {
-      const saved = localStorage.getItem(this.CONFIG_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.providers && Array.isArray(parsed.providers)) {
-          return {
-            providers: parsed.providers,
-            defaultProviderId: parsed.defaultProviderId || null
-          };
-        }
-      }
+      const config = await invoke<AIMultiConfig>('load_ai_config');
+      this.cachedConfig = {
+        providers: config.providers || [],
+        defaultProviderId: config.defaultProviderId || null
+      };
+      return this.cachedConfig;
     } catch (error) {
       console.error('Failed to load AI config:', error);
+      return { providers: [], defaultProviderId: null };
     }
-    return { providers: [], defaultProviderId: null };
   }
 
   /**
    * 保存多提供商配置
    */
-  saveMultiConfig(config: AIMultiConfig): void {
+  async saveMultiConfig(config: AIMultiConfig): Promise<void> {
     try {
-      localStorage.setItem(this.CONFIG_KEY, JSON.stringify(config));
+      await invoke('save_ai_config', { config });
+      this.cachedConfig = config;
     } catch (error) {
       console.error('Failed to save AI config:', error);
       throw new Error('保存配置失败');
@@ -66,8 +70,8 @@ class AIConfigManager {
   /**
    * 获取默认提供商配置
    */
-  getDefaultProvider(): AIProviderConfig | null {
-    const config = this.getMultiConfig();
+  async getDefaultProvider(): Promise<AIProviderConfig | null> {
+    const config = await this.getMultiConfig();
     if (config.defaultProviderId) {
       return config.providers.find(p => p.id === config.defaultProviderId) || null;
     }
@@ -77,16 +81,16 @@ class AIConfigManager {
   /**
    * 获取指定 ID 的提供商配置
    */
-  getProvider(id: string): AIProviderConfig | null {
-    const config = this.getMultiConfig();
+  async getProvider(id: string): Promise<AIProviderConfig | null> {
+    const config = await this.getMultiConfig();
     return config.providers.find(p => p.id === id) || null;
   }
 
   /**
    * 添加提供商
    */
-  addProvider(provider: AIProviderConfig): void {
-    const config = this.getMultiConfig();
+  async addProvider(provider: AIProviderConfig): Promise<void> {
+    const config = await this.getMultiConfig();
     config.providers.push(provider);
 
     // 如果没有默认提供商，设置为这个
@@ -94,27 +98,27 @@ class AIConfigManager {
       config.defaultProviderId = provider.id;
     }
 
-    this.saveMultiConfig(config);
+    await this.saveMultiConfig(config);
   }
 
   /**
    * 更新提供商
    */
-  updateProvider(id: string, updates: Partial<AIProviderConfig>): void {
-    const config = this.getMultiConfig();
+  async updateProvider(id: string, updates: Partial<AIProviderConfig>): Promise<void> {
+    const config = await this.getMultiConfig();
     const index = config.providers.findIndex(p => p.id === id);
 
     if (index !== -1) {
       config.providers[index] = { ...config.providers[index], ...updates };
-      this.saveMultiConfig(config);
+      await this.saveMultiConfig(config);
     }
   }
 
   /**
    * 删除提供商
    */
-  deleteProvider(id: string): void {
-    const config = this.getMultiConfig();
+  async deleteProvider(id: string): Promise<void> {
+    const config = await this.getMultiConfig();
     const wasDefault = config.defaultProviderId === id;
 
     config.providers = config.providers.filter(p => p.id !== id);
@@ -126,18 +130,18 @@ class AIConfigManager {
       config.defaultProviderId = null;
     }
 
-    this.saveMultiConfig(config);
+    await this.saveMultiConfig(config);
   }
 
   /**
    * 设置默认提供商
    */
-  setDefaultProvider(id: string): void {
-    const config = this.getMultiConfig();
+  async setDefaultProvider(id: string): Promise<void> {
+    const config = await this.getMultiConfig();
 
     if (config.providers.find(p => p.id === id)) {
       config.defaultProviderId = id;
-      this.saveMultiConfig(config);
+      await this.saveMultiConfig(config);
     }
   }
 
@@ -175,9 +179,9 @@ class AIConfigManager {
   /**
    * 清除所有配置
    */
-  clearConfig(): void {
+  async clearConfig(): Promise<void> {
     try {
-      localStorage.removeItem(this.CONFIG_KEY);
+      await this.saveMultiConfig({ providers: [], defaultProviderId: null });
     } catch (error) {
       console.error('Failed to clear AI config:', error);
     }
@@ -200,9 +204,16 @@ class AIConfigManager {
   /**
    * 检查是否已配置
    */
-  isConfigured(): boolean {
-    const config = this.getMultiConfig();
+  async isConfigured(): Promise<boolean> {
+    const config = await this.getMultiConfig();
     return config.providers.length > 0 && !!config.defaultProviderId;
+  }
+
+  /**
+   * 清除缓存，强制重新加载
+   */
+  clearCache(): void {
+    this.cachedConfig = null;
   }
 }
 

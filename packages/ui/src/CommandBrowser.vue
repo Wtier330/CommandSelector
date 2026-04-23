@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, toRefs } from "vue";
+import { computed, ref, watch, toRefs, onMounted, onUnmounted } from "vue";
 import type { CommandEntry, ScriptFileMeta } from "@commandselector/shared";
 import { useResponsiveLayout, type ResponsiveOptions } from "./composables/useResponsiveLayout";
 import { useCommandFilter } from "./composables/useCommandFilter";
@@ -17,6 +17,7 @@ import CommandEditForm from "./components/CommandEditForm.vue";
 import ToastNotification from "./components/ToastNotification.vue";
 import BottomStatusBar from "./components/BottomStatusBar.vue";
 import ScriptCard from "./components/ScriptCard.vue";
+import WelcomeDialog from "./components/WelcomeDialog.vue";
 
 const props = defineProps<{
   commands: CommandEntry[];
@@ -67,6 +68,46 @@ watch(internalMode, (newMode) => {
   }
   emit('update:mode', newMode);
 }, { immediate: true });
+
+// 首次启动引导
+const showWelcome = ref(false);
+const LAUNCHED_KEY = 'cs-has-launched-before';
+
+function checkFirstLaunch() {
+  try {
+    const hasLaunched = localStorage.getItem(LAUNCHED_KEY);
+    if (!hasLaunched) {
+      showWelcome.value = true;
+      localStorage.setItem(LAUNCHED_KEY, 'true');
+    }
+  } catch {
+    // localStorage 不可用时忽略
+  }
+}
+
+function closeWelcome() {
+  showWelcome.value = false;
+}
+
+// Ctrl+N 新建命令快捷键
+function handleGlobalKeydown(e: KeyboardEvent) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    // 仅在非输入框场景生效
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+    e.preventDefault();
+    emit('create');
+  }
+}
+
+onMounted(() => {
+  checkFirstLaunch();
+  window.addEventListener('keydown', handleGlobalKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown);
+});
 
 // 1. 响应式布局
 const rootEl = ref<HTMLElement | null>(null);
@@ -182,9 +223,6 @@ const {
 // 5.1 AI 补全
 const {
   isCompleting,
-  isStreaming,
-  streamingContent,
-  streamingStage,
   isConfigured: isAIConfigured,
   completeMetadataStream,
   loadProviders: loadAIProviders,
@@ -547,6 +585,9 @@ defineExpose({
 
     <!-- Toast Notification -->
     <ToastNotification :toast="toast" />
+
+    <!-- 首次启动欢迎对话框 -->
+    <WelcomeDialog v-if="showWelcome" @close="closeWelcome" />
 
     <BottomStatusBar />
   </div>

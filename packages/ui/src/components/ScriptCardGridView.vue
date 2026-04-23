@@ -71,13 +71,6 @@ const stats = computed(() => {
   };
 });
 
-// 可用的脚本类型（下拉选项）
-const availableTypes = computed(() => {
-  return allTypeOptions.filter(
-    type => stats.value[type] > 0
-  );
-});
-
 // 当前选中类型的标签
 const selectedTypeLabel = computed(() => {
   if (selectedType.value === 'all') return '全部类型';
@@ -535,18 +528,18 @@ function handleCategorySelect(category: string) {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: white;
+  border: 1px solid var(--claude-border-warm);
+  border-radius: var(--claude-radius-sm);
+  background: var(--claude-ivory);
   font-size: 13px;
-  color: #374151;
+  color: var(--claude-text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .cs-dropdown-trigger:hover {
-  border-color: #d1d5db;
-  background: #f9fafb;
+  border-color: var(--claude-border);
+  background: var(--claude-ivory);
 }
 
 .cs-dropdown-trigger svg {
@@ -562,12 +555,10 @@ function handleCategorySelect(category: string) {
   top: calc(100% + 4px);
   left: 0;
   min-width: 160px;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  background: var(--claude-ivory);
+  border: 1px solid var(--claude-border-warm);
+  border-radius: var(--claude-radius-sm);
+  box-shadow: 0px 0px 0px 1px var(--claude-border-warm), 0px 4px 24px rgba(0, 0, 0, 0.05);
   z-index: 100;
   padding: 6px;
   animation: dropdownFadeIn 0.15s ease;
@@ -594,19 +585,20 @@ function handleCategorySelect(category: string) {
   border-radius: 6px;
   background: transparent;
   font-size: 13px;
-  color: #374151;
+  color: var(--claude-text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
 }
 
 .cs-dropdown-item:hover {
-  background: #f3f4f6;
+  background: var(--claude-parchment);
+  color: var(--claude-text-primary);
 }
 
 .cs-dropdown-item.active {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--claude-border-warm);
+  color: var(--claude-text-primary);
   font-weight: 500;
 }
 
@@ -620,12 +612,12 @@ function handleCategorySelect(category: string) {
 .cs-dropdown-count {
   margin-left: auto;
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--claude-text-tertiary);
 }
 
 .cs-dropdown-divider {
   height: 1px;
-  background: #f0f0f0;
+  background: var(--claude-border-warm);
   margin: 6px 0;
 }
 </style>

@@ -240,7 +240,8 @@ onUnmounted(() => {
 .cs-dialog-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(20, 20, 19, 0.4);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -248,14 +249,15 @@ onUnmounted(() => {
 }
 
 .cs-dialog {
-  background: white;
-  border-radius: 8px;
+  background: var(--claude-ivory);
+  border: 1px solid var(--claude-border);
+  border-radius: var(--claude-radius-lg);
   width: 480px;
   max-width: 90%;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.08);
 }
 
 .cs-dialog-confirm {
@@ -267,32 +269,33 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--claude-border-warm);
 }
 
 .cs-dialog-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
+  font-family: var(--claude-font-serif);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--claude-text-primary);
 }
 
 .cs-dialog-close {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   background: transparent;
   font-size: 24px;
-  color: #6b7280;
+  color: var(--claude-text-secondary);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--claude-radius-sm);
   transition: background 0.2s;
 }
 
 .cs-dialog-close:hover {
-  background: #f3f4f6;
+  background: var(--claude-border-warm);
 }
 
 .cs-dialog-body {
@@ -305,14 +308,14 @@ onUnmounted(() => {
 .cs-add-category {
   margin-bottom: 20px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--claude-border-warm);
 }
 
 .cs-add-label {
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--claude-text-secondary);
   margin-bottom: 8px;
 }
 
@@ -328,20 +331,20 @@ onUnmounted(() => {
 .cs-error-text {
   margin-top: 8px;
   font-size: 13px;
-  color: #dc2626;
+  color: var(--claude-error);
 }
 
 /* 分类列表 */
 .cs-category-list-title {
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--claude-text-secondary);
   margin-bottom: 12px;
 }
 
 .cs-empty-text {
   text-align: center;
-  color: #9ca3af;
+  color: var(--claude-text-tertiary);
   font-size: 14px;
   padding: 20px 0;
 }
@@ -357,18 +360,20 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  background: #f9fafb;
-  border-radius: 6px;
-  transition: background 0.2s;
+  background: var(--claude-parchment);
+  border: 1px solid transparent;
+  border-radius: var(--claude-radius-sm);
+  transition: all 0.2s;
 }
 
 .cs-category-item:hover {
-  background: #f3f4f6;
+  background: var(--claude-border-warm);
+  border-color: var(--claude-border-warm);
 }
 
 .cs-category-name {
   font-size: 14px;
-  color: #374151;
+  color: var(--claude-text-primary);
   font-weight: 500;
 }
 
@@ -380,7 +385,7 @@ onUnmounted(() => {
 
 .cs-category-count {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--claude-text-tertiary);
 }
 
 .cs-btn-icon {
@@ -393,13 +398,15 @@ onUnmounted(() => {
 }
 
 .cs-btn-danger {
-  color: #dc2626;
-  border-color: #fecaca;
-  background: #fef2f2;
+  color: var(--claude-error);
+  border-color: var(--claude-border-warm);
+  background: var(--claude-parchment);
 }
 
 .cs-btn-danger:hover:not(:disabled) {
-  background: #fee2e2;
+  background: var(--claude-error);
+  border-color: var(--claude-error);
+  color: var(--claude-ivory);
 }
 
 /* 删除确认对话框 */
@@ -408,17 +415,17 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 12px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  border-radius: 6px;
-  color: #ea580c;
+  background: var(--claude-parchment);
+  border: 1px solid var(--claude-border-warm);
+  border-radius: var(--claude-radius-sm);
+  color: var(--claude-text-primary);
   font-size: 14px;
   margin-bottom: 12px;
 }
 
 .cs-confirm-desc {
   font-size: 14px;
-  color: #374151;
+  color: var(--claude-text-secondary);
   margin-bottom: 16px;
 }
 
@@ -432,18 +439,21 @@ onUnmounted(() => {
   display: flex;
   gap: 12px;
   padding: 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border: 1px solid var(--claude-border-warm);
+  border-radius: var(--claude-radius-sm);
   cursor: pointer;
   transition: all 0.2s;
+  background: var(--claude-ivory);
 }
 
 .cs-confirm-option:hover {
-  border-color: #d1d5db;
+  border-color: var(--claude-text-tertiary);
+  background: var(--claude-parchment);
 }
 
 .cs-confirm-option input[type="radio"] {
   margin-top: 2px;
+  accent-color: var(--claude-terracotta);
 }
 
 .cs-option-content {
@@ -456,12 +466,12 @@ onUnmounted(() => {
 .cs-option-label {
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--claude-text-primary);
 }
 
 .cs-option-desc {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--claude-text-tertiary);
 }
 
 .cs-dialog-footer {
@@ -469,7 +479,7 @@ onUnmounted(() => {
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 20px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--claude-border-warm);
 }
 
 .cs-dialog-footer button:disabled {

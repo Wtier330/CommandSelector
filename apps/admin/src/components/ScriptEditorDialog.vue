@@ -10,11 +10,12 @@ import {
   useKeyboardShortcuts,
   useAIMetadata
 } from "@commandselector/ui";
+import type { ScriptType } from "@commandselector/shared";
 
 const props = defineProps<{
   scriptId: string;
   scriptName: string;
-  scriptType: "bat" | "ps1";
+  scriptType: ScriptType;
 }>();
 
 const emit = defineEmits<{
@@ -120,9 +121,15 @@ function handleContentChange(value: string) {
 async function handleGenerateMetadata() {
   clearAIError();
 
+  // AI 元数据生成仅支持 bat 和 ps1
+  if (props.scriptType !== 'bat' && props.scriptType !== 'ps1') {
+    alert('AI 元数据生成仅支持 bat 和 ps1 脚本');
+    return;
+  }
+
   const metadata = await generateMetadata(
     scriptContent.value,
-    props.scriptType
+    props.scriptType as 'bat' | 'ps1'
   );
 
   if (metadata) {
@@ -138,7 +145,7 @@ async function handleGenerateMetadata() {
     scriptContent.value = replaceOrInsertCommentBlock(
       scriptContent.value,
       commentTemplate,
-      props.scriptType
+      props.scriptType as 'bat' | 'ps1'
     );
     setChanged(true);
   } else if (aiError.value) {

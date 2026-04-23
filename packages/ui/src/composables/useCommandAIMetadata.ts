@@ -31,8 +31,8 @@ export function useCommandAIMetadata() {
   /**
    * 加载所有提供商配置
    */
-  function loadProviders() {
-    const config = aiConfigManager.getMultiConfig();
+  async function loadProviders() {
+    const config = await aiConfigManager.getMultiConfig();
     providers.value = config.providers;
     defaultProviderId.value = config.defaultProviderId;
   }

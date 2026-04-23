@@ -284,13 +284,13 @@ function scrollToFocused() {
 }
 
 .cs-select-trigger:hover {
-  border-color: var(--cs-blue-200);
+  border-color: var(--claude-border-warm);
 }
 
 .cs-select-trigger:focus-visible,
 .cs-select-trigger.is-open {
-  border-color: var(--cs-blue-200);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--claude-focus);
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
 }
 
 .cs-select-value {
@@ -353,17 +353,19 @@ function scrollToFocused() {
   cursor: pointer;
   user-select: none;
   transition: background-color 0.2s;
+  color: var(--claude-text-secondary);
 }
 
 .cs-select-item.is-focused,
 .cs-select-item:hover {
-  background: var(--cs-blue-50);
+  background: var(--claude-parchment);
+  color: var(--claude-text-primary);
 }
 
 .cs-checkbox {
   width: 16px;
   height: 16px;
-  border: 1px solid var(--cs-border);
+  border: 1px solid var(--claude-border-warm);
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -371,13 +373,13 @@ function scrollToFocused() {
   color: white;
   transition: all 0.2s;
   flex-shrink: 0;
-  background: white;
+  background: var(--claude-ivory);
 }
 
 .cs-checkbox.is-checked,
 .cs-checkbox.is-indeterminate {
-  background: var(--cs-blue);
-  border-color: var(--cs-blue);
+  background: var(--claude-terracotta);
+  border-color: var(--claude-terracotta);
 }
 
 .cs-select-item-text {

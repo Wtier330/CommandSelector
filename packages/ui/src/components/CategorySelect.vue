@@ -193,25 +193,26 @@ function scrollToFocused() {
   width: 100%;
   height: 32px;
   padding: 0 10px;
-  background: var(--cs-card, #ffffff);
-  border: 1px solid var(--cs-border, #e5e7eb);
-  border-radius: 4px;
+  background: var(--claude-ivory);
+  border: 1px solid var(--claude-border-warm);
+  border-radius: var(--claude-radius-sm);
   cursor: pointer;
   user-select: none;
   transition: all 0.2s;
   outline: none;
   box-sizing: border-box;
   font-size: 13px;
+  color: var(--claude-text-secondary);
 }
 
 .cs-select-trigger:hover {
-  border-color: var(--cs-blue-200, #bfdbfe);
+  border-color: var(--claude-border);
 }
 
 .cs-select-trigger:focus-visible,
 .cs-select-trigger.is-open {
-  border-color: var(--cs-blue-200, #bfdbfe);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--claude-focus);
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
 }
 
 .cs-select-value {
@@ -240,10 +241,10 @@ function scrollToFocused() {
   position: absolute;
   left: 0;
   width: 100%;
-  background: var(--cs-card, #ffffff);
-  border: 1px solid var(--cs-border, #e5e7eb);
-  border-radius: 4px;
-  box-shadow: var(--cs-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
+  background: var(--claude-ivory);
+  border: 1px solid var(--claude-border-warm);
+  border-radius: var(--claude-radius-sm);
+  box-shadow: 0px 0px 0px 1px var(--claude-border-warm), 0px 4px 24px rgba(0, 0, 0, 0.05);
   z-index: 50;
   overflow-y: auto;
   outline: none;
@@ -254,7 +255,7 @@ function scrollToFocused() {
   width: 4px;
 }
 .cs-select-dropdown::-webkit-scrollbar-thumb {
-  background-color: var(--cs-border, #e5e7eb);
+  background-color: var(--claude-border-warm);
   border-radius: 4px;
 }
 
@@ -269,21 +270,22 @@ function scrollToFocused() {
   display: flex;
   align-items: center;
   padding: 8px 10px;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   user-select: none;
   transition: background-color 0.2s;
-;
+  color: var(--claude-text-secondary);
 }
 
 .cs-select-item.is-focused,
 .cs-select-item:hover {
-  background: var(--cs-blue-50, #eff6ff);
+  background: var(--claude-parchment);
+  color: var(--claude-text-primary);
 }
 
 .cs-select-item.is-selected {
-  background: var(--cs-blue-50, #eff6ff);
-  color: var(--cs-blue, #2563eb);
+  background: var(--claude-border-warm);
+  color: var(--claude-text-primary);
   font-weight: 500;
 }
 

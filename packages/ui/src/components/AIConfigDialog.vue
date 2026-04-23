@@ -35,6 +35,9 @@ const editingProviderId = ref<string | null>(null);
 const isTesting = ref(false);
 const testResult = ref<{ success: boolean; message: string } | null>(null);
 
+// 删除确认状态
+const confirmingDelete = ref<{ id: string; name: string } | null>(null);
+
 // 编辑表单
 const editForm = ref<AIProviderConfig>({
   id: '',
@@ -101,8 +104,8 @@ function closeEditDialog() {
 }
 
 // 添加新提供商
-function handleAddProvider() {
-  const validation = addProvider({
+async function handleAddProvider() {
+  const validation = await addProvider({
     ...editForm.value,
     id: aiConfigManager.generateId()
   });
@@ -114,10 +117,10 @@ function handleAddProvider() {
 }
 
 // 更新提供商
-function handleUpdateProvider() {
+async function handleUpdateProvider() {
   if (!editingProviderId.value || editingProviderId.value === 'new') return;
   const { id, ...updates } = editForm.value;
-  const validation = updateProvider(id, updates);
+  const validation = await updateProvider(id, updates);
   if (validation.valid) {
     closeEditDialog();
   } else {
@@ -125,16 +128,22 @@ function handleUpdateProvider() {
   }
 }
 
-// 删除提供商
-function handleDeleteProvider(id: string, name: string) {
-  if (confirm(`确定要删除"${name}"吗？`)) {
-    deleteProvider(id);
+// 确认删除
+async function confirmDelete() {
+  if (confirmingDelete.value) {
+    await deleteProvider(confirmingDelete.value.id);
+    confirmingDelete.value = null;
   }
 }
 
+// 取消删除
+function cancelDelete() {
+  confirmingDelete.value = null;
+}
+
 // 设为默认
-function handleSetDefault(id: string) {
-  setDefaultProvider(id);
+async function handleSetDefault(id: string) {
+  await setDefaultProvider(id);
 }
 
 // 测试连接
@@ -230,7 +239,7 @@ function getProviderIcon(type: AIProvider): string {
                   <button
                     class="cs-ai-config-item-btn"
                     title="删除"
-                    @click="handleDeleteProvider(provider.id, provider.name)"
+                    @click="confirmingDelete = { id: provider.id, name: provider.name }"
                   >
                     🗑️
                   </button>
@@ -358,6 +367,29 @@ function getProviderIcon(type: AIProvider): string {
                   @click="isCreating ? handleAddProvider() : handleUpdateProvider()"
                 >
                   保存
+                </button>
+              </div>
+            </div>
+          </div>
+        </transition>
+
+        <!-- 删除确认对话框 -->
+        <transition name="cs-ai-edit-fade">
+          <div v-if="confirmingDelete" class="cs-ai-confirm-overlay" @click.self="cancelDelete">
+            <div class="cs-ai-confirm-dialog">
+              <div class="cs-ai-confirm-header">
+                <h4>确认删除</h4>
+              </div>
+              <div class="cs-ai-confirm-body">
+                <p>确定要删除「{{ confirmingDelete.name }}」吗？</p>
+                <p class="cs-ai-confirm-hint">此操作不可恢复</p>
+              </div>
+              <div class="cs-ai-confirm-footer">
+                <button class="cs-ai-confirm-btn" @click="cancelDelete">
+                  取消
+                </button>
+                <button class="cs-ai-confirm-btn cs-ai-confirm-btn-danger" @click="confirmDelete">
+                  删除
                 </button>
               </div>
             </div>
@@ -511,7 +543,7 @@ function getProviderIcon(type: AIProvider): string {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #6b72828;
+  color: #6b728280;
   font-size: 13px;
   margin-bottom: 12px;
 }
@@ -746,5 +778,83 @@ function getProviderIcon(type: AIProvider): string {
 
 .cs-ai-config-btn-primary:hover {
   background: #2563eb;
+}
+
+/* 删除确认对话框 */
+.cs-ai-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4200;
+}
+
+.cs-ai-confirm-dialog {
+  background: white;
+  border-radius: 12px;
+  width: 360px;
+  max-width: 90%;
+}
+
+.cs-ai-confirm-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.cs-ai-confirm-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cs-ai-confirm-body {
+  padding: 20px;
+}
+
+.cs-ai-confirm-body p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.cs-ai-confirm-hint {
+  color: #6b7280 !important;
+  font-size: 13px !important;
+}
+
+.cs-ai-confirm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cs-ai-confirm-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  transition: all 0.15s;
+}
+
+.cs-ai-confirm-btn:hover {
+  background: #f9fafb;
+}
+
+.cs-ai-confirm-btn-danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+}
+
+.cs-ai-confirm-btn-danger:hover {
+  background: #b91c1c;
 }
 </style>

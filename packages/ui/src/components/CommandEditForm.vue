@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import type { CommandEntry } from "@commandselector/shared";
 import CategorySelect from "./CategorySelect.vue";
 
-const props = defineProps<{
+defineProps<{
   draftCommand: CommandEntry;
   categories: string[];
   templateEditMode: "cmd" | "powershell";
@@ -19,18 +18,6 @@ const emit = defineEmits<{
   (e: "ai-complete"): void;
 }>();
 
-// 标签字符串
-const tagsStr = computed({
-  get() {
-    return props.draftCommand.tags?.join(", ") ?? "";
-  },
-  set(val: string) {
-    emit("update:draftCommand", {
-      ...props.draftCommand,
-      tags: val.split(",").map(s => s.trim()).filter(Boolean)
-    });
-  }
-});
 </script>
 
 <template>
@@ -115,14 +102,6 @@ const tagsStr = computed({
         />
       </label>
 
-      <label class="cs-field-col" style="grid-column: 1 / -1;">
-        <span class="cs-field-label">标签 (逗号分隔)</span>
-        <input
-          v-model="tagsStr"
-          class="cs-input cs-input-sm"
-          placeholder="例如: 网络, 进程, 维护"
-        />
-      </label>
     </div>
 
     <div class="cs-command-edit-template">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import type { CommandEntry, ScriptFileMeta, ScriptType } from "@commandselector/shared";
 import CategoryMultiSelect from "./CategoryMultiSelect.vue";
 import CategoryManageDialog from "./CategoryManageDialog.vue";
@@ -7,7 +7,7 @@ import ModeSwitcher from "./ModeSwitcher.vue";
 
 type ScriptTypeFilter = 'all' | ScriptType;
 
-defineProps<{
+const props = defineProps<{
   categories: string[];
   filteredCommands: CommandEntry[];
   scripts: ScriptFileMeta[];
@@ -147,13 +147,39 @@ function toggleScriptTypeDropdown(e: MouseEvent) {
   showScriptTypeDropdown.value = !showScriptTypeDropdown.value;
 }
 
-function closeScriptTypeDropdown() {
-  showScriptTypeDropdown.value = false;
-}
-
 function handleOpenScriptManage() {
   emit('open-script-manage');
 }
+
+// 搜索框 ref 和聚焦处理
+const searchInput = ref<HTMLInputElement | null>(null);
+
+function handleFocusSearch() {
+  searchInput.value?.focus();
+}
+
+// ESC 清空搜索框
+function handleSearchKeydown(e: KeyboardEvent) {
+  const target = e.target as HTMLInputElement;
+  if (e.key === 'Escape' && target.value) {
+    e.stopPropagation();
+    target.value = '';
+    emit('update:keyword', '');
+  }
+  // Ctrl+/ 切换命令/脚本模式
+  if (e.ctrlKey && e.key === '/') {
+    e.preventDefault();
+    emit('update:mode', props.mode === 'command' ? 'script' : 'command');
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('focus-search', handleFocusSearch);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('focus-search', handleFocusSearch);
+});
 </script>
 
 <template>
@@ -166,10 +192,12 @@ function handleOpenScriptManage() {
         </svg>
       </span>
       <input
+        ref="searchInput"
         class="cs-input"
-        :placeholder="mode === 'script' ? '搜索脚本...' : '搜索命令 (Ctrl+/)'"
+        :placeholder="mode === 'script' ? '搜索脚本...' : '搜索命令 (Ctrl+F 聚焦)'"
         :value="keyword"
         @input="emit('update:keyword', ($event.target as HTMLInputElement).value)"
+        @keydown="handleSearchKeydown"
       />
     </div>
 
@@ -347,10 +375,10 @@ function handleOpenScriptManage() {
   gap: 8px;
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #e8e6dc;
-  border-radius: 8px;
-  background: #faf9f5;
-  color: #5e5d59;
+  border: 1px solid var(--claude-border-warm);
+  border-radius: var(--claude-radius-sm);
+  background: var(--claude-ivory);
+  color: var(--claude-text-secondary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -358,12 +386,13 @@ function handleOpenScriptManage() {
 }
 
 .cs-dropdown-trigger:hover {
-  border-color: #d1d5db;
+  border-color: var(--claude-border);
+  background: var(--claude-ivory);
 }
 
 .cs-dropdown-trigger.active {
-  border-color: #3898ec;
-  background: #eff6ff;
+  border-color: var(--claude-focus);
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
 }
 
 .cs-dropdown-dot {
@@ -378,10 +407,10 @@ function handleOpenScriptManage() {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #e8e6dc;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: var(--claude-ivory);
+  border: 1px solid var(--claude-border-warm);
+  border-radius: var(--claude-radius-sm);
+  box-shadow: 0px 0px 0px 1px var(--claude-border-warm), 0px 4px 24px rgba(0, 0, 0, 0.05);
   z-index: 100;
   padding: 6px;
 }
@@ -395,19 +424,20 @@ function handleOpenScriptManage() {
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #5e5d59;
+  color: var(--claude-text-secondary);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .cs-dropdown-item:hover {
-  background: #f3f4f6;
+  background: var(--claude-parchment);
+  color: var(--claude-text-primary);
 }
 
 .cs-dropdown-item.active {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--claude-border-warm);
+  color: var(--claude-text-primary);
   font-weight: 500;
 }
 
@@ -428,12 +458,13 @@ function handleOpenScriptManage() {
 .cs-btn-ghost {
   background: transparent;
   border: 1px solid transparent;
-  color: #5e5d59;
+  color: var(--claude-text-secondary);
 }
 
 .cs-btn-ghost:hover {
-  background: #e8e6dc;
-  border-color: #e8e6dc;
+  background: var(--claude-border-warm);
+  border-color: var(--claude-border-warm);
+  color: var(--claude-text-primary);
 }
 
 .cs-dialog-overlay {

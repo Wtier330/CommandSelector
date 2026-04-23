@@ -7,6 +7,7 @@
 	import { useLibraryStore } from "../store/library";
 	import { useScriptsStore } from "../store/scripts";
 	import { isTauri } from "@tauri-apps/api/core";
+	import type { ScriptType } from "@commandselector/shared";
 
 	const router = useRouter();
 	const route = useRoute();
@@ -20,7 +21,7 @@
 	const showScriptEditorDialog = ref(false);
 	const editingScriptId = ref("");
 	const editingScriptName = ref("");
-	const editingScriptType = ref<"bat" | "ps1">("bat");
+	const editingScriptType = ref<ScriptType>("bat");
 
 	function handleCsOpenTrash() {
 	  showTrashModal.value = true;

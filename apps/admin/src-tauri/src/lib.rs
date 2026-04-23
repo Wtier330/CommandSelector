@@ -1,3 +1,4 @@
+mod ai_config;
 mod debug;
 mod file_ops;
 mod log_utils;
@@ -17,6 +18,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_store::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             greet,
             file_ops::read_script_file,
@@ -29,6 +31,8 @@ pub fn run() {
             log_utils::append_log,
             search::search_commands,
             search::search_scripts,
+            ai_config::load_ai_config,
+            ai_config::save_ai_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

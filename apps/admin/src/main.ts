@@ -10,6 +10,15 @@ createApp(App).use(router).mount("#app");
 logger.info('App', 'Application mounted', { isTauri: isTauri() });
 
 // 添加全局诊断快捷键（Ctrl+Shift+L）
+// 全局快捷键 - Ctrl+F 聚焦搜索框（在 Tauri 和 Web 环境都生效）
+window.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 'f') {
+    e.preventDefault();
+    window.dispatchEvent(new CustomEvent('focus-search'));
+  }
+});
+
+// Tauri 环境额外快捷键
 if (isTauri()) {
   window.addEventListener('keydown', async (e) => {
     if (e.ctrlKey && e.shiftKey && e.key === 'L') {

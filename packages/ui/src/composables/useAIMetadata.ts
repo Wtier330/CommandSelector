@@ -28,8 +28,8 @@ export function useAIMetadata() {
   /**
    * 加载所有提供商配置
    */
-  function loadProviders() {
-    const config = aiConfigManager.getMultiConfig();
+  async function loadProviders() {
+    const config = await aiConfigManager.getMultiConfig();
     providers.value = config.providers;
     defaultProviderId.value = config.defaultProviderId;
   }
@@ -93,11 +93,11 @@ export function useAIMetadata() {
   /**
    * 添加提供商
    */
-  function addProvider(provider: AIProviderConfig): { valid: boolean; error?: string } {
+  async function addProvider(provider: AIProviderConfig): Promise<{ valid: boolean; error?: string }> {
     const validation = aiConfigManager.validateProvider(provider);
     if (validation.valid) {
-      aiConfigManager.addProvider(provider);
-      loadProviders();
+      await aiConfigManager.addProvider(provider);
+      await loadProviders();
     }
     return validation;
   }
@@ -105,8 +105,8 @@ export function useAIMetadata() {
   /**
    * 更新提供商
    */
-  function updateProvider(id: string, updates: Partial<AIProviderConfig>): { valid: boolean; error?: string } {
-    const existing = aiConfigManager.getProvider(id);
+  async function updateProvider(id: string, updates: Partial<AIProviderConfig>): Promise<{ valid: boolean; error?: string }> {
+    const existing = await aiConfigManager.getProvider(id);
     if (!existing) {
       return { valid: false, error: '提供商不存在' };
     }
@@ -114,8 +114,8 @@ export function useAIMetadata() {
     const updated = { ...existing, ...updates };
     const validation = aiConfigManager.validateProvider(updated);
     if (validation.valid) {
-      aiConfigManager.updateProvider(id, updates);
-      loadProviders();
+      await aiConfigManager.updateProvider(id, updates);
+      await loadProviders();
     }
     return validation;
   }
@@ -123,16 +123,16 @@ export function useAIMetadata() {
   /**
    * 删除提供商
    */
-  function deleteProvider(id: string) {
-    aiConfigManager.deleteProvider(id);
-    loadProviders();
+  async function deleteProvider(id: string) {
+    await aiConfigManager.deleteProvider(id);
+    await loadProviders();
   }
 
   /**
    * 设置默认提供商
    */
-  function setDefaultProvider(id: string) {
-    aiConfigManager.setDefaultProvider(id);
+  async function setDefaultProvider(id: string) {
+    await aiConfigManager.setDefaultProvider(id);
     defaultProviderId.value = id;
   }
 
@@ -146,9 +146,9 @@ export function useAIMetadata() {
   /**
    * 清除所有配置
    */
-  function clearConfig() {
-    aiConfigManager.clearConfig();
-    loadProviders();
+  async function clearConfig() {
+    await aiConfigManager.clearConfig();
+    await loadProviders();
   }
 
   /**

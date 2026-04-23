@@ -1,5 +1,6 @@
 import { computed, type Ref } from "vue";
 import { parseBatComment, parsePs1Comment, type ParsedScriptMetadata } from "../utils/scriptCommentParser";
+import type { ScriptType } from "@commandselector/shared";
 
 export interface MetadataStatus {
   isValid: boolean;
@@ -17,12 +18,12 @@ export interface MetadataStatus {
 /**
  * 脚本元数据解析和验证
  * @param scriptContent - 脚本内容
- * @param scriptType - 脚本类型 (bat | ps1)
+ * @param scriptType - 脚本类型
  * @returns 元数据和验证状态
  */
 export function useScriptMetadata(
   scriptContent: Ref<string>,
-  scriptType: Ref<"bat" | "ps1">
+  scriptType: Ref<ScriptType>
 ) {
   // 解析元数据
   const metadata = computed<ParsedScriptMetadata | null>(() => {

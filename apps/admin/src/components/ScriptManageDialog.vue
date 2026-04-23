@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import type { ScriptFileMeta } from "@commandselector/shared";
+import type { ScriptFileMeta, ScriptType } from "@commandselector/shared";
 import { useScriptsStore } from "../store/scripts";
 import { useKeyboardShortcuts } from "@commandselector/ui";
 import { useScriptFilters } from "../composables/useScriptFilters";
@@ -89,7 +89,7 @@ function closeEditDialog() {
 }
 
 // 脚本操作
-async function handleCreateScript(name: string, type: "bat" | "ps1", content: string, description?: string) {
+async function handleCreateScript(name: string, type: ScriptType, content: string, description?: string) {
   try {
     const { createScript } = useScriptsStore();
     await createScript(name, type, content, description);

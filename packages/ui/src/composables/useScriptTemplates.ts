@@ -1,15 +1,16 @@
 import { ref, type Ref } from "vue";
 import { getBatCommentTemplate, getPs1CommentTemplate } from "../utils/commentTemplates";
+import type { ScriptType } from "@commandselector/shared";
 
 /**
  * 脚本模板管理
  * @param scriptContent - 脚本内容的响应式引用
- * @param scriptType - 脚本类型 (bat | ps1)
+ * @param scriptType - 脚本类型
  * @returns 模板插入相关方法
  */
 export function useScriptTemplates(
   scriptContent: Ref<string>,
-  scriptType: Ref<"bat" | "ps1">
+  scriptType: Ref<ScriptType>
 ) {
   const hasChanges = ref(false);
 
