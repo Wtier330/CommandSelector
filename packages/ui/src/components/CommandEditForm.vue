@@ -7,6 +7,8 @@ const props = defineProps<{
   draftCommand: CommandEntry;
   categories: string[];
   templateEditMode: "cmd" | "powershell";
+  isGenerating?: boolean;
+  generatingStep?: string;
 }>();
 
 const emit = defineEmits<{
@@ -14,6 +16,7 @@ const emit = defineEmits<{
   (e: "update:templateEditMode", value: "cmd" | "powershell"): void;
   (e: "cancel"): void;
   (e: "save"): void;
+  (e: "ai-complete"): void;
 }>();
 
 // 标签字符串
@@ -33,7 +36,23 @@ const tagsStr = computed({
 <template>
   <div class="cs-command-edit">
     <div class="cs-command-edit-header">
-      <h2 class="cs-command-edit-title">编辑基本信息</h2>
+      <div class="cs-command-edit-title-row">
+        <h2 class="cs-command-edit-title">编辑基本信息</h2>
+        <button
+          class="cs-btn cs-btn-ai"
+          :class="{ 'cs-btn-loading': isGenerating }"
+          :disabled="isGenerating"
+          @click="emit('ai-complete')"
+        >
+          <span v-if="isGenerating" class="cs-btn-ai-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" stroke-dasharray="31.4" stroke-dashoffset="10"/>
+            </svg>
+          </span>
+          <span v-if="isGenerating && generatingStep" class="cs-btn-ai-step">{{ generatingStep }}</span>
+          <span v-else>{{ isGenerating ? '补全中...' : 'AI 补全' }}</span>
+        </button>
+      </div>
       <div class="cs-command-edit-actions">
         <button class="cs-btn cs-btn-outline" @click="emit('cancel')">取消</button>
         <button class="cs-btn cs-btn-primary" @click="emit('save')">完成</button>
@@ -146,8 +165,14 @@ const tagsStr = computed({
 .cs-command-edit-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 8px;
+}
+
+.cs-command-edit-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .cs-command-edit-title {
@@ -242,5 +267,47 @@ const tagsStr = computed({
 .cs-btn-outline:hover {
   background: #f9fafb;
   border-color: #9ca3af;
+}
+
+.cs-btn-ai {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #a855f7;
+  background: #faf5ff;
+  color: #a855f7;
+  transition: all 0.2s ease;
+}
+
+.cs-btn-ai:hover:not(:disabled) {
+  background: #f3e8ff;
+  border-color: #9333ea;
+}
+
+.cs-btn-ai:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cs-btn-ai-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+}
+
+.cs-btn-ai-icon svg {
+  animation: cs-spin 1s linear infinite;
+}
+
+.cs-btn-ai-step {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+@keyframes cs-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

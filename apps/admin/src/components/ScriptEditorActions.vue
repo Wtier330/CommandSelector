@@ -32,16 +32,19 @@ const showAIBtn = computed(() => props.isAIConfigured === true);
     </button>
     <button
       v-if="showAIBtn"
-      class="cs-btn cs-btn-icon"
+      class="cs-btn cs-btn-icon cs-btn-ai"
       type="button"
       title="AI 生成元数据"
       :disabled="isGenerating"
       @click="emit('generate-metadata')"
     >
-      <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg v-if="isGenerating" class="icon icon-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="31.4" stroke-dashoffset="10"/>
+      </svg>
+      <svg v-else class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>{{ isGenerating ? '生成中...' : 'AI 生成' }}</span>
+      <span>{{ isGenerating ? 'AI 生成中...' : 'AI 生成' }}</span>
     </button>
     <button
       class="cs-btn cs-btn-icon"
@@ -88,7 +91,7 @@ const showAIBtn = computed(() => props.isAIConfigured === true);
 }
 
 .cs-btn-icon:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
@@ -100,5 +103,29 @@ const showAIBtn = computed(() => props.isAIConfigured === true);
 
 .cs-btn-icon span {
   font-size: 13.5px;
+}
+
+/* AI 按钮特殊样式 */
+.cs-btn-ai {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+.cs-btn-ai:hover:not(:disabled) {
+  background: #e9d5ff;
+}
+
+.cs-btn-ai:disabled {
+  background: #f3e8ff;
+}
+
+/* 旋转动画 */
+.icon-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

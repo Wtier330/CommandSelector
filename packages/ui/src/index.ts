@@ -13,6 +13,8 @@ export * from "./composables/useScriptTemplates";
 export * from "./composables/useKeyboardShortcuts";
 export * from "./composables/useCommandEdit";
 export * from "./composables/useAIMetadata";
+export * from "./composables/useCommandAIMetadata";
+export * from "./composables/usePinyinSearch";
 export * from "./utils/scriptCommentParser";
 export * from "./utils/commentTemplates";
 export * from "./utils/searchConfig";

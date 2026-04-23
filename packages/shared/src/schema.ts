@@ -60,7 +60,7 @@ export interface Library {
 }
 
 // 脚本类型
-export type ScriptType = "bat" | "ps1";
+export type ScriptType = "bat" | "ps1" | "vbs" | "sh" | "cmd" | "py";
 
 // 脚本文件元数据
 export interface ScriptFileMeta {

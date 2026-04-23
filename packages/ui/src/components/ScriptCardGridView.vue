@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import type { ScriptFileMeta } from "@commandselector/shared";
+import { ref, computed, watch } from "vue";
+import type { ScriptFileMeta, ScriptType } from "@commandselector/shared";
 import ScriptCard from "./ScriptCard.vue";
+import { fuzzyMatch } from "../composables/usePinyinSearch";
 
 const props = defineProps<{
   scripts: ScriptFileMeta[];
@@ -12,9 +13,33 @@ const emit = defineEmits<{
   (e: "more", id: string): void;
 }>();
 
+// 视图模式
+const viewMode = ref<'grid' | 'list'>('grid');
+
 // 搜索和筛选状态
 const searchKeyword = ref("");
+
+// 调试：监控 searchKeyword 变化
+watch(searchKeyword, (newVal) => {
+  console.log("[searchKeyword] changed to:", newVal);
+});
+
 const selectedCategories = ref<string[]>(["__all__"]);
+const selectedType = ref<ScriptType | 'all'>('all');
+const showTypeDropdown = ref(false);
+
+// 脚本类型配置
+const scriptTypeConfig: Record<ScriptType, { label: string; color: string }> = {
+  bat: { label: 'BAT', color: '#4d4d4d' },
+  ps1: { label: 'PowerShell', color: '#2b579a' },
+  vbs: { label: 'VBS', color: '#8b4513' },
+  sh: { label: 'Shell', color: '#2e8b57' },
+  cmd: { label: 'CMD', color: '#6b7280' },
+  py: { label: 'Python', color: '#3776ab' }
+};
+
+// 所有类型选项
+const allTypeOptions = ['bat', 'ps1', 'vbs', 'sh', 'cmd', 'py'] as const;
 
 // 计算所有分类
 const categories = computed(() => {
@@ -29,22 +54,55 @@ const categories = computed(() => {
 
 // 统计信息
 const stats = computed(() => {
-  const batCount = props.scripts.filter((s) => s.type === "bat").length;
-  const ps1Count = props.scripts.filter((s) => s.type === "ps1").length;
-  return { batCount, ps1Count, total: props.scripts.length };
+  const counts: Record<ScriptType, number> = {
+    bat: 0,
+    ps1: 0,
+    vbs: 0,
+    sh: 0,
+    cmd: 0,
+    py: 0
+  };
+  for (const s of props.scripts) {
+    counts[s.type] = (counts[s.type] || 0) + 1;
+  }
+  return {
+    ...counts,
+    total: props.scripts.length
+  };
+});
+
+// 可用的脚本类型（下拉选项）
+const availableTypes = computed(() => {
+  return allTypeOptions.filter(
+    type => stats.value[type] > 0
+  );
+});
+
+// 当前选中类型的标签
+const selectedTypeLabel = computed(() => {
+  if (selectedType.value === 'all') return '全部类型';
+  return scriptTypeConfig[selectedType.value]?.label || selectedType.value;
 });
 
 // 过滤后的脚本
 const filteredScripts = computed(() => {
   const k = searchKeyword.value.trim().toLowerCase();
-  const isAll = selectedCategories.value.includes("__all__");
-  const isNone = selectedCategories.value.includes("__none__");
+
+  console.log("[search] keyword:", searchKeyword.value, "-> processed:", k, "scripts count:", props.scripts.length);
+
+  const isAllCats = selectedCategories.value.includes("__all__");
+  const isNoneCats = selectedCategories.value.includes("__none__");
 
   let result = props.scripts;
 
+  // 类型过滤
+  if (selectedType.value !== 'all') {
+    result = result.filter(s => s.type === selectedType.value);
+  }
+
   // 分类过滤
-  if (!isAll) {
-    if (isNone) {
+  if (!isAllCats) {
+    if (isNoneCats) {
       result = [];
     } else {
       result = result.filter((s) => {
@@ -54,19 +112,25 @@ const filteredScripts = computed(() => {
     }
   }
 
-  // 关键词搜索（简单实现，后续使用智能搜索）
+  // 关键词搜索（支持拼音首字母匹配）
   if (k) {
+    console.log("[search] doing fuzzy search with:", k);
     result = result.filter((s) => {
-      const fields = [
-        s.name,
-        s.description ?? "",
-        s.metadata?.name ?? "",
-        s.metadata?.description ?? "",
-        s.metadata?.category ?? "",
-        ...(s.metadata?.tags ?? []),
-      ].join(" ").toLowerCase();
-      return fields.includes(k);
+      // 检查名称
+      if (fuzzyMatch(s.name, k).matched) return true;
+      // 检查简称/描述
+      if (s.description && fuzzyMatch(s.description, k).matched) return true;
+      // 检查元数据简称
+      if (s.metadata?.name && fuzzyMatch(s.metadata.name, k).matched) return true;
+      // 检查元数据描述
+      if (s.metadata?.description && fuzzyMatch(s.metadata.description, k).matched) return true;
+      // 检查分类
+      if (s.metadata?.category && fuzzyMatch(s.metadata.category, k).matched) return true;
+      // 检查标签
+      if (s.metadata?.tags?.some(tag => fuzzyMatch(tag, k).matched)) return true;
+      return false;
     });
+    console.log("[search] filtered result count:", result.length);
   }
 
   return result;
@@ -77,9 +141,23 @@ function handleEdit(id: string) {
   emit("edit", id);
 }
 
-// 处理更多更多操作
+// 处理更多操作
 function handleMore(id: string) {
   emit("more", id);
+}
+
+// 处理类型选择
+function handleTypeSelect(type: ScriptType | 'all') {
+  selectedType.value = type;
+  showTypeDropdown.value = false;
+}
+
+// 点击外部关闭下拉
+function handleClickOutside(e: MouseEvent) {
+  const target = e.target as HTMLElement;
+  if (!target.closest('.cs-type-dropdown')) {
+    showTypeDropdown.value = false;
+  }
 }
 
 // 处理分类选择
@@ -106,58 +184,131 @@ function handleCategorySelect(category: string) {
 </script>
 
 <template>
-  <div class="cs-script-grid-view">
+  <div class="cs-script-grid-view" @click="handleClickOutside">
     <!-- 工具栏 -->
     <div class="cs-toolbar">
       <div class="cs-toolbar-left">
+        <!-- 统计信息 -->
+        <div class="cs-stats-summary">
+          <span class="cs-total-count">共 <em>{{ stats.total }}</em> 个脚本</span>
+        </div>
+
+        <!-- 类型下拉选择器 -->
+        <div class="cs-type-dropdown">
+          <button
+            class="cs-dropdown-trigger"
+            :class="{ active: showTypeDropdown }"
+            @click.stop="showTypeDropdown = !showTypeDropdown"
+          >
+            <span>{{ selectedTypeLabel }}</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div v-if="showTypeDropdown" class="cs-dropdown-menu">
+            <button
+              class="cs-dropdown-item"
+              :class="{ active: selectedType === 'all' }"
+              @click="handleTypeSelect('all')"
+            >
+              <span class="cs-dropdown-dot" style="background: #6b7280"></span>
+              全部类型
+              <span class="cs-dropdown-count">{{ stats.total }}</span>
+            </button>
+            <div class="cs-dropdown-divider"></div>
+            <button
+              v-for="type in allTypeOptions"
+              :key="type"
+              class="cs-dropdown-item"
+              :class="{ active: selectedType === type }"
+              @click="handleTypeSelect(type)"
+            >
+              <span class="cs-dropdown-dot" :style="{ background: scriptTypeConfig[type].color }"></span>
+              {{ scriptTypeConfig[type].label }}
+              <span class="cs-dropdown-count">{{ stats[type] }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="cs-toolbar-right">
+        <!-- 搜索框 -->
         <input
           v-model="searchKeyword"
           class="cs-input"
-          placeholder="搜索脚本"
+          placeholder="搜索脚本..."
         />
-      </div>
-      <div class="cs-toolbar-right">
-        <div class="cs-filter-buttons">
+        <!-- 视图切换 -->
+        <div class="cs-view-toggle">
           <button
-            class="cs-filter-btn"
-            :class="{ active: selectedCategories.includes('__all__') }"
-            type="button"
-            @click="handleCategorySelect('__all__')"
+            class="cs-toggle-btn"
+            :class="{ active: viewMode === 'grid' }"
+            title="网格视图"
+            @click="viewMode = 'grid'"
           >
-            全部 ({{ stats.total }})
+            <svg viewBox="0 0 16 16" width="14" height="14">
+              <rect x="1" y="1" width="6" height="6" rx="1" fill="currentColor"/>
+              <rect x="9" y="1" width="6" height="6" rx="1" fill="currentColor"/>
+              <rect x="1" y="9" width="6" height="6" rx="1" fill="currentColor"/>
+              <rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor"/>
+            </svg>
           </button>
           <button
-            class="cs-filter-btn"
-            :class="{ active: selectedCategories.includes('__none__') }"
-            type="button"
-            @click="handleCategorySelect('__none__')"
+            class="cs-toggle-btn"
+            :class="{ active: viewMode === 'list' }"
+            title="列表视图"
+            @click="viewMode = 'list'"
           >
-            未分类 (0)
+            <svg viewBox="0 0 16 16" width="14" height="14">
+              <rect x="1" y="2" width="14" height="2" rx="1" fill="currentColor"/>
+              <rect x="1" y="7" width="14" height="2" rx="1" fill="currentColor"/>
+              <rect x="1" y="12" width="14" height="2" rx="1" fill="currentColor"/>
+            </svg>
           </button>
-          <template v-if="categories.length">
-            <div class="cs-divider"></div>
-            <button
-              v-for="cat in categories"
-              :key="cat"
-              class="cs-filter-btn"
-              :class="{ active: selectedCategories.includes(cat) }"
-              type="button"
-              @click="handleCategorySelect(cat)"
-            >
-              {{ cat }}
-            </button>
-          </template>
         </div>
       </div>
     </div>
 
-    <!-- 卡片网格 -->
-    <div class="cs-card-grid">
+    <!-- 分类过滤器 -->
+    <div class="cs-filter-bar">
+      <button
+        class="cs-filter-btn"
+        :class="{ active: selectedCategories.includes('__all__') }"
+        type="button"
+        @click="handleCategorySelect('__all__')"
+      >
+        全部
+      </button>
+      <button
+        class="cs-filter-btn"
+        :class="{ active: selectedCategories.includes('__none__') }"
+        type="button"
+        @click="handleCategorySelect('__none__')"
+      >
+        未分类
+      </button>
+      <template v-if="categories.length">
+        <div class="cs-filter-divider"></div>
+        <button
+          v-for="cat in categories"
+          :key="cat"
+          class="cs-filter-btn"
+          :class="{ active: selectedCategories.includes(cat) }"
+          type="button"
+          @click="handleCategorySelect(cat)"
+        >
+          {{ cat }}
+        </button>
+      </template>
+    </div>
+
+    <!-- 卡片网格/列表 -->
+    <div class="cs-card-container" :class="viewMode">
       <template v-if="filteredScripts.length > 0">
         <ScriptCard
           v-for="script in filteredScripts"
           :key="script.id"
           :script="script"
+          :compact="viewMode === 'list'"
           @edit="handleEdit"
           @more="handleMore"
         />
@@ -179,8 +330,8 @@ function handleCategorySelect(category: string) {
 .cs-script-grid-view {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px;
+  gap: 16px;
+  padding: 16px 20px;
 }
 
 /* 工具栏 */
@@ -189,30 +340,12 @@ function handleCategorySelect(category: string) {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f0eee6;
 }
 
 .cs-toolbar-left {
-  flex: 1;
-}
-
-.cs-input {
-  width: 100%;
-  max-width: 320px;
-  padding: 8px 12px;
-  border: 1px solid #e8e6dc;
-  border-radius: 12px;
-  font-size: 14px;
-  background: #faf9f5;
-  color: #141413;
-  transition: all 0.2s ease;
-}
-
-.cs-input:focus {
-  outline: none;
-  border-color: #3898ec;
-  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .cs-toolbar-right {
@@ -221,8 +354,75 @@ function handleCategorySelect(category: string) {
   gap: 12px;
 }
 
+/* 统计信息 */
+.cs-stats-summary {
+  display: flex;
+  align-items: center;
+}
+
+.cs-total-count {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.cs-total-count em {
+  font-style: normal;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* 搜索框 */
+.cs-input {
+  padding: 8px 12px;
+  border: 1px solid #e8e6dc;
+  border-radius: 8px;
+  font-size: 13px;
+  background: #faf9f5;
+  color: #141413;
+  width: 160px;
+  transition: all 0.2s ease;
+}
+
+.cs-input:focus {
+  outline: none;
+  border-color: #3898ec;
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
+  width: 200px;
+}
+
+/* 视图切换 */
+.cs-view-toggle {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.cs-toggle-btn {
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.cs-toggle-btn:hover {
+  color: #6b7280;
+}
+
+.cs-toggle-btn.active {
+  background: white;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
 /* 分类过滤器 */
-.cs-filter-buttons {
+.cs-filter-bar {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -230,61 +430,73 @@ function handleCategorySelect(category: string) {
 }
 
 .cs-filter-btn {
-  padding: 6px 12px;
+  padding: 4px 10px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   background: transparent;
-  font-size: 13px;
-;
+  font-size: 12px;
+  color: #6b7280;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 
 .cs-filter-btn:hover {
-  background: #e8e6dc;
+  background: #f3f4f6;
 }
 
 .cs-filter-btn.active {
-  background: #e8e6dc;
-  color: #4d4c48;
+  background: #e5e7eb;
+  color: #374151;
   font-weight: 500;
 }
 
-.cs-divider {
+.cs-filter-divider {
   width: 1px;
-  height: 20px;
-  background: #e8e6dc;
-  margin: 0 8px;
+  height: 16px;
+  background: #e5e7eb;
+  margin: 0 4px;
 }
 
-/* 卡片网格 - 响应式 */
-.cs-card-grid {
+/* 卡片容器 */
+.cs-card-container {
   display: grid;
   gap: 16px;
-  /* 默认 5 列 */
+  /* 默认网格视图 5 列 */
   grid-template-columns: repeat(5, 1fr);
 }
 
-@media (max-width: 1200px) {
-  .cs-card-grid {
+.cs-card-container.list {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 1400px) {
+  .cs-card-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .cs-card-container {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .cs-card-grid {
+  .cs-card-container {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 480px) {
-  .cs-card-grid {
+  .cs-card-container {
     grid-template-columns: 1fr;
   }
 }
 
 /* 空状态 */
 .cs-empty-state {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -311,5 +523,109 @@ function handleCategorySelect(category: string) {
 .cs-empty-hint {
   font-size: 14px;
   opacity: 0.7;
+}
+
+/* 类型下拉选择器 */
+.cs-type-dropdown {
+  position: relative;
+}
+
+.cs-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cs-dropdown-trigger:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.cs-dropdown-trigger svg {
+  transition: transform 0.2s ease;
+}
+
+.cs-dropdown-trigger.active svg {
+  transform: rotate(180deg);
+}
+
+.cs-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 160px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  padding: 6px;
+  animation: dropdownFadeIn 0.15s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cs-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.cs-dropdown-item:hover {
+  background: #f3f4f6;
+}
+
+.cs-dropdown-item.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+.cs-dropdown-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cs-dropdown-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.cs-dropdown-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 6px 0;
 }
 </style>

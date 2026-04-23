@@ -5,6 +5,7 @@ import { useResponsiveLayout, type ResponsiveOptions } from "./composables/useRe
 import { useCommandFilter } from "./composables/useCommandFilter";
 import { useCommandParams } from "./composables/useCommandParams";
 import { useCommandEdit } from "./composables/useCommandEdit";
+import { useCommandAIMetadata } from "./composables/useCommandAIMetadata";
 
 import CommandSidebar from "./components/CommandSidebar.vue";
 import CommandPreview from "./components/CommandPreview.vue";
@@ -87,7 +88,7 @@ const mainEl = ref<HTMLElement | null>(null);
 const { keyword, selectedCategories, categories, filteredCommands } = useCommandFilter(commands);
 
 // 脚本类型过滤
-const selectedScriptType = ref<'all' | 'bat' | 'ps1'>('all');
+const selectedScriptType = ref<'all' | 'bat' | 'ps1' | 'vbs' | 'sh' | 'cmd' | 'py'>('all');
 
 // 过滤后的脚本列表
 const filteredScripts = computed(() => {
@@ -155,6 +156,103 @@ const {
   cancelCommandEdit,
   saveCommandEdit: doSaveCommandEdit
 } = useCommandEdit(selected);
+
+// 5.1 AI 补全
+const {
+  isCompleting,
+  isStreaming,
+  streamingContent,
+  streamingStage,
+  isConfigured: isAIConfigured,
+  completeMetadataStream,
+  loadProviders: loadAIProviders,
+  clearError: clearAIError
+} = useCommandAIMetadata();
+
+// AI 补全进度步骤
+const generatingStep = ref('');
+
+// 初始化时加载 AI 配置
+loadAIProviders();
+
+// AI 补全命令元数据
+async function handleAICompleteCommand() {
+  if (!draftCommand.value) return;
+
+  clearAIError();
+
+  if (!isAIConfigured.value) {
+    showToast("请先在设置中配置 AI 服务", "error");
+    return;
+  }
+
+  const name = draftCommand.value.name;
+  const template = draftCommand.value.template;
+  const psTemplate = draftCommand.value.powershellTemplate;
+
+  if (!name && !template && !psTemplate) {
+    showToast("请先填写命令名称或模板内容", "error");
+    return;
+  }
+
+  // 优先使用当前模式对应的模板
+  // 如果没有，则使用另一个模板
+  const currentMode = templateEditMode.value === 'powershell' ? 'powershell' : 'cmd';
+  const primaryTemplate = currentMode === 'powershell' ? psTemplate : template;
+  const fallbackTemplate = currentMode === 'powershell' ? template : psTemplate;
+  // 确保空字符串不会传给 AI
+  const sourceTemplate = (primaryTemplate?.trim() || fallbackTemplate?.trim()) || undefined;
+
+  // 构建传递给 AI 的数据（基于可用模板）
+  const commandForAI = {
+    name: name || undefined,
+    template: currentMode === 'powershell' ? undefined : sourceTemplate,
+    powershellTemplate: currentMode === 'powershell' ? sourceTemplate : undefined,
+  };
+
+  // 分步更新进度
+  generatingStep.value = '正在分析模板...';
+
+  const completed = await completeMetadataStream(commandForAI);
+
+  if (completed) {
+    generatingStep.value = '正在填充描述...';
+    // 模拟短暂延迟让用户看到进度
+    await new Promise(r => setTimeout(r, 200));
+
+    // 合并补全的数据
+    if (completed.description) {
+      draftCommand.value.description = completed.description;
+    }
+
+    generatingStep.value = '正在填充分类...';
+    await new Promise(r => setTimeout(r, 150));
+
+    if (completed.category) {
+      draftCommand.value.category = completed.category;
+    }
+
+    generatingStep.value = '正在填充标签...';
+    await new Promise(r => setTimeout(r, 150));
+
+    if (completed.tags && completed.tags.length > 0) {
+      draftCommand.value.tags = completed.tags;
+    }
+
+    generatingStep.value = '正在填充使用说明...';
+    await new Promise(r => setTimeout(r, 150));
+
+    if (completed.usage) {
+      draftCommand.value.usage = completed.usage;
+    }
+
+    generatingStep.value = '';
+    showToast("AI 补全成功", "success");
+  } else {
+    generatingStep.value = '';
+    showToast("AI 补全失败", "error");
+  }
+}
 
 // 6. 提示消息
 const toast = ref<{ text: string; kind: "success" | "error" } | null>(null);
@@ -314,10 +412,13 @@ defineExpose({
                       :draft-command="draftCommand"
                       :categories="categories"
                       :template-edit-mode="templateEditMode"
+                      :is-generating="isCompleting"
+                      :generating-step="generatingStep"
                       @update:draft-command="draftCommand = $event"
                       @update:template-edit-mode="templateEditMode = $event"
                       @cancel="cancelCommandEdit"
                       @save="handleSaveCommandEdit"
+                      @ai-complete="handleAICompleteCommand"
                     />
                   </template>
                 </header>

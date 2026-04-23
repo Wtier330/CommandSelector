@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { CommandEntry } from "@commandselector/shared";
 import { useLibraryStore } from "../store/library";
+import { useCommandAIMetadata } from "@commandselector/ui";
 import {
   NButton,
   NCard,
@@ -14,13 +15,23 @@ import {
   NSelect,
   NCheckbox,
   NDivider,
-  useMessage
+  useMessage,
+  useLoadingBar
 } from "naive-ui";
 
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
+const loadingBar = useLoadingBar();
 const { commands, saveCommand, loadLibrary } = useLibraryStore();
+const {
+  isCompleting,
+  error: aiError,
+  isConfigured,
+  completeMetadata,
+  loadProviders: loadAIProviders,
+  clearError: clearAIError
+} = useCommandAIMetadata();
 
 const id = computed(() => String(route.params.id ?? ""));
 const isNew = computed(() => id.value === "new");
@@ -41,6 +52,7 @@ const draft = reactive<CommandEntry>({
 
 onMounted(async () => {
   await loadLibrary();
+  loadAIProviders();
   if (!isNew.value) {
     const existing = commands.value.find(c => c.id === id.value);
     if (existing) {
@@ -144,6 +156,44 @@ const currentTemplateValue = computed({
 function handleEngineChange() {
   // 不需要做额外处理，templateEditMode 切换即可
 }
+
+// 处理 AI 补全
+async function handleAIComplete() {
+  clearAIError();
+
+  if (!isConfigured.value) {
+    message.warning("请先在设置中配置 AI 服务");
+    return;
+  }
+
+  if (!draft.name && !draft.template && !draft.powershellTemplate) {
+    message.warning("请先填写命令名称或模板内容");
+    return;
+  }
+
+  loadingBar.start();
+  const completed = await completeMetadata(draft);
+  loadingBar.finish();
+
+  if (completed) {
+    // 合并补全的数据
+    if (completed.description) {
+      draft.description = completed.description;
+    }
+    if (completed.category) {
+      draft.category = completed.category;
+    }
+    if (completed.tags && completed.tags.length > 0) {
+      draft.tags = completed.tags;
+    }
+    if (completed.usage) {
+      draft.usage = completed.usage;
+    }
+    message.success("AI 补全成功");
+  } else if (aiError.value) {
+    message.error(aiError.value.message);
+  }
+}
 </script>
 
 <template>
@@ -163,7 +213,20 @@ n
           <n-space vertical size="large">
             <!-- 基本信息 -->
             <div>
-              <n-divider title-placement="left">基本信息</n-divider>
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 14px; font-weight: 500; color: var(--n-text-color);">基本信息</span>
+                <n-button
+                  size="tiny"
+                  type="info"
+                  quaternary
+                  :loading="isCompleting"
+                  :disabled="isCompleting"
+                  @click="handleAIComplete"
+                  style="margin-left: 12px;"
+                >
+                  AI 补全
+                </n-button>
+              </div>
               <n-space vertical>
                 <n-form-item label="唯一 ID (英文/连字符)" required>
                   <n-input :value="draft.id" @update:value="draft.id = $event" placeholder="如：clean-temp" :disabled="!isNew" />

@@ -118,15 +118,35 @@ function handleImport() {
   }
 }
 
-// 脚本类型过滤
-const scriptTypes = [
-  { value: 'all' as const, label: '全部' },
-  { value: 'bat' as const, label: 'BAT' },
-  { value: 'ps1' as const, label: 'PowerShell' }
-];
+// 脚本类型配置
+const scriptTypeConfig = {
+  all: { label: '全部', color: '#6b7280' },
+  bat: { label: 'BAT', color: '#4d4d4d' },
+  ps1: { label: 'PowerShell', color: '#2b579a' },
+  vbs: { label: 'VBS', color: '#8b4513' },
+  sh: { label: 'Shell', color: '#2e8b57' },
+  cmd: { label: 'CMD', color: '#6b7280' },
+  py: { label: 'Python', color: '#3776ab' }
+};
 
-function handleScriptTypeChange(type: 'all' | 'bat' | 'ps1') {
+// 所有类型选项
+const allScriptTypes = ['all', 'bat', 'ps1', 'vbs', 'sh', 'cmd', 'py'] as const;
+
+// 下拉菜单状态
+const showScriptTypeDropdown = ref(false);
+
+function handleScriptTypeChange(type: typeof allScriptTypes[number]) {
   emit('update:selectedScriptType', type);
+  showScriptTypeDropdown.value = false;
+}
+
+function toggleScriptTypeDropdown(e: MouseEvent) {
+  e.stopPropagation();
+  showScriptTypeDropdown.value = !showScriptTypeDropdown.value;
+}
+
+function closeScriptTypeDropdown() {
+  showScriptTypeDropdown.value = false;
 }
 
 function handleOpenScriptManage() {
@@ -226,17 +246,32 @@ function handleOpenScriptManage() {
         </div>
 
         <!-- 脚本类型过滤 -->
-        <div class="cs-script-type-filter">
+        <div class="cs-script-type-dropdown" @click.stop>
           <button
-            v-for="type in scriptTypes"
-            :key="type.value"
-            class="cs-type-btn"
-            :class="{ 'is-active': selectedScriptType === type.value }"
+            class="cs-dropdown-trigger"
+            :class="{ active: showScriptTypeDropdown }"
             type="button"
-            @click="handleScriptTypeChange(type.value)"
+            @click="toggleScriptTypeDropdown"
           >
-            {{ type.label }}
+            <span class="cs-dropdown-dot" :style="{ background: scriptTypeConfig[selectedScriptType as keyof typeof scriptTypeConfig]?.color }"></span>
+            {{ scriptTypeConfig[selectedScriptType as keyof typeof scriptTypeConfig]?.label }}
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
           </button>
+          <div v-if="showScriptTypeDropdown" class="cs-dropdown-menu">
+            <button
+              v-for="type in allScriptTypes"
+              :key="type"
+              class="cs-dropdown-item"
+              :class="{ active: selectedScriptType === type }"
+              type="button"
+              @click="handleScriptTypeChange(type)"
+            >
+              <span class="cs-dropdown-dot" :style="{ background: scriptTypeConfig[type].color }"></span>
+              {{ scriptTypeConfig[type].label }}
+            </button>
+          </div>
         </div>
 
         <!-- 管理按钮 -->
@@ -299,14 +334,16 @@ function handleOpenScriptManage() {
 }
 
 /* 脚本类型过滤 */
-.cs-script-type-filter {
-  display: flex;
-  gap: 8px;
+.cs-script-type-dropdown {
+  position: relative;
   margin-bottom: 12px;
 }
 
-.cs-type-btn {
-  flex: 1;
+.cs-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
   padding: 8px 12px;
   border: 1px solid #e8e6dc;
   border-radius: 8px;
@@ -318,14 +355,58 @@ function handleOpenScriptManage() {
   transition: all 0.2s ease;
 }
 
-.cs-type-btn:hover {
-  background: #e8e6dc;
+.cs-dropdown-trigger:hover {
+  border-color: #d1d5db;
 }
 
-.cs-type-btn.is-active {
-  background: #3898ec;
-  color: white;
+.cs-dropdown-trigger.active {
   border-color: #3898ec;
+  background: #eff6ff;
+}
+
+.cs-dropdown-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cs-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e8e6dc;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  padding: 6px;
+}
+
+.cs-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #5e5d59;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cs-dropdown-item:hover {
+  background: #f3f4f6;
+}
+
+.cs-dropdown-item.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 500;
 }
 
 .cs-manage-btn {

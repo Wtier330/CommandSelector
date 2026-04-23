@@ -56,6 +56,28 @@ const shellKeywords = new Set([
   "export", "unset", "source", "exec", "eval", "test"
 ]);
 
+// VBS 关键字
+const vbsKeywords = new Set([
+  "if", "then", "else", "elseif", "end if", "select", "case", "end select",
+  "for", "each", "to", "step", "next", "while", "wend", "do", "loop",
+  "function", "sub", "end function", "end sub", "class", "end class",
+  "dim", "set", "redim", "const", "public", "private", "option explicit",
+  "on error resume next", "on error goto 0", "exit", "return",
+  "msgbox", "inputbox", "len", "left", "right", "mid", "trim", "replace",
+  "split", "join", "ubound", "isarray", "isdate", "isnull", "isnumeric",
+  "isempty", "cstr", "cint", "clng", "cdbl", "cbool", "cdate", "fix", "int"
+]);
+
+// Python 关键字
+const pythonKeywords = new Set([
+  "if", "elif", "else", "for", "while", "break", "continue", "return",
+  "def", "class", "try", "except", "finally", "raise", "import", "from",
+  "as", "with", "pass", "lambda", "yield", "global", "nonlocal", "assert",
+  "del", "in", "not", "and", "or", "is", "True", "False", "None",
+  "self", "print", "len", "range", "str", "int", "float", "list", "dict",
+  "tuple", "set", "open", "input", "type", "super", "staticmethod", "classmethod"
+]);
+
 // 运算符
 const operators = new Set([
   "==", "!=", "equ", "neq", "lss", "leq", "gtr", "geq",
@@ -127,6 +149,20 @@ function syntaxHighlighter(state: EditorState) {
         offset += line.length + 1;
         continue;
       }
+    } else if (lang === 'vbscript' || lang === 'vbs') {
+      // VBS 注释使用单引号
+      if (trimmedLine.startsWith("'")) {
+        ranges.push({ from: offset, to: offset + line.length, class: "tok-comment" });
+        offset += line.length + 1;
+        continue;
+      }
+    } else if (lang === 'python' || lang === 'py') {
+      // Python 注释使用 #
+      if (trimmedLine.startsWith('#')) {
+        ranges.push({ from: offset, to: offset + line.length, class: "tok-comment" });
+        offset += line.length + 1;
+        continue;
+      }
     } else {
       // BAT 注释
       if (trimmedLine.startsWith('::') || trimmedLine.toLowerCase().startsWith('rem ') ||
@@ -163,6 +199,10 @@ function syntaxHighlighter(state: EditorState) {
         keywordsSet = ps1Keywords;
       } else if (lang === 'shell' || lang === 'sh' || lang === 'bash') {
         keywordsSet = shellKeywords;
+      } else if (lang === 'vbscript' || lang === 'vbs') {
+        keywordsSet = vbsKeywords;
+      } else if (lang === 'python' || lang === 'py') {
+        keywordsSet = pythonKeywords;
       }
 
       if (keywordsSet.has(lowerWord)) {

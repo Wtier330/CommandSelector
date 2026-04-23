@@ -42,3 +42,4 @@ doc
 temp_script_saver.txt
 apps/admin/src/pages/CommandBrowserPage.vue.backup
 scripts/
+*.bak

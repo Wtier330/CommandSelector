@@ -74,9 +74,12 @@ export class ScriptCommentParser {
   // 提取 BAT 注释块
   private extractBatCommentBlock(content: string): string | null {
     // 查找 /* ... */ 风格
-    const multiLineMatch = content.match(/\/\*\s*[\s\S]*?\n([\s\S\s]*?)\n\s*\*\//);
+    // 匹配从 /* 开始到第一个 */ 结束的内容
+    const multiLineMatch = content.match(/\/\*[\s\S]*?\*\//);
     if (multiLineMatch) {
-      return multiLineMatch[1] || '';
+      // 去掉首尾的 /* 和 */
+      const block = multiLineMatch[0];
+      return block.slice(2, -2).trim();
     }
 
     // 查找单行注释

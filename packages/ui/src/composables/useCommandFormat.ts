@@ -9,11 +9,14 @@ export function useCommandFormat(finalCommand: Ref<string>, powershellTemplate?:
   const formattedCommand = computed(() => {
     // 根据执行模式选择正确的模板
     let cmd = "";
-    if (execMode.value === "powershell" && powershellTemplate?.value) {
+    if (execMode.value === "powershell" && powershellTemplate?.value?.trim()) {
+      // PowerShell 模式：仅使用 PowerShell 模板内容，不 fallback
       cmd = powershellTemplate.value.trim();
-    } else {
+    } else if (execMode.value !== "powershell") {
+      // CMD 或 CMD→PS 模式：使用 CMD 模板内容
       cmd = finalCommand.value.trim();
     }
+    // PowerShell 模式但没有内容时，cmd 为空，不 fallback
 
     if (!cmd) return "";
 
@@ -21,8 +24,9 @@ export function useCommandFormat(finalCommand: Ref<string>, powershellTemplate?:
       case "powershell":
         return cmd;
       case "cmd2powershell":
-        // cmd2powershell 模式下，优先使用 PowerShell 模板内容
-        const psCmd = powershellTemplate?.value?.trim() || cmd;
+        // cmd2powershell 模式下，只使用 PowerShell 模板内容
+        const psCmd = powershellTemplate?.value?.trim();
+        if (!psCmd) return ""; // 没有 PowerShell 内容时返回空
         return convertToCmd2PowerShell(psCmd, runAsAdmin.value, silentMode.value);
       case "cmd":
       default:

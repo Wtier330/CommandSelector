@@ -234,18 +234,23 @@ export async function updateScript(
       localStorage.setItem(`cs_script_${id}`, content);
     }
 
-    // 更新元数据
-    script.size = content.length;
-    script.updatedAt = new Date().toISOString();
-    if (description !== undefined) {
-      script.description = description;
-    }
-
     // 解析脚本注释元数据
     const metadata = parseScriptMetadata(content, script.type);
-    if (metadata) {
-      script.metadata = metadata;
-    }
+
+    // 创建新的脚本对象以确保 Vue 响应式更新
+    // 注意：如果 metadata 为 null，应该清除元数据，而不是保留旧的
+    const updatedScript: ScriptFileMeta = {
+      ...script,
+      size: content.length,
+      updatedAt: new Date().toISOString(),
+      description: description !== undefined ? description : script.description,
+      metadata: metadata ?? undefined
+    };
+
+    // 创建新数组以触发响应式更新（Vue 对数组替换的检测）
+    const newScripts = [...scripts.value];
+    newScripts[index] = updatedScript;
+    scripts.value = newScripts;
 
     await saveScripts();
     logger.info('Scripts', 'Script updated', { id, size: content.length });
@@ -269,17 +274,22 @@ export async function updateScriptMeta(
 
     const script = scripts.value[index];
 
-    if (updates.name !== undefined) {
-      // 检查名称是否与其他脚本冲突
-      if (updates.name !== script.name && scripts.value.some((s) => s.name === updates.name)) {
-        throw new Error("脚本名称已存在");
-      }
-      script.name = updates.name;
+    // 检查名称冲突
+    if (updates.name !== undefined && updates.name !== script.name && scripts.value.some((s) => s.name === updates.name)) {
+      throw new Error("脚本名称已存在");
     }
 
-    if (updates.description !== undefined) {
-      script.description = updates.description;
-    }
+    // 创建新的脚本对象以确保 Vue 响应式更新
+    const updatedScript: ScriptFileMeta = {
+      ...script,
+      ...(updates.name !== undefined && { name: updates.name }),
+      ...(updates.description !== undefined && { description: updates.description })
+    };
+
+    // 创建新数组以触发响应式更新
+    const newScripts = [...scripts.value];
+    newScripts[index] = updatedScript;
+    scripts.value = newScripts;
 
     await saveScripts();
     logger.info('Scripts', 'Script metadata updated', { id, updates });
@@ -353,7 +363,10 @@ export async function importScript(): Promise<ScriptFileMeta | undefined> {
       filters: [
         { name: "批处理脚本", extensions: ["bat", "cmd"] },
         { name: "PowerShell 脚本", extensions: ["ps1"] },
-        { name: "所有脚本", extensions: ["bat", "cmd", "ps1"] }
+        { name: "VBS 脚本", extensions: ["vbs"] },
+        { name: "Shell 脚本", extensions: ["sh", "bash"] },
+        { name: "Python 脚本", extensions: ["py"] },
+        { name: "所有脚本", extensions: ["bat", "cmd", "ps1", "vbs", "sh", "bash", "py"] }
       ]
     });
 
@@ -366,11 +379,22 @@ export async function importScript(): Promise<ScriptFileMeta | undefined> {
 
     // 确定脚本类型
     const ext = importedPath.toLowerCase();
-    const scriptType: ScriptType = ext.endsWith(".ps1") ? "ps1" : "bat";
+    let scriptType: ScriptType = "bat";
+    if (ext.endsWith(".ps1")) {
+      scriptType = "ps1";
+    } else if (ext.endsWith(".vbs")) {
+      scriptType = "vbs";
+    } else if (ext.endsWith(".sh") || ext.endsWith(".bash")) {
+      scriptType = "sh";
+    } else if (ext.endsWith(".py")) {
+      scriptType = "py";
+    } else if (ext.endsWith(".cmd")) {
+      scriptType = "cmd";
+    }
 
     // 生成唯一名称
     const fileName = importedPath.split(/[/\\]/).pop() || "script";
-    const baseName = fileName.replace(/\.(bat|cmd|ps1)$/i, "");
+    const baseName = fileName.replace(/\.(bat|cmd|ps1|vbs|sh|bash|py)$/i, "");
     let scriptName = baseName;
     let counter = 1;
 
@@ -406,11 +430,19 @@ export async function exportScript(
     if (isTauri()) {
       let finalOutputPath: string | undefined = outputPath;
       if (!finalOutputPath) {
+        const typeNames: Record<ScriptType, string> = {
+          bat: "批处理脚本",
+          ps1: "PowerShell 脚本",
+          vbs: "VBS 脚本",
+          sh: "Shell 脚本",
+          cmd: "CMD 脚本",
+          py: "Python 脚本"
+        };
         const saveResult: string | null = await save({
           defaultPath: defaultFileName,
           filters: [
             {
-              name: script.type === "bat" ? "批处理脚本" : "PowerShell 脚本",
+              name: typeNames[script.type] || "脚本",
               extensions: [script.type]
             }
           ]

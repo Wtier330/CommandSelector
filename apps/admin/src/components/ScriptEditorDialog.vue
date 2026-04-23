@@ -48,7 +48,15 @@ const isSavingState = ref(false);
 
 // Monaco 语言
 const monacoLanguage = computed(() => {
-  return props.scriptType === "ps1" ? "powershell" : "batch";
+  const map: Record<string, string> = {
+    bat: "batch",
+    ps1: "powershell",
+    vbs: "vbscript",
+    sh: "shell",
+    cmd: "batch",
+    py: "python"
+  };
+  return map[props.scriptType] || "batch";
 });
 
 // 加载脚本内容
