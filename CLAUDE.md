@@ -12,6 +12,7 @@
 - **Vue 组件**: 不超过 300 行（建议在 250 行时拆分）
 - **TypeScript**: 不超过 400 行（建议在 350 行时拆分）
 - **Store 文件**: 不超过 300 行（建议在 250 行时拆分）
+- **Rust 文件**: 不超过 300 行（建议在 250 行时拆分）
 
 ### 拆分原则
 1. 超过 250 行的组件应该考虑拆分
@@ -36,6 +37,37 @@
 - 提交前使用 `/audit-large-files` 检查
 - 每月定期审计代码质量
 - 遇到大文件时及时拆分
+
+## TS/Rust 分工规则
+
+### 优先 Rust 的场景
+- 文件系统操作
+- 日志记录
+- 搜索/过滤/排序等计算密集型操作
+- 敏感数据处理（API Key 等）
+
+### 保持 TypeScript 的场景
+- AI API 调用（HTTPS 易调试）
+- Vue 组件和 Composables（UI 绑定逻辑）
+- 业务状态管理（Store）
+- 业务逻辑和 UI 交互
+
+### 迁移检查清单
+新增功能时自检:
+1. [ ] 是否涉及文件 I/O？ -> Rust
+2. [ ] 是否是计算密集型？ -> Rust
+3. [ ] 是否涉及敏感数据？ -> Rust
+4. [ ] 纯 UI 绑定/业务逻辑？ -> TypeScript
+
+### 已有 Rust 实现的模块
+- 文件读写：`apps/admin/src-tauri/src/file_ops.rs` - `read_script_file`, `write_script_file`, `delete_script_file`, `copy_script_file`
+- 日志系统：`apps/admin/src-tauri/src/log_utils.rs` - `append_log`, `get_log_dir`
+- 调试日志：`apps/admin/src-tauri/src/debug.rs` - `read_debug_log`, `get_logs_dir`, `diagnose_logs`
+- 搜索功能：`apps/admin/src-tauri/src/search.rs` - `search_commands`, `search_scripts`
+
+### TypeScript 端调用 Rust 的模式
+使用 `useRustSearch` composable 封装 Tauri invoke 调用:
+- 文件: `packages/ui/src/composables/useRustSearch.ts`
 
 ## 快速工具
 - 使用 `/audit-large-files` 审计项目中的大文件

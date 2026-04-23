@@ -568,6 +568,7 @@ dependencies = [
  "dirs",
  "encoding_rs",
  "log",
+ "rust-pinyin",
  "serde",
  "serde_json",
  "tauri",
@@ -3097,6 +3098,12 @@ dependencies = [
  "quote",
  "syn 1.0.109",
 ]
+
+[[package]]
+name = "rust-pinyin"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0875c3bc33ccfd2f137c121997169477ec8f08686228d07a591bf179dfe3a5af"
 
 [[package]]
 name = "rust_decimal"

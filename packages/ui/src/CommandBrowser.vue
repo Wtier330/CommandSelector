@@ -6,6 +6,7 @@ import { useCommandFilter } from "./composables/useCommandFilter";
 import { useCommandParams } from "./composables/useCommandParams";
 import { useCommandEdit } from "./composables/useCommandEdit";
 import { useCommandAIMetadata } from "./composables/useCommandAIMetadata";
+import { useRustSearch } from "./composables/useRustSearch";
 
 import CommandSidebar from "./components/CommandSidebar.vue";
 import CommandPreview from "./components/CommandPreview.vue";
@@ -87,24 +88,45 @@ const mainEl = ref<HTMLElement | null>(null);
 // 2. 过滤与列表
 const { keyword, selectedCategories, categories, filteredCommands } = useCommandFilter(commands);
 
-// 脚本类型过滤
-const selectedScriptType = ref<'all' | 'bat' | 'ps1' | 'vbs' | 'sh' | 'cmd' | 'py'>('all');
+// 3. 脚本搜索（使用 Rust）
+const { searchScripts } = useRustSearch();
+const selectedScriptType = ref<'all' | 'bat' | 'ps1'>('all');
+const rustFilteredScripts = ref<ScriptFileMeta[]>([]);
 
-// 过滤后的脚本列表
-const filteredScripts = computed(() => {
-  let result = props.scripts || [];
-  if (selectedScriptType.value !== 'all') {
-    result = result.filter(s => s.type === selectedScriptType.value);
-  }
-  if (keyword.value.trim()) {
-    const kw = keyword.value.toLowerCase();
-    result = result.filter(s =>
-      s.name.toLowerCase().includes(kw) ||
-      (s.description?.toLowerCase().includes(kw) ?? false)
-    );
-  }
-  return result;
-});
+// 先按类型过滤，再调用 Rust 搜索关键词
+watch(
+  [keyword, selectedScriptType, () => props.scripts],
+  async () => {
+    const scripts = props.scripts || [];
+
+    // 先按类型过滤
+    let typeFiltered = scripts;
+    if (selectedScriptType.value !== 'all') {
+      typeFiltered = scripts.filter(s => s.type === selectedScriptType.value);
+    }
+
+    // 如果有关键词，调用 Rust 搜索
+    if (keyword.value.trim()) {
+      try {
+        const result = await searchScripts(keyword.value, typeFiltered);
+        rustFilteredScripts.value = result.filtered;
+      } catch (error) {
+        console.error("Rust script search failed, falling back to TypeScript:", error);
+        // Rust 失败时使用 TypeScript 后备
+        const kw = keyword.value.toLowerCase();
+        rustFilteredScripts.value = typeFiltered.filter(s =>
+          s.name.toLowerCase().includes(kw) ||
+          (s.description?.toLowerCase().includes(kw) ?? false)
+        );
+      }
+    } else {
+      rustFilteredScripts.value = typeFiltered;
+    }
+  },
+  { immediate: true }
+);
+
+const filteredScripts = computed(() => rustFilteredScripts.value);
 
 // 3. 选择逻辑
 const internalSelectedId = ref<string>(props.selectedId ?? "");

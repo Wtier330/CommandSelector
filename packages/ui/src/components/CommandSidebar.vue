@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import type { CommandEntry, ScriptFileMeta } from "@commandselector/shared";
+import type { CommandEntry, ScriptFileMeta, ScriptType } from "@commandselector/shared";
 import CategoryMultiSelect from "./CategoryMultiSelect.vue";
 import CategoryManageDialog from "./CategoryManageDialog.vue";
 import ModeSwitcher from "./ModeSwitcher.vue";
+
+type ScriptTypeFilter = 'all' | ScriptType;
 
 defineProps<{
   categories: string[];
@@ -14,7 +16,7 @@ defineProps<{
   selectedCategories: string[];
   trashedCommands?: CommandEntry[];
   mode: 'command' | 'script';
-  selectedScriptType?: 'all' | 'bat' | 'ps1';
+  selectedScriptType?: ScriptTypeFilter;
 }>();
 
 const emit = defineEmits<{
@@ -29,7 +31,7 @@ const emit = defineEmits<{
   (e: "empty-trash"): void;
   (e: "add-category", category: string): void;
   (e: "delete-category", category: string, action: "move" | "clear", targetCategory?: string): void;
-  (e: "update:selectedScriptType", value: 'all' | 'bat' | 'ps1'): void;
+  (e: "update:selectedScriptType", value: ScriptTypeFilter): void;
   (e: "open-script-manage"): void;
 }>();
 
