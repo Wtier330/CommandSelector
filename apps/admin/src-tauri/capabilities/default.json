@@ -12,6 +12,7 @@
     "fs:allow-write-text-file",
     "fs:allow-applocaldata-read",
     "fs:allow-applocaldata-write",
-    "dialog:default"
+    "dialog:default",
+    "shell:allow-open"
   ]
 }

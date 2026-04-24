@@ -1,13 +1,16 @@
 <script setup lang="ts">
 	import { computed, onMounted, onUnmounted, ref } from "vue";
 	import { useRoute, useRouter } from "vue-router";
-	import { CommandBrowser, CommandTrash, BottomStatusBar } from "../../../../packages/ui/src";
+	import { CommandBrowser, CommandTrash, BottomStatusBar, CategoryManageDialog } from "../../../../packages/ui/src";
 	import ScriptManageDialog from "../components/ScriptManageDialog.vue";
 	import ScriptEditorDialog from "../components/ScriptEditorDialog.vue";
 	import { useLibraryStore } from "../store/library";
 	import { useScriptsStore } from "../store/scripts";
 	import { isTauri } from "@tauri-apps/api/core";
+	import { useMessage } from "../composables/useMessage";
 	import type { ScriptType } from "@commandselector/shared";
+
+	const message = useMessage();
 
 	const router = useRouter();
 	const route = useRoute();
@@ -17,6 +20,7 @@
 
 	const showTrashModal = ref(false);
 	const showScriptManageModal = ref(false);
+	const showCategoryManageModal = ref(false);
 	const currentMode = ref<'command' | 'script'>('command');
 	const showScriptEditorDialog = ref(false);
 	const editingScriptId = ref("");
@@ -70,7 +74,7 @@
 	  if (isTauri()) {
 	    // 在 Tauri 环境中直接调用 importLibrary（会触发原生选择文件弹窗）
 	    importLibrary().then((success) => {
-	      if (success) alert("导入成功！");
+	      if (success) message.success("导入成功！");
 	    });
 	  } else {
 	    // 网页端降级：利用 input file 选择文件
@@ -85,7 +89,7 @@
 	        const content = ev.target?.result as string;
 	        if (content) {
 	          const success = await import (content);
-	          if (success) alert("导入成功！");
+	          if (success) message.success("导入成功！");
 	        }
 	      };
 	      reader.readAsText(file);
@@ -151,6 +155,10 @@
 	  showScriptManageModal.value = true;
 	}
 
+	function handleCsOpenCategoryManage() {
+	  showCategoryManageModal.value = true;
+	}
+
 	function handleModeChange(newMode: 'command' | 'script') {
 	  currentMode.value = newMode;
 	}
@@ -172,7 +180,7 @@
 			await updateScript(id, content);
 		} catch (e: any) {
 			console.error("Failed to save script:", e);
-			alert("保存脚本失败: " + e.message);
+			message.error(`保存脚本失败: ${e.message}`);
 		}
 	}
 
@@ -224,6 +232,7 @@
         @import:command="handleImportCommand"
         @add-category="handleAddCategory"
         @delete-category="handleDeleteCategory"
+        @open-category-manage="handleCsOpenCategoryManage"
         @open-script-manage="handleCsOpenScriptManage"
         @update:mode="handleModeChange"
         @edit-script="handleEditScript"
@@ -247,6 +256,17 @@
         <ScriptManageDialog
           @close="showScriptManageModal = false"
           @import-command="handleImportCommand"
+        />
+      </div>
+    </Transition>
+    <Transition name="cs-trash-fade">
+      <div v-if="showCategoryManageModal" class="cs-trash-overlay" @click.self="showCategoryManageModal = false">
+        <CategoryManageDialog
+          :categories="commands.map(c => c.category).filter((c): c is string => !!c).filter((c, i, arr) => arr.indexOf(c) === i)"
+          :commands="commands"
+          @close="showCategoryManageModal = false"
+          @add="handleAddCategory"
+          @delete="handleDeleteCategory"
         />
       </div>
     </Transition>

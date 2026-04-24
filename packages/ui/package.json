@@ -16,5 +16,8 @@
   },
   "optionalDependencies": {
     "@tauri-apps/plugin-opener": "^2"
+  },
+  "devDependencies": {
+    "@tauri-apps/plugin-shell": "^2.3.5"
   }
 }

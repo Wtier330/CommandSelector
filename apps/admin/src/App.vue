@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { NConfigProvider, NMessageProvider, NDialogProvider, NNotificationProvider } from "naive-ui";
+import MessageContainer from "./components/MessageContainer.vue";
 
 // 动态组件加载
 const AsyncSettingsModal = ref<any>(null);
@@ -117,6 +118,9 @@ window.addEventListener("cs-system-info-update", ((e: any) => {
 
 <template>
   <div>
+    <!-- 消息通知容器 -->
+    <MessageContainer />
+
     <n-config-provider>
       <n-message-provider>
         <n-dialog-provider>

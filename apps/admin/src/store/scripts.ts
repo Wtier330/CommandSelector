@@ -155,21 +155,17 @@ export async function createScript(
   try {
     await ensureScriptsDir();
 
-    // 检查名称是否已存在
-    if (scripts.value.some((s) => s.name === name)) {
-      throw new Error("脚本名称已存在");
-    }
-
+    // UUID 子目录已保证物理文件唯一性，无需检查重名
     const id = await generateScriptId();
     const timestamp = new Date().toISOString();
 
-    // 构建文件路径
+    // 构建文件路径：scripts/{type}/{uuid}/{name}.{type}
     let scriptPath: string;
     if (isTauri()) {
       const appDataDir = await appLocalDataDir();
-      scriptPath = await join(appDataDir, SCRIPTS_DIR, `${id}.${type}`);
+      scriptPath = await join(appDataDir, SCRIPTS_DIR, type, id, `${name}.${type}`);
     } else {
-      scriptPath = `/virtual/${SCRIPTS_DIR}/${id}.${type}`;
+      scriptPath = `/virtual/${SCRIPTS_DIR}/${type}/${id}/${name}.${type}`;
     }
 
     // 写入文件内容
@@ -392,20 +388,13 @@ export async function importScript(): Promise<ScriptFileMeta | undefined> {
       scriptType = "cmd";
     }
 
-    // 生成唯一名称
+    // 提取原始文件名（不含扩展名）
     const fileName = importedPath.split(/[/\\]/).pop() || "script";
     const baseName = fileName.replace(/\.(bat|cmd|ps1|vbs|sh|bash|py)$/i, "");
-    let scriptName = baseName;
-    let counter = 1;
 
-    while (scripts.value.some((s) => s.name === scriptName)) {
-      scriptName = `${baseName}_${counter}`;
-      counter++;
-    }
-
-    // 创建新脚本
-    const result = await createScript(scriptName, scriptType, content as string);
-    logger.info('Scripts', 'Script imported', { originalPath: importedPath, importedAs: scriptName, type: scriptType });
+    // 创建新脚本（直接使用原始文件名，UUID 子目录保证物理文件唯一）
+    const result = await createScript(baseName, scriptType, content as string);
+    logger.info('Scripts', 'Script imported', { originalPath: importedPath, importedAs: baseName, type: scriptType });
     return result ?? undefined;
   } catch (e: any) {
     logger.error('Scripts', 'Failed to import script', { originalPath: importedPath, error: e.message });

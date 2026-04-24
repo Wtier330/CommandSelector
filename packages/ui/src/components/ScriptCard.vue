@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { invoke } from "@tauri-apps/api/core";
 import type { ScriptFileMeta, ScriptType } from "@commandselector/shared";
 
 const props = defineProps<{
@@ -82,6 +83,17 @@ function handleMore(e: Event) {
   e.stopPropagation();
   emit("more", props.script.id);
 }
+
+// 复制文件到剪切板
+async function handleCopyPath(e: Event) {
+  e.stopPropagation();
+  try {
+    // 文件路径已包含正确的文件名，直接复制
+    await invoke("copy_file_to_clipboard", { filePath: props.script.path });
+  } catch (err) {
+    console.error("Failed to copy:", err);
+  }
+}
 </script>
 
 <template>
@@ -109,6 +121,7 @@ function handleMore(e: Event) {
         <span class="cs-meta-size">{{ formatSize(script.size) }}</span>
       </div>
       <div class="cs-card-actions-compact">
+        <button class="cs-action-btn" title="复制文件（可粘贴为文件）" @click.stop="handleCopyPath">📋</button>
         <button class="cs-action-btn" title="编辑" @click.stop="handleEdit">✏️</button>
         <button class="cs-action-btn" title="更多" @click.stop="handleMore">⋮</button>
       </div>
@@ -144,7 +157,15 @@ function handleMore(e: Event) {
         <span class="cs-meta-size">{{ formatSize(script.size) }}</span>
       </div>
 
-      <!-- 编辑按钮 -->
+      <!-- 复制文件按钮 -->
+      <button
+        class="cs-action-btn cs-action-copy"
+        type="button"
+        title="复制文件（可粘贴为文件）"
+        @click.stop="handleCopyPath"
+      >
+        📋
+      </button>
       <button
         class="cs-action-btn cs-action-edit"
         type="button"
@@ -344,6 +365,12 @@ function handleMore(e: Event) {
   position: absolute;
   top: 12px;
   right: 12px;
+}
+
+.cs-action-copy {
+  position: absolute;
+  top: 12px;
+  right: 50px;
 }
 
 .cs-action-btn:hover {

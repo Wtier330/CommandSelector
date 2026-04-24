@@ -11,6 +11,9 @@ import {
   useAIMetadata
 } from "@commandselector/ui";
 import type { ScriptType } from "@commandselector/shared";
+import { useMessage } from "../composables/useMessage";
+
+const message = useMessage();
 
 const props = defineProps<{
   scriptId: string;
@@ -85,7 +88,7 @@ async function handleSave() {
     emit('save', props.scriptId, scriptContent.value);
     emit('close');
   } catch (e: any) {
-    alert(`保存失败: ${e.message}`);
+    message.error(`保存失败: ${e.message}`);
   } finally {
     isSavingState.value = false;
   }
@@ -138,7 +141,7 @@ async function handleGenerateMetadata() {
     );
     setChanged(true);
   } else if (aiError.value) {
-    alert(`AI 生成失败: ${aiError.value.message}`);
+    message.error(`AI 生成失败: ${aiError.value.message}`);
   }
 }
 

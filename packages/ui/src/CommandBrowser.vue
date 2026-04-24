@@ -42,6 +42,7 @@ const emit = defineEmits<{
   (e: "import:command", command: CommandEntry): void;
   (e: "add-category", category: string): void;
   (e: "delete-category", category: string, action: "move" | "clear", targetCategory?: string): void;
+  (e: "open-category-manage"): void;
   (e: "open-script-manage"): void;
   (e: "update:mode", value: 'command' | 'script'): void;
   (e: "edit-script", id: string): void;
@@ -423,6 +424,7 @@ defineExpose({
               @import="handleImportCommand"
               @addCategory="handleAddCategory"
               @deleteCategory="handleDeleteCategory"
+              @open-category-manage="$emit('open-category-manage')"
               @open-script-manage="$emit('open-script-manage')"
             />
           </aside>

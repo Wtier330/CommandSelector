@@ -1,8 +1,11 @@
 mod ai_config;
+mod app_paths;
+mod clipboard;
 mod debug;
 mod file_ops;
 mod log_utils;
 mod search;
+mod shell_open;
 
 use tauri_plugin_log::{Target, TargetKind};
 
@@ -18,9 +21,13 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             greet,
+            app_paths::get_app_paths,
+            clipboard::copy_file_to_clipboard,
+            clipboard::get_clipboard_text,
             file_ops::read_script_file,
             file_ops::write_script_file,
             file_ops::delete_script_file,
@@ -33,6 +40,7 @@ pub fn run() {
             search::search_scripts,
             ai_config::load_ai_config,
             ai_config::save_ai_config,
+            shell_open::open_in_explorer,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

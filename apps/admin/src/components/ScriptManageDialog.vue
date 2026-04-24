@@ -4,7 +4,10 @@ import type { ScriptFileMeta, ScriptType } from "@commandselector/shared";
 import { useScriptsStore } from "../store/scripts";
 import { useKeyboardShortcuts } from "@commandselector/ui";
 import { useScriptFilters } from "../composables/useScriptFilters";
+import { useMessage } from "../composables/useMessage";
 import CreateScriptDialog from "./CreateScriptDialog.vue";
+
+const message = useMessage();
 import ScriptEditorDialog from "./ScriptEditorDialog.vue";
 import ScriptManageToolbar from "./ScriptManageToolbar.vue";
 import ConfirmDialog from "./ConfirmDialog.vue";
@@ -96,7 +99,7 @@ async function handleCreateScript(name: string, type: ScriptType, content: strin
     await handleLoadScripts();
     closeCreateDialog();
   } catch (e: any) {
-    alert(`创建失败: ${e.message}`);
+    message.error(`创建失败: ${e.message}`);
   }
 }
 
@@ -114,7 +117,7 @@ async function handleConfirmDelete() {
     await deleteScript(script.id);
     await handleLoadScripts();
   } catch (e: any) {
-    alert(`删除失败: ${e.message}`);
+    message.error(`删除失败: ${e.message}`);
   } finally {
     isDeleting.value = null;
     showConfirmDialog.value = false;
@@ -133,7 +136,7 @@ async function handleImportScript() {
     await importScript();
     await handleLoadScripts();
   } catch (e: any) {
-    alert(`导入导入: ${e.message}`);
+    message.error(`导入导入: ${e.message}`);
   }
 }
 
@@ -142,10 +145,10 @@ async function handleExportScript(script: ScriptFileMeta) {
   try {
     const result = await exportScript(script.id);
     if (result) {
-      alert("导出成功");
+      message.success("导出成功");
     }
   } catch (e: any) {
-    alert(`导出失败: ${e.message}`);
+    message.error(`导出失败: ${e.message}`);
   } finally {
     isExporting.value = null;
   }

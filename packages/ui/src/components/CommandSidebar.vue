@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import type { CommandEntry, ScriptFileMeta, ScriptType } from "@commandselector/shared";
-import CategoryMultiSelect from "./CategoryMultiSelect.vue";
-import CategoryManageDialog from "./CategoryManageDialog.vue";
 import ModeSwitcher from "./ModeSwitcher.vue";
 
 type ScriptTypeFilter = 'all' | ScriptType;
@@ -29,8 +27,7 @@ const emit = defineEmits<{
   (e: "restore-trash", id: string): void;
   (e: "delete-permanently", id: string): void;
   (e: "empty-trash"): void;
-  (e: "add-category", category: string): void;
-  (e: "delete-category", category: string, action: "move" | "clear", targetCategory?: string): void;
+  (e: "open-category-manage"): void;
   (e: "update:selectedScriptType", value: ScriptTypeFilter): void;
   (e: "open-script-manage"): void;
 }>();
@@ -40,8 +37,49 @@ const showImportDialog = ref(false);
 const importJsonText = ref("");
 const importError = ref("");
 
-// 分类管理弹窗状态
-const showCategoryManage = ref(false);
+// 分类下拉框状态
+const showCategoryDropdown = ref(false);
+
+// 分类选中的值（'全部' 或具体分类名）
+const selectedCategory = computed(() => {
+  if (props.selectedCategories.length === 0) {
+    return '全部';
+  }
+  if (props.selectedCategories.length === props.categories.length) {
+    return '全部';
+  }
+  const firstCategory = props.selectedCategories[0];
+  if (firstCategory === '__all__') {
+    return '全部';
+  }
+  return firstCategory || '全部';
+});
+
+// 处理分类选择
+function handleCategorySelect(category: string) {
+  if (category === '全部') {
+    // 全部：清空选择
+    emit('update:selectedCategories', []);
+  } else if (category === selectedCategory.value) {
+    // 点击已选中的，切换到全部
+    emit('update:selectedCategories', []);
+  } else {
+    // 选择具体分类
+    emit('update:selectedCategories', [category]);
+  }
+  showCategoryDropdown.value = false;
+}
+
+// 切换分类下拉框
+function toggleCategoryDropdown(e: MouseEvent) {
+  e.stopPropagation();
+  showCategoryDropdown.value = !showCategoryDropdown.value;
+}
+
+// 获取分类列表（包含'全部'选项）
+const categoryOptions = computed(() => {
+  return ['全部', ...props.categories];
+});
 
 function selectCommand(id: string) {
   emit("select", id);
@@ -60,19 +98,7 @@ function closeImportDialog() {
 }
 
 function openCategoryManage() {
-  showCategoryManage.value = true;
-}
-
-function closeCategoryManage() {
-  showCategoryManage.value = false;
-}
-
-function handleAddCategory(category: string) {
-  emit("add-category", category);
-}
-
-function handleDeleteCategory(category: string, action: "move" | "clear", targetCategory?: string) {
-  emit("delete-category", category, action, targetCategory);
+  emit('open-category-manage');
 }
 
 function handleImport() {
@@ -208,23 +234,48 @@ onUnmounted(() => {
 
     <!-- 命令库界面 -->
     <template v-if="mode === 'command'">
-      <div class="cs-section">
-        <div class="cs-section-header">
-          <div class="cs-section-title">分类</div>
-          <button
-            class="cs-btn cs-btn-icon cs-btn-ghost"
-            type="button"
-            title="管理分类"
-            @click="openCategoryManage"
+      <!-- 分类过滤 -->
+      <div class="cs-category-dropdown" @click.stop>
+        <div class="cs-select">
+          <div
+            class="cs-select-trigger"
+            :class="{ 'is-open': showCategoryDropdown }"
+            @click="toggleCategoryDropdown"
+            tabindex="0"
           >
-            <svg t="1776216985874" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5567" width="16" height="16"><path d="M642.8 165.6c3.5 0 6.8 0.9 9.9 2.7l86.6 50c5.9 3.4 8.3 8.5 9.3 12.1 1 3.7 1.4 9.2-2 15.2l-21.4 37.1c-15.3 26.4-14.2 59.2 2.9 84.6 6.4 9.5 12.2 19.6 17.4 30 13.5 27.3 41.3 44.7 71.8 44.7H860c11 0 20 9 20 20v100c0 11-9 20-20 20h-42.8c-30.5 0-58.3 17.3-71.8 44.7-5.1 10.4-11 20.5-17.4 30-17 25.3-18.1 58.2-2.9 84.6l21.4 37.1c5.5 9.6 2.2 21.8-7.3 27.3l-86.6 50c-3.1 1.8-6.4 2.7-9.9 2.7-2.7 0-12-0.7-17.4-10l-21.4-37.1a79.95 79.95 0 0 0-69.3-40c-1.7 0-3.5 0.1-5.3 0.2-6 0.4-11.9 0.6-17.4 0.6-5.5 0-11.4-0.2-17.4-0.6-1.8-0.1-3.5-0.2-5.3-0.2-28.4 0-54.9 15.1-69.3 40l-21.4 37.1c-5.4 9.3-14.7 10-17.4 10-3.5 0-6.8-0.9-9.9-2.7l-86.6-50c-9.6-5.5-12.8-17.8-7.3-27.3l21.4-37.1c15.3-26.4 14.2-59.2-2.9-84.6-6.4-9.5-12.2-19.6-17.4-30-13.5-27.3-41.3-44.7-71.8-44.7H164c-11 0-20-9-20-20V462c0-11 9-20 20-20h42.8c30.5 0 58.3-17.3 71.8-44.7 5.1-10.4 11-20.5 17.4-30 17-25.3 18.1-58.2 2.9-84.6l-21.4-37.1c-3.4-5.9-3-11.5-2-15.2 1-3.7 3.4-8.7 9.3-12.1l86.6-50c3.1-1.8 6.4-2.7 9.9-2.7 2.7 0 12.1 0.7 17.4 10l21.4 37.1c14.4 24.9 40.8 40 69.3 40 1.7 0 3.5-0.1 5.3-0.2 6-0.4 11.9-0.6 17.4-0.6 5.5 0 11.4 0.2 17.4 0.6 1.8 0.1 3.5 0.2 5.3 0.2 28.4 0 54.9-15.1 69.3-40l21.4-37.1c5.2-9.3 14.6-10 17.3-10m0-80c-34.6 0-68.2 17.9-86.7 50l-21.4 37.1c-7.5-0.5-15-0.8-22.7-0.8-7.6 0-15.2 0.3-22.6 0.8L468 135.6c-18.5-32.1-52.1-50-86.7-50-17 0-34.2 4.3-49.9 13.4l-86.6 50c-47.8 27.6-64.2 88.8-36.6 136.6l21.4 37.1c-8.4 12.5-16 25.6-22.7 39.3H164c-55.2 0-100 44.8-100 100v100c0 55.2 44.8 100 100 100h42.8c6.7 13.6 14.3 26.7 22.7 39.3l-21.4 37.1c-27.6 47.8-11.2 109 36.6 136.6l86.6 50c15.7 9.1 32.9 13.4 49.9 13.4 34.6 0 68.2-17.9 86.7-50l21.4-37.1c7.5 0.5 15 0.8 22.6 0.8 7.6 0 15.2-0.3 22.7-0.8l21.4 37.1c18.5 32.1 52.1 50 86.7 50 17 0 34.2-4.3 49.9-13.4l86.6 50c47.8-27.6 64.2-88.8 36.6-136.6l-21.4-37.1c8.4-12.5 16-25.6 22.7-39.3H860c55.2 0 100-44.8 100-100V462c0-55.2-44.8-100-100-100h-42.8c-6.7-13.6-14.3-26.7-22.7-39.3l21.4-37.1c27.6-47.8 11.2-109-36.6-136.6l-86.6-50c-15.7-9.1-32.9-13.4-49.9-13.4z" fill="#4a5fe2" p-id="5568"></path><path d="M512 442c38.6 0 70 31.4 70 70s-31.4 70-70 70-70-31.4-70-70 31.4-70 70-70m0-80c-82.8 0-150 67.2-150 150s67.2 150 150 150 150-67.2 150-150150-67.2-150-150-150z" fill="#7c44e2" p-id="5569"></path></svg>
-          </button>
+            <div class="cs-select-value">{{ selectedCategory }}</div>
+            <div class="cs-select-icon" :class="{ 'is-open': showCategoryDropdown }">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </div>
+          <Transition name="cs-dropdown">
+            <div v-if="showCategoryDropdown" class="cs-select-dropdown">
+              <div class="cs-select-list">
+                <div
+                  v-for="category in categoryOptions"
+                  :key="category"
+                  class="cs-select-item"
+                  :class="{ 'is-selected': selectedCategory === category }"
+                  @click="handleCategorySelect(category)"
+                >
+                  <span class="cs-select-item-text">{{ category }}</span>
+                </div>
+              </div>
+            </div>
+          </Transition>
         </div>
-        <CategoryMultiSelect
-          :categories="categories"
-          :model-value="selectedCategories"
-          @update:model-value="emit('update:selectedCategories', $event)"
-        />
+
+        <!-- 管理分类按钮 -->
+        <button
+          class="cs-btn cs-btn-icon cs-btn-ghost cs-manage-category-btn"
+          type="button"
+          title="管理分类"
+          @click="openCategoryManage"
+        >
+          <svg t="1776216985874" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5567" width="16" height="16"><path d="M642.8 165.6c3.5 0 6.8 0.9 9.9 2.7l86.6 50c5.9 3.4 8.3 8.5 9.3 12.1 1 3.7 1.4 9.2-2 15.2l-21.4 37.1c-15.3 26.4-14.2 59.2 2.9 84.6 6.4 9.5 12.2 19.6 17.4 30 13.5 27.3 41.3 44.7 71.8 44.7H860c11 0 20 9 20 20v100c0 11-9 20-20 20h-42.8c-30.5 0-58.3 17.3-71.8 44.7-5.1 10.4-11 20.5-17.4 30-17 25.3-18.1 58.2-2.9 84.6l21.4 37.1c5.5 9.6 2.2 21.8-7.3 27.3l-86.6 50c-3.1 1.8-6.4 2.7-9.9 2.7-2.7 0-12-0.7-17.4-10l-21.4-37.1a79.95 79.95 0 0 0-69.3-40c-1.7 0-3.5 0.1-5.3 0.2-6 0.4-11.9 0.6-17.4 0.6-5.5 0-11.4-0.2-17.4-0.6-1.8-0.1-3.5-0.2-5.3-0.2-28.4 0-54.9 15.1-69.3 40l-21.4 37.1c-5.4 9.3-14.7 10-17.4 10-3.5 0-6.8-0.9-9.9-2.7l-86.6-50c-9.6-5.5-12.8-17.8-7.3-27.3l21.4-37.1c15.3-26.4 14.2-59.2-2.9-84.6-6.4-9.5-12.2-19.6-17.4-30-13.5-27.3-41.3-44.7-71.8-44.7H164c-11 0-20-9-20-20V462c0-11 9-20 20-20h42.8c30.5 0 58.3-17.3 71.8-44.7 5.1-10.4 11-20.5 17.4-30 17-25.3 18.1-58.2 2.9-84.6l-21.4-37.1c-3.4-5.9-3-11.5-2-15.2 1-3.7 3.4-8.7 9.3-12.1l86.6-50c3.1-1.8 6.4-2.7 9.9-2.7 2.7 0 12.1 0.7 17.4 10l21.4 37.1c14.4 24.9 40.8 40 69.3 40 1.7 0 3.5-0.1 5.3-0.2 6-0.4 11.9-0.6 17.4-0.6 5.5 0 11.4 0.2 17.4 0.6 1.8 0.1 3.5 0.2 5.3 0.2 28.4 0 54.9-15.1 69.3-40l21.4-37.1c5.2-9.3 14.6-10 17.3-10m0-80c-34.6 0-68.2 17.9-86.7 50l-21.4 37.1c-7.5-0.5-15-0.8-22.7-0.8-7.6 0-15.2 0.3-22.6 0.8L468 135.6c-18.5-32.1-52.1-50-86.7-50-17 0-34.2 4.3-49.9 13.4l-86.6 50c-47.8 27.6-64.2 88.8-36.6 136.6l21.4 37.1c-8.4 12.5-16 25.6-22.7 39.3H164c-55.2 0-100 44.8-100 100v100c0 55.2 44.8 100 100 100h42.8c6.7 13.6 14.3 26.7 22.7 39.3l-21.4 37.1c-27.6 47.8-11.2 109 36.6 136.6l86.6 50c15.7 9.1 32.9 13.4 49.9 13.4 34.6 0 68.2-17.9 86.7-50l21.4-37.1c7.5 0.5 15 0.8 22.6 0.8 7.6 0 15.2-0.3 22.7-0.8l21.4 37.1c18.5 32.1 52.1 50 86.7 50 17 0 34.2-4.3 49.9-13.4l86.6 50c47.8-27.6 64.2-88.8 36.6-136.6l-21.4-37.1c8.4-12.5 16-25.6 22.7-39.3H860c55.2 0 100-44.8 100-100V462c0-55.2-44.8-100-100-100h-42.8c-6.7-13.6-14.3-26.7-22.7-39.3l21.4-37.1c27.6-47.8 11.2-109-36.6-136.6l-86.6-50c-15.7-9.1-32.9-13.4-49.9-13.4z" fill="#4a5fe2" p-id="5568"></path><path d="M512 442c38.6 0 70 31.4 70 70s-31.4 70-70 70-70-31.4-70-70 31.4-70 70-70m0-80c-82.8 0-150 67.2-150 150s67.2 150 150 150 150-67.2 150-150150-67.2-150-150-150z" fill="#7c44e2" p-id="5569"></path></svg>
+        </button>
       </div>
 
       <div class="cs-section cs-list-section">
@@ -277,30 +328,39 @@ onUnmounted(() => {
 
         <!-- 脚本类型过滤 -->
         <div class="cs-script-type-dropdown" @click.stop>
-          <button
-            class="cs-dropdown-trigger"
-            :class="{ active: showScriptTypeDropdown }"
-            type="button"
-            @click="toggleScriptTypeDropdown"
-          >
-            <span class="cs-dropdown-dot" :style="{ background: scriptTypeConfig[selectedScriptType as keyof typeof scriptTypeConfig]?.color }"></span>
-            {{ scriptTypeConfig[selectedScriptType as keyof typeof scriptTypeConfig]?.label }}
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </button>
-          <div v-if="showScriptTypeDropdown" class="cs-dropdown-menu">
-            <button
-              v-for="type in allScriptTypes"
-              :key="type"
-              class="cs-dropdown-item"
-              :class="{ active: selectedScriptType === type }"
-              type="button"
-              @click="handleScriptTypeChange(type)"
+          <div class="cs-select">
+            <div
+              class="cs-select-trigger"
+              :class="{ 'is-open': showScriptTypeDropdown }"
+              @click="toggleScriptTypeDropdown"
+              tabindex="0"
             >
-              <span class="cs-dropdown-dot" :style="{ background: scriptTypeConfig[type].color }"></span>
-              {{ scriptTypeConfig[type].label }}
-            </button>
+              <div class="cs-select-value" style="display: flex; align-items: center; gap: 8px;">
+                <span class="cs-dropdown-dot" :style="{ background: scriptTypeConfig[selectedScriptType as keyof typeof scriptTypeConfig]?.color }"></span>
+                {{ scriptTypeConfig[selectedScriptType as keyof typeof scriptTypeConfig]?.label }}
+              </div>
+              <div class="cs-select-icon" :class="{ 'is-open': showScriptTypeDropdown }">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+            </div>
+            <Transition name="cs-dropdown">
+              <div v-if="showScriptTypeDropdown" class="cs-select-dropdown">
+                <div class="cs-select-list">
+                  <div
+                    v-for="type in allScriptTypes"
+                    :key="type"
+                    class="cs-select-item"
+                    :class="{ 'is-selected': selectedScriptType === type }"
+                    @click="handleScriptTypeChange(type)"
+                  >
+                    <span class="cs-dropdown-dot" :style="{ background: scriptTypeConfig[type].color }"></span>
+                    <span class="cs-select-item-text">{{ scriptTypeConfig[type].label }}</span>
+                  </div>
+                </div>
+              </div>
+            </Transition>
           </div>
         </div>
 
@@ -340,15 +400,6 @@ onUnmounted(() => {
       </div>
     </div>
   </div>
-  <!-- 分类管理对话框 -->
-  <CategoryManageDialog
-    v-if="showCategoryManage"
-    :categories="categories"
-    :commands="filteredCommands"
-    @close="closeCategoryManage"
-    @add="handleAddCategory"
-    @delete="handleDeleteCategory"
-  />
 </template>
 
 <style scoped>
@@ -369,30 +420,143 @@ onUnmounted(() => {
   margin-bottom: 12px;
 }
 
-.cs-dropdown-trigger {
+/* cs-select 样式 */
+.cs-select {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cs-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--claude-ivory);
+  border: 1px solid var(--claude-border-warm);
+  border-radius: var(--claude-radius-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+  outline: none;
+  box-sizing: border-box;
+  font-size: 13px;
+  color: var(--claude-text-secondary);
+}
+
+.cs-select-trigger:hover {
+  border-color: var(--claude-border);
+}
+
+.cs-select-trigger:focus-visible,
+.cs-select-trigger.is-open {
+  border-color: var(--claude-focus);
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
+}
+
+.cs-select-value {
+  font-size: 13px;
+  color: var(--cs-text, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cs-select-icon {
+  color: var(--cs-muted, #6b7280);
+  display: flex;
+  transition: transform 0.2s;
+}
+
+.cs-select-icon.is-open {
+  transform: rotate(180deg);
+}
+
+.cs-select-dropdown {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  background: var(--claude-ivory);
+  border: 1px solid var(--claude-border-warm);
+  border-radius: var(--claude-radius-sm);
+  box-shadow: 0px 0px 0px 1px var(--claude-border-warm), 0px 4px 24px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+  overflow-y: auto;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.cs-select-dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cs-select-dropdown::-webkit-scrollbar-thumb {
+  background-color: var(--claude-border-warm);
+  border-radius: 4px;
+}
+
+.cs-select-list {
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cs-select-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+  color: var(--claude-text-secondary);
+}
+
+.cs-select-item:hover {
+  background: var(--claude-parchment);
+  color: var(--claude-text-primary);
+}
+
+.cs-select-item.is-selected {
+  background: var(--claude-border-warm);
+  color: var(--claude-text-primary);
+  font-weight: 500;
+}
+
+.cs-select-item-text {
+  font-size: 13px;
+  color: inherit;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 下拉动画 */
+.cs-dropdown-enter-active,
+.cs-dropdown-leave-active {
+  transition: opacity 0.2s, transform 0.2s;
+  transform-origin: top;
+}
+
+.cs-dropdown-enter-from,
+.cs-dropdown-leave-to {
+  opacity: 0;
+  transform: scaleY(0.95);
+}
+
+/* 脚本类型过滤的特殊样式 */
+.cs-script-type-dropdown .cs-select-trigger {
+  gap: 0;
+}
+
+.cs-script-type-dropdown .cs-select-value {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--claude-border-warm);
-  border-radius: var(--claude-radius-sm);
-  background: var(--claude-ivory);
-  color: var(--claude-text-secondary);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.cs-dropdown-trigger:hover {
-  border-color: var(--claude-border);
-  background: var(--claude-ivory);
-}
-
-.cs-dropdown-trigger.active {
-  border-color: var(--claude-focus);
-  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
 }
 
 .cs-dropdown-dot {
@@ -402,47 +566,31 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-.cs-dropdown-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: var(--claude-ivory);
-  border: 1px solid var(--claude-border-warm);
-  border-radius: var(--claude-radius-sm);
-  box-shadow: 0px 0px 0px 1px var(--claude-border-warm), 0px 4px 24px rgba(0, 0, 0, 0.05);
-  z-index: 100;
-  padding: 6px;
+.cs-manage-btn {
+  width: 100%;
 }
 
-.cs-dropdown-item {
+/* 分类过滤下拉框 */
+.cs-category-dropdown {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
-  padding: 8px 10px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--claude-text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  margin-bottom: 16px;
 }
 
-.cs-dropdown-item:hover {
-  background: var(--claude-parchment);
-  color: var(--claude-text-primary);
+.cs-category-dropdown .cs-dropdown-trigger {
+  flex: 1;
+  width: auto;
 }
 
-.cs-dropdown-item.active {
-  background: var(--claude-border-warm);
-  color: var(--claude-text-primary);
-  font-weight: 500;
+.cs-category-dropdown .cs-dropdown-menu {
+  left: 0;
+  right: calc(32px + 8px);
 }
 
-.cs-manage-btn {
-  width: 100%;
+.cs-manage-category-btn {
+  flex-shrink: 0;
 }
 
 .cs-btn-icon {
