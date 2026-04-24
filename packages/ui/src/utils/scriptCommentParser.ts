@@ -250,3 +250,236 @@ export function parseBatComment(content: string): ParsedScriptMetadata | null {
 export function parsePs1Comment(content: string): ParsedScriptMetadata | null {
   return new ScriptCommentParser().parsePs1(content);
 }
+
+// 解析 VBS 注释
+export function parseVbsComment(content: string): ParsedScriptMetadata | null {
+  const commentBlock = extractVbsCommentBlock(content);
+  if (!commentBlock) return null;
+  return parseVbsCommentBlock(commentBlock);
+}
+
+// 解析 Shell 注释
+export function parseShellComment(content: string): ParsedScriptMetadata | null {
+  const commentBlock = extractShellCommentBlock(content);
+  if (!commentBlock) return null;
+  return parseShellCommentBlock(commentBlock);
+}
+
+// 解析 Python 注释
+export function parsePythonComment(content: string): ParsedScriptMetadata | null {
+  const commentBlock = extractPythonCommentBlock(content);
+  if (!commentBlock) return null;
+  return parsePythonCommentBlock(commentBlock);
+}
+
+// ============ VBS 解析器 ============
+
+function extractVbsCommentBlock(content: string): string | null {
+  const lines = content.split('\n');
+  const commentLines: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // 查找以 REM 或 ' 开头的注释行
+    if (trimmed.startsWith('REM') || trimmed.startsWith('rem')) {
+      commentLines.push(trimmed);
+    } else if (trimmed.startsWith("'")) {
+      commentLines.push(trimmed);
+    } else if (commentLines.length > 0) {
+      // 如果已经开始收集注释，遇到非注释行则停止
+      break;
+    }
+  }
+
+  return commentLines.length > 0 ? commentLines.join('\n') : null;
+}
+
+function parseVbsCommentBlock(block: string): ParsedScriptMetadata | null {
+  const metadata: ParsedScriptMetadata = {
+    name: '',
+    description: '',
+    category: '未分类',
+    tags: [],
+    params: [],
+    examples: [],
+    platform: 'Windows',
+  };
+
+  const lines = block.split('\n');
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed === 'REM' || trimmed === "'") continue;
+
+    // 移除 REM 或 ' 前缀
+    const content = trimmed
+      .replace(/^REM\s*/i, '')
+      .replace(/^'/, '')
+      .replace(/^#? ?/, '');
+
+    // 解析键值对: Key: Value
+    const match = content.match(/^(\w+):\s*(.*)/);
+    if (match) {
+      const [, key, value] = match;
+      setMetadata(metadata, key, value);
+    }
+  }
+
+  return validateAndFillDefaults(metadata);
+}
+
+// ============ Shell 解析器 ============
+
+function extractShellCommentBlock(content: string): string | null {
+  const lines = content.split('\n');
+  const commentLines: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('#')) {
+      commentLines.push(trimmed);
+    } else if (commentLines.length > 0 && !trimmed.startsWith('#')) {
+      break;
+    }
+  }
+
+  return commentLines.length > 0 ? commentLines.join('\n') : null;
+}
+
+function parseShellCommentBlock(block: string): ParsedScriptMetadata | null {
+  const metadata: ParsedScriptMetadata = {
+    name: '',
+    description: '',
+    category: '未分类',
+    tags: [],
+    params: [],
+    examples: [],
+    platform: 'Linux/Mac',
+  };
+
+  const lines = block.split('\n');
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed === '#') continue;
+
+    // 移除 # 前缀
+    const content = trimmed.replace(/^#+\s*/, '');
+
+    // 解析键值对: Key: Value
+    const match = content.match(/^(\w+):\s*(.*)/);
+    if (match) {
+      const [, key, value] = match;
+      setMetadata(metadata, key, value);
+    }
+  }
+
+  return validateAndFillDefaults(metadata);
+}
+
+// ============ Python 解析器 ============
+
+function extractPythonCommentBlock(content: string): string | null {
+  // 首先尝试匹配三引号注释块
+  const docstringMatch = content.match(/"""[\s\S]*?"""/);
+  if (docstringMatch) {
+    return docstringMatch[0].slice(3, -3).trim();
+  }
+
+  // 其次尝试匹配单引号三引号注释块
+  const singleQuoteMatch = content.match(/'''[\s\S]*?'''/);
+  if (singleQuoteMatch) {
+    return singleQuoteMatch[0].slice(3, -3).trim();
+  }
+
+  return null;
+}
+
+function parsePythonCommentBlock(block: string): ParsedScriptMetadata | null {
+  const metadata: ParsedScriptMetadata = {
+    name: '',
+    description: '',
+    category: '未分类',
+    tags: [],
+    params: [],
+    examples: [],
+    platform: 'Any',
+  };
+
+  const lines = block.split('\n');
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // 解析键值对: Key: Value
+    const match = trimmed.match(/^(\w+):\s*(.*)/);
+    if (match) {
+      const [, key, value] = match;
+      setMetadata(metadata, key, value);
+    }
+  }
+
+  return validateAndFillDefaults(metadata);
+}
+
+// 通用设置元数据函数
+function setMetadata(metadata: ParsedScriptMetadata, key: string, value: string) {
+  const normalizedKey = key.toLowerCase().replace(/-/g, '');
+
+  switch (normalizedKey) {
+    case 'name':
+    case 'scriptname':
+      metadata.name = value.trim();
+      break;
+    case 'shortdescription':
+    case 'short':
+      metadata.shortDescription = value.trim();
+      break;
+    case 'description':
+      metadata.description = value.trim();
+      break;
+    case 'category':
+      metadata.category = value.trim();
+      break;
+    case 'tags':
+      metadata.tags = value.split(',').map(t => t.trim()).filter(Boolean);
+      break;
+    case 'requires':
+      metadata.requires = value.trim();
+      break;
+    case 'platform':
+      metadata.platform = value.trim();
+      break;
+    case 'version':
+      metadata.version = value.trim();
+      break;
+    case 'author':
+      metadata.author = value.trim();
+      break;
+    case 'date':
+      metadata.date = value.trim();
+      break;
+    case 'usage':
+      metadata.usage = value.trim();
+      break;
+    case 'example':
+      metadata.examples.push(value.trim());
+      break;
+    case 'notes':
+      metadata.notes = value.trim();
+      break;
+  }
+}
+
+// 验证并填充默认值
+function validateAndFillDefaults(metadata: ParsedScriptMetadata): ParsedScriptMetadata {
+  if (!metadata.name || metadata.name.trim() === '') {
+    metadata.name = '未命名脚本';
+  }
+  if (!metadata.category || metadata.category.trim() === '') {
+    metadata.category = '未分类';
+  }
+
+  return metadata;
+}

@@ -1,5 +1,11 @@
 import { ref, type Ref } from "vue";
-import { getBatCommentTemplate, getPs1CommentTemplate } from "../utils/commentTemplates";
+import {
+  getBatCommentTemplate,
+  getPs1CommentTemplate,
+  getVbsCommentTemplate,
+  getShellCommentTemplate,
+  getPythonCommentTemplate
+} from "../utils/commentTemplates";
 import type { ScriptType } from "@commandselector/shared";
 
 /**
@@ -18,9 +24,7 @@ export function useScriptTemplates(
    * 插入注释模板到文件开头
    */
   function insertCommentTemplate() {
-    const template = scriptType.value === "bat"
-      ? getBatCommentTemplate()
-      : getPs1CommentTemplate();
+    const template = getTemplateByType(scriptType.value);
 
     // 在文件开头插入
     const content = scriptContent.value;
@@ -31,12 +35,31 @@ export function useScriptTemplates(
   }
 
   /**
+   * 根据脚本类型获取对应的模板
+   */
+  function getTemplateByType(type: ScriptType): string {
+    switch (type) {
+      case "bat":
+      case "cmd":
+        return getBatCommentTemplate();
+      case "ps1":
+        return getPs1CommentTemplate();
+      case "vbs":
+        return getVbsCommentTemplate();
+      case "sh":
+        return getShellCommentTemplate();
+      case "py":
+        return getPythonCommentTemplate();
+      default:
+        return getBatCommentTemplate();
+    }
+  }
+
+  /**
    * 获取当前脚本类型的模板
    */
   function getTemplate() {
-    return scriptType.value === "bat"
-      ? getBatCommentTemplate()
-      : getPs1CommentTemplate();
+    return getTemplateByType(scriptType.value);
   }
 
   /**

@@ -17,6 +17,14 @@ export * from "./composables/useCommandAIMetadata";
 export * from "./composables/usePinyinSearch";
 export * from "./utils/scriptCommentParser";
 export * from "./utils/commentTemplates";
+export {
+  getVbsCommentTemplate,
+  getShellCommentTemplate,
+  getPythonCommentTemplate,
+  getVbsCommentTemplateWithPlaceholder,
+  getShellCommentTemplateWithPlaceholder,
+  getPythonCommentTemplateWithPlaceholder
+} from "./utils/commentTemplates";
 export * from "./utils/searchConfig";
 export type { AIProvider, AIProviderConfig, AIMultiConfig } from "./utils/aiConfig";
 export * from "./services/aiService";

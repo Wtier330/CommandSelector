@@ -39,7 +39,7 @@ export function useAIMetadata() {
    */
   async function generateMetadata(
     scriptContent: string,
-    scriptType: 'bat' | 'ps1'
+    scriptType: 'bat' | 'ps1' | 'vbs' | 'sh' | 'py'
   ): Promise<ParsedScriptMetadata | null> {
     isGenerating.value = true;
     error.value = null;

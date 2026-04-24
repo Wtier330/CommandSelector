@@ -1,5 +1,12 @@
 import { computed, type Ref } from "vue";
-import { parseBatComment, parsePs1Comment, type ParsedScriptMetadata } from "../utils/scriptCommentParser";
+import {
+  parseBatComment,
+  parsePs1Comment,
+  parseVbsComment,
+  parseShellComment,
+  parsePythonComment,
+  type ParsedScriptMetadata
+} from "../utils/scriptCommentParser";
 import type { ScriptType } from "@commandselector/shared";
 
 export interface MetadataStatus {
@@ -30,10 +37,20 @@ export function useScriptMetadata(
     if (!scriptContent.value) return null;
 
     try {
-      if (scriptType.value === "bat") {
-        return parseBatComment(scriptContent.value);
-      } else {
-        return parsePs1Comment(scriptContent.value);
+      switch (scriptType.value) {
+        case "bat":
+        case "cmd":
+          return parseBatComment(scriptContent.value);
+        case "ps1":
+          return parsePs1Comment(scriptContent.value);
+        case "vbs":
+          return parseVbsComment(scriptContent.value);
+        case "sh":
+          return parseShellComment(scriptContent.value);
+        case "py":
+          return parsePythonComment(scriptContent.value);
+        default:
+          return parseBatComment(scriptContent.value);
       }
     } catch {
       return null;

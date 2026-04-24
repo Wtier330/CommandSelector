@@ -121,31 +121,20 @@ function handleContentChange(value: string) {
 async function handleGenerateMetadata() {
   clearAIError();
 
-  // AI 元数据生成仅支持 bat 和 ps1
-  if (props.scriptType !== 'bat' && props.scriptType !== 'ps1') {
-    alert('AI 元数据生成仅支持 bat 和 ps1 脚本');
-    return;
-  }
-
   const metadata = await generateMetadata(
     scriptContent.value,
-    props.scriptType as 'bat' | 'ps1'
+    props.scriptType as 'bat' | 'ps1' | 'vbs' | 'sh' | 'py'
   );
 
   if (metadata) {
     // 生成注释块
-    const { getBatCommentTemplateWithPlaceholder, getPs1CommentTemplateWithPlaceholder } =
-      await import("@commandselector/ui");
-
-    const commentTemplate = props.scriptType === 'bat'
-      ? getBatCommentTemplateWithPlaceholder(metadata)
-      : getPs1CommentTemplateWithPlaceholder(metadata);
+    const commentTemplate = await getCommentTemplateByType(props.scriptType, metadata);
 
     // 替换或插入注释块
     scriptContent.value = replaceOrInsertCommentBlock(
       scriptContent.value,
       commentTemplate,
-      props.scriptType as 'bat' | 'ps1'
+      props.scriptType
     );
     setChanged(true);
   } else if (aiError.value) {
@@ -153,25 +142,137 @@ async function handleGenerateMetadata() {
   }
 }
 
+// 根据脚本类型获取显示名称
+function getScriptTypeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    bat: 'BAT',
+    cmd: 'CMD',
+    ps1: 'PowerShell',
+    vbs: 'VBScript',
+    sh: 'Shell',
+    py: 'Python'
+  };
+  return labels[type] || type.toUpperCase();
+}
+
+// 根据脚本类型获取对应的注释模板
+async function getCommentTemplateByType(
+  type: string,
+  metadata: any
+): Promise<string> {
+  const {
+    getBatCommentTemplateWithPlaceholder,
+    getPs1CommentTemplateWithPlaceholder,
+    getVbsCommentTemplateWithPlaceholder,
+    getShellCommentTemplateWithPlaceholder,
+    getPythonCommentTemplateWithPlaceholder
+  } = await import("@commandselector/ui");
+
+  switch (type) {
+    case "bat":
+    case "cmd":
+      return getBatCommentTemplateWithPlaceholder(metadata);
+    case "ps1":
+      return getPs1CommentTemplateWithPlaceholder(metadata);
+    case "vbs":
+      return getVbsCommentTemplateWithPlaceholder(metadata);
+    case "sh":
+      return getShellCommentTemplateWithPlaceholder(metadata);
+    case "py":
+      return getPythonCommentTemplateWithPlaceholder(metadata);
+    default:
+      return getBatCommentTemplateWithPlaceholder(metadata);
+  }
+}
+
 // 替换或插入注释块
 function replaceOrInsertCommentBlock(
   content: string,
   newComment: string,
-  type: 'bat' | 'ps1'
+  type: string
 ): string {
-  if (type === 'bat') {
-    // 查找 BAT 注释块 /* ... */
-    const regex = /\/\*\s*[\s\S]*?\*\/\s*\n?/;
-    if (regex.test(content)) {
-      return content.replace(regex, newComment + '\n\n');
+  const lines = content.split('\n');
+  let commentStartIndex = -1;
+  let commentEndIndex = -1;
+
+  switch (type) {
+    case 'bat':
+    case 'cmd': {
+      // 查找 BAT 注释块 /* ... */
+      const match = content.match(/\/\*\s*[\s\S]*?\*\/\s*\n?/);
+      if (match) {
+        return content.replace(match[0], newComment + '\n\n');
+      }
+      break;
     }
-  } else {
-    // 查找 PowerShell 注释块 <# ... #>
-    const regex = /<#\s*[\s\S]*?#>\s*\n?/;
-    if (regex.test(content)) {
-      return content.replace(regex, newComment + '\n\n');
+    case 'ps1': {
+      // 查找 PowerShell 注释块 <# ... #>
+      const match = content.match(/<#\s*[\s\S]*?#>\s*\n?/);
+      if (match) {
+        return content.replace(match[0], newComment + '\n\n');
+      }
+      break;
     }
+    case 'vbs':
+      // 查找 VBS 注释块（连续的 REM 行）
+      for (let i = 0; i < lines.length; i++) {
+        const trimmed = lines[i].trim();
+        if (trimmed.startsWith('REM') || trimmed.startsWith('rem')) {
+          if (commentStartIndex === -1) {
+            commentStartIndex = i;
+          }
+          // 检查下一行是否还是注释
+          if (i < lines.length - 1 && !lines[i + 1].trim().match(/^(REM|rem)/i)) {
+            commentEndIndex = i + 1;
+            break;
+          }
+        } else if (commentStartIndex !== -1) {
+          commentEndIndex = i;
+          break;
+        }
+      }
+      if (commentEndIndex === -1 && commentStartIndex !== -1) {
+        commentEndIndex = lines.length;
+      }
+      break;
+    case 'sh':
+      // 查找 Shell 注释块（连续的 # 行）
+      for (let i = 0; i < lines.length; i++) {
+        const trimmed = lines[i].trim();
+        if (trimmed.startsWith('#')) {
+          if (commentStartIndex === -1) {
+            commentStartIndex = i;
+          }
+          // 检查下一行是否还是注释
+          if (i < lines.length - 1 && !lines[i + 1].trim().startsWith('#')) {
+            commentEndIndex = i + 1;
+            break;
+          }
+        } else if (commentStartIndex !== -1) {
+          commentEndIndex = i;
+          break;
+        }
+      }
+      if (commentEndIndex === -1 && commentStartIndex !== -1) {
+        commentEndIndex = lines.length;
+      }
+      break;
+    case 'py':
+      // 查找 Python docstring """ ... """
+      const pyMatch = content.match(/"""\s*[\s\S]*?\s*"""\s*\n?/);
+      if (pyMatch) {
+        return content.replace(pyMatch[0], newComment + '\n\n');
+      }
+      break;
   }
+
+  // 如果找到注释块，替换它
+  if (commentStartIndex !== -1 && commentEndIndex !== -1) {
+    const before = lines.slice(0, commentStartIndex).join('\n');
+    const after = lines.slice(commentEndIndex).join('\n');
+    return (before ? before + '\n' : '') + newComment + '\n\n' + (after ? after : '');
+  }
+
   // 如果没有找到注释块，在开头插入
   return newComment + '\n\n' + content;
 }
@@ -241,7 +342,7 @@ loadScriptContent();
               <div class="cs-editor-header">
                 <div class="cs-editor-title">脚本内容</div>
                 <div class="cs-editor-info">
-                  <span class="cs-editor-type">{{ scriptType === 'ps1' ? 'PowerShell' : 'BAT' }}</span>
+                  <span class="cs-editor-type">{{ getScriptTypeLabel(scriptType) }}</span>
                 </div>
               </div>
               <CodeMirrorEditor
