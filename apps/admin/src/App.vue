@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, shallowRef } from "vue";
 import { NConfigProvider, NMessageProvider, NDialogProvider, NNotificationProvider } from "naive-ui";
 import MessageContainer from "./components/MessageContainer.vue";
 
-// 动态组件加载
-const AsyncSettingsModal = ref<any>(null);
-const AsyncProjectInfoModal = ref<any>(null);
-const AsyncAIConfigDialog = ref<any>(null);
+// 动态组件加载 - 使用 shallowRef 避免对组件对象进行响应式追踪
+const AsyncSettingsModal = shallowRef<any>(null);
+const AsyncProjectInfoModal = shallowRef<any>(null);
+const AsyncAIConfigDialog = shallowRef<any>(null);
 
 // 设置模态框
 const showSettings = ref(false);

@@ -110,6 +110,8 @@ async function handleAddProvider() {
     id: aiConfigManager.generateId()
   });
   if (validation.valid) {
+    // 发出 AI 配置更新事件
+    window.dispatchEvent(new CustomEvent("cs-ai-config-updated"));
     closeEditDialog();
   } else {
     alert(validation.error);
@@ -122,6 +124,8 @@ async function handleUpdateProvider() {
   const { id, ...updates } = editForm.value;
   const validation = await updateProvider(id, updates);
   if (validation.valid) {
+    // 发出 AI 配置更新事件
+    window.dispatchEvent(new CustomEvent("cs-ai-config-updated"));
     closeEditDialog();
   } else {
     alert(validation.error);
@@ -132,6 +136,8 @@ async function handleUpdateProvider() {
 async function confirmDelete() {
   if (confirmingDelete.value) {
     await deleteProvider(confirmingDelete.value.id);
+    // 发出 AI 配置更新事件
+    window.dispatchEvent(new CustomEvent("cs-ai-config-updated"));
     confirmingDelete.value = null;
   }
 }
@@ -144,6 +150,8 @@ function cancelDelete() {
 // 设为默认
 async function handleSetDefault(id: string) {
   await setDefaultProvider(id);
+  // 发出 AI 配置更新事件
+  window.dispatchEvent(new CustomEvent("cs-ai-config-updated"));
 }
 
 // 测试连接
