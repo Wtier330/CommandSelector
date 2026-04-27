@@ -14,13 +14,13 @@ const emit = defineEmits<{
 }>();
 
 // 脚本类型配置
-const typeConfig: Record<ScriptType, { label: string; color: string; icon: string }> = {
-  bat: { label: 'BAT', color: '#4d4d4d', icon: '⚙️' },
-  ps1: { label: 'PowerShell', color: '#2b579a', icon: '💠' },
-  vbs: { label: 'VBS', color: '#8b4513', icon: '📜' },
-  sh: { label: 'Shell', color: '#2e8b57', icon: '🐚' },
-  cmd: { label: 'CMD', color: '#6b7280', icon: '💻' },
-  py: { label: 'Python', color: '#3776ab', icon: '🐍' }
+const typeConfig: Record<ScriptType, { label: string; color: string }> = {
+  bat: { label: 'BAT', color: '#4d4d4d' },
+  ps1: { label: 'PowerShell', color: '#2b579a' },
+  vbs: { label: 'VBS', color: '#8b4513' },
+  sh: { label: 'Shell', color: '#2e8b57' },
+  cmd: { label: 'CMD', color: '#6b7280' },
+  py: { label: 'Python', color: '#3776ab' }
 };
 
 // 计算脚本摘要描述（优先使用简短描述）
@@ -70,11 +70,6 @@ function getTypeLabel(type: ScriptType): string {
   return typeConfig[type]?.label || type.toUpperCase();
 }
 
-// 获取类型图标
-function getTypeIcon(type: ScriptType): string {
-  return typeConfig[type]?.icon || '📄';
-}
-
 function handleEdit() {
   emit("edit", props.script.id);
 }
@@ -100,8 +95,38 @@ async function handleCopyPath(e: Event) {
   <div class="cs-script-card" :class="{ compact }" @dblclick="handleEdit">
     <!-- 紧凑模式：左侧图标 -->
     <template v-if="compact">
-      <div class="cs-card-icon-compact">
-        {{ getTypeIcon(script.type) }}
+      <div class="cs-card-icon-compact" :style="{ color: typeConfig[script.type]?.color }">
+        <svg v-if="script.type === 'bat'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <svg v-else-if="script.type === 'ps1'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polygon points="12 2 2 7 12 12 22 7 12 17 2 12"></polygon>
+          <polyline points="2 7 12 12 12 17"></polyline>
+          <line x1="12" y1="12" x2="12" y2="22"></line>
+        </svg>
+        <svg v-else-if="script.type === 'vbs'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+          <circle cx="12" cy="12" r="10"></circle>
+        </svg>
+        <svg v-else-if="script.type === 'sh'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="4 17 10 11 4 5"></polyline>
+          <line x1="12" y1="19" x2="20" y2="19"></line>
+          <polyline points="20 5 14 11 20 19"></polyline>
+        </svg>
+        <svg v-else-if="script.type === 'cmd'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <svg v-else-if="script.type === 'py'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 19c-4 0-6-1.5-6-3s2-3 6-3 6 1.5 6 3-2 3-6 3z"></path>
+          <path d="M12 5c4 0 6 1.5 6 3s-2 3-6 3-6-1.5-6-3 2-3 6-3z"></path>
+          <path d="M12 5v14"></path>
+        </svg>
       </div>
       <div class="cs-card-content-compact">
         <div class="cs-card-title-compact">
@@ -130,8 +155,38 @@ async function handleCopyPath(e: Event) {
     <!-- 网格模式 -->
     <template v-else>
       <!-- 功能图标区域 -->
-      <div class="cs-card-icon">
-        {{ getTypeIcon(script.type) }}
+      <div class="cs-card-icon" :style="{ color: typeConfig[script.type]?.color }">
+        <svg v-if="script.type === 'bat'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <svg v-else-if="script.type === 'ps1'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polygon points="12 2 2 7 12 12 22 7 12 17 2 12"></polygon>
+          <polyline points="2 7 12 12 12 17"></polyline>
+          <line x1="12" y1="12" x2="12" y2="22"></line>
+        </svg>
+        <svg v-else-if="script.type === 'vbs'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+          <circle cx="12" cy="12" r="10"></circle>
+        </svg>
+        <svg v-else-if="script.type === 'sh'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="4 17 10 11 4 5"></polyline>
+          <line x1="12" y1="19" x2="20" y2="19"></line>
+          <polyline points="20 5 14 11 20 19"></polyline>
+        </svg>
+        <svg v-else-if="script.type === 'cmd'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <svg v-else-if="script.type === 'py'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 19c-4 0-6-1.5-6-3s2-3 6-3 6 1.5 6 3-2 3-6 3z"></path>
+          <path d="M12 5c4 0 6 1.5 6 3s-2 3-6 3-6-1.5-6-3 2-3 6-3z"></path>
+          <path d="M12 5v14"></path>
+        </svg>
       </div>
 
       <!-- 主要内容 -->
@@ -213,10 +268,18 @@ async function handleCopyPath(e: Event) {
 }
 
 .cs-card-icon-compact {
-  font-size: 24px;
-  width: 36px;
-  text-align: center;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+}
+
+.cs-card-icon-compact svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
 }
 
 .cs-card-content-compact {
@@ -269,9 +332,18 @@ async function handleCopyPath(e: Event) {
 
 /* 网格模式 */
 .cs-card-icon {
-  font-size: 32px;
-  text-align: center;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 12px;
+}
+
+.cs-card-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
 }
 
 .cs-card-content {

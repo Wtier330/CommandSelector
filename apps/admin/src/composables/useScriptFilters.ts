@@ -9,15 +9,42 @@ import { fuzzyMatch } from "@commandselector/ui";
  */
 export function useScriptFilters(scripts: Ref<ScriptFileMeta[]>) {
   const keyword = ref("");
-  const selectedType = ref<"all" | "bat" | "ps1">("all");
+  const selectedType = ref<string>("all");
+  const selectedSource = ref<string>("all"); // "all" 表示所有来源
+
+  // 获取所有唯一的来源目录
+  const sourceDirs = computed(() => {
+    const dirs = new Set<string>();
+    scripts.value.forEach((s) => {
+      if (s.sourceDir) {
+        dirs.add(s.sourceDir);
+      }
+    });
+    return Array.from(dirs).sort();
+  });
+
+  // 获取来源目录的简短显示名称
+  const formatSourceName = (dir: string): string => {
+    // 如果路径太长，显示最后 2 个部分
+    const parts = dir.replace(/[\/\\]+$/, "").split(/[\/\\]/);
+    if (parts.length <= 2) return dir;
+    return `.../${parts.slice(-2).join("/")}`;
+  };
 
   const filteredScripts = computed(() => {
     let result = scripts.value;
 
+    // 按类型筛选
     if (selectedType.value !== "all") {
       result = result.filter((s) => s.type === selectedType.value);
     }
 
+    // 按来源筛选
+    if (selectedSource.value !== "all") {
+      result = result.filter((s) => s.sourceDir === selectedSource.value);
+    }
+
+    // 按关键词搜索
     if (keyword.value.trim()) {
       const kw = keyword.value.toLowerCase();
       result = result.filter((s) => {
@@ -33,6 +60,8 @@ export function useScriptFilters(scripts: Ref<ScriptFileMeta[]>) {
         if (s.metadata?.category && fuzzyMatch(s.metadata.category, kw).matched) return true;
         // 检查标签
         if (s.metadata?.tags?.some(tag => fuzzyMatch(tag, kw).matched)) return true;
+        // 检查来源目录
+        if (s.sourceDir && fuzzyMatch(s.sourceDir, kw).matched) return true;
         return false;
       });
     }
@@ -43,14 +72,22 @@ export function useScriptFilters(scripts: Ref<ScriptFileMeta[]>) {
   });
 
   const stats = computed(() => {
-    const batCount = scripts.value.filter((s) => s.type === "bat").length;
-    const ps1Count = scripts.value.filter((s) => s.type === "ps1").length;
-    return { batCount, ps1Count, total: scripts.value.length };
+    const counts: Record<string, number> = {
+      all: scripts.value.length
+    };
+    scripts.value.forEach((s) => {
+      const type = s.type;
+      counts[type] = (counts[type] || 0) + 1;
+    });
+    return counts;
   });
 
   return {
     keyword,
     selectedType,
+    selectedSource,
+    sourceDirs,
+    formatSourceName,
     filteredScripts,
     stats
   };

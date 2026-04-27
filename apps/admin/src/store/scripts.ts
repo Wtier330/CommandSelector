@@ -150,7 +150,9 @@ export async function createScript(
   name: string,
   type: ScriptType,
   content: string,
-  description?: string
+  description?: string,
+  sourcePath?: string,
+  sourceDir?: string
 ): Promise<ScriptFileMeta | null> {
   try {
     await ensureScriptsDir();
@@ -182,6 +184,12 @@ export async function createScript(
     // 解析脚本注释元数据
     const metadata = parseScriptMetadata(content, type);
 
+    // 提取来源目录（如果提供了 sourcePath 但没提供 sourceDir）
+    let finalSourceDir = sourceDir;
+    if (sourcePath && !sourceDir) {
+      finalSourceDir = sourcePath.replace(/[^/\]+$/, "").replace(/[\/]+$/, "");
+    }
+
     // 创建脚本元数据
     const scriptMeta: ScriptFileMeta = {
       id,
@@ -192,13 +200,15 @@ export async function createScript(
       createdAt: timestamp,
       updatedAt: timestamp,
       description,
-      metadata: metadata || undefined
+      metadata: metadata || undefined,
+      sourcePath,
+      sourceDir: finalSourceDir
     };
 
     scripts.value.push(scriptMeta);
     await saveScripts();
 
-    logger.info('Scripts', 'Script created', { id, name, type, path: scriptPath });
+    logger.info('Scripts', 'Script created', { id, name, type, path: scriptPath, sourceDir: finalSourceDir });
     return scriptMeta;
   } catch (e: any) {
     logger.error('Scripts', 'Failed to create script', { name, error: e.message });
@@ -392,9 +402,12 @@ export async function importScript(): Promise<ScriptFileMeta | undefined> {
     const fileName = importedPath.split(/[/\\]/).pop() || "script";
     const baseName = fileName.replace(/\.(bat|cmd|ps1|vbs|sh|bash|py)$/i, "");
 
+    // 提取来源目录
+    const sourceDir = importedPath.replace(/[^/\\]+$/, "").replace(/[\/\\]+$/, "");
+
     // 创建新脚本（直接使用原始文件名，UUID 子目录保证物理文件唯一）
-    const result = await createScript(baseName, scriptType, content as string);
-    logger.info('Scripts', 'Script imported', { originalPath: importedPath, importedAs: baseName, type: scriptType });
+    const result = await createScript(baseName, scriptType, content as string, undefined, importedPath, sourceDir);
+    logger.info('Scripts', 'Script imported', { originalPath: importedPath, importedAs: baseName, type: scriptType, sourceDir });
     return result ?? undefined;
   } catch (e: any) {
     logger.error('Scripts', 'Failed to import script', { originalPath: importedPath, error: e.message });

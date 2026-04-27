@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAIMetadata } from '../composables/useAIMetadata';
 
-const { isConfigured, loadProviders, providers } = useAIMetadata();
+const { isConfigured, loadProviders } = useAIMetadata();
 
 const aiStatus = ref<'loading' | 'configured' | 'not-configured'>('loading');
 

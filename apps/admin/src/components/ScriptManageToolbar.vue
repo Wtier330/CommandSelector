@@ -1,63 +1,77 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 
-defineProps<{
-  stats: { batCount: number; ps1Count: number; total: number };
+const props = defineProps<{
+  stats: Record<string, number>;
+  sourceDirs: string[];
+  formatSourceName: (dir: string) => string;
 }>();
 
 const emit = defineEmits<{
   (e: "create"): void;
   (e: "import"): void;
   (e: "update:keyword", value: string): void;
-  (e: "update:selectedType", value: "all" | "bat" | "ps1"): void;
+  (e: "update:selectedType", value: string): void;
+  (e: "update:selectedSource", value: string): void;
 }>();
 
 const searchKeyword = ref("");
-const selectedType = ref<"all" | "bat" | "ps1">("all");
+const selectedType = ref<string>("all");
+const selectedSource = ref<string>("all");
+
+// 获取可用的脚本类型列表
+const scriptTypes = computed(() => {
+  const types = ["all"];
+  Object.keys(props.stats).forEach(key => {
+    if (key !== "total" && key !== "all" && props.stats[key] > 0) {
+      types.push(key);
+    }
+  });
+  return types;
+});
+
+// 格式化类型名称
+function formatTypeName(type: string): string {
+  const names: Record<string, string> = {
+    all: "全部",
+    bat: "BAT",
+    ps1: "PS1",
+    vbs: "VBS",
+    sh: "Shell",
+    py: "Python"
+  };
+  return names[type] || type.toUpperCase();
+}
 
 // 监听变化并 emit
 watch(searchKeyword, (val) => emit("update:keyword", val));
 watch(selectedType, (val) => emit("update:selectedType", val));
+watch(selectedSource, (val) => emit("update:selectedSource", val));
 </script>
 
 <template>
   <div class="cs-toolbar">
     <div class="cs-toolbar-left">
-      <button class="cs-btn cs-btn-primary" type="button" @click="emit('create')">
-        新建脚本
+      <button class="cs-btn cs-btn-primary cs-btn-sm" type="button" @click="emit('create')">
+        新建
       </button>
-      <button class="cs-btn cs-btn-outline" type="button" @click="emit('import')">
+      <button class="cs-btn cs-btn-outline cs-btn-sm" type="button" @click="emit('import')">
         导入
       </button>
     </div>
     <div class="cs-toolbar-right">
       <input v-model="searchKeyword" class="cs-input" placeholder="搜索脚本..." />
-      <div class="cs-filter-buttons">
-        <button
-          class="cs-filter-btn"
-          :class="{ active: selectedType === 'all' }"
-          type="button"
-          @click="selectedType = 'all'"
-        >
-          全部 ({{ stats.total }})
-        </button>
-        <button
-          class="cs-filter-btn"
-          :class="{ active: selectedType === 'bat' }" 
-          type="button"
-          @click="selectedType = 'bat'"
-        >
-          BAT ({{ stats.batCount }})
-        </button>
-        <button
-          class="cs-filter-btn"
-          :class="{ active: selectedType === 'ps1' }"
-          type="button"
-          @click="selectedType = 'ps1'"
-        >
-          PS1 ({{ stats.ps1Count }})
-        </button>
-      </div>
+      <select v-model="selectedType" class="cs-select cs-select-type">
+        <option v-for="type in scriptTypes" :key="type" :value="type">
+          {{ formatTypeName(type) }} ({{ props.stats[type] || 0 }})
+        </option>
+      </select>
+      <select v-if="sourceDirs.length > 0" v-model="selectedSource" class="cs-select">
+        <option value="all">所有来源</option>
+        <option v-for="dir in sourceDirs" :key="dir" :value="dir">
+          {{ formatSourceName(dir) }}
+        </option>
+      </select>
     </div>
   </div>
 </template>
@@ -67,24 +81,30 @@ watch(selectedType, (val) => emit("update:selectedType", val));
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--claude-border-warm, #e5e7eb);
 }
 
 .cs-toolbar-left, .cs-toolbar-right {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
 }
 
 .cs-btn {
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: var(--claude-radius-sm, 6px);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid;
+  transition: all 0.2s ease;
+}
+
+.cs-btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
 }
 
 .cs-btn-primary {
@@ -99,46 +119,49 @@ watch(selectedType, (val) => emit("update:selectedType", val));
 }
 
 .cs-btn-outline {
-  background: white;
-  color: #374151;
-  border-color: #d1d5db;
+  background: var(--claude-ivory, white);
+  color: var(--claude-text-primary, #374151);
+  border-color: var(--claude-border-warm, #d1d5db);
 }
 
 .cs-btn-outline:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: var(--claude-parchment, #f9fafb);
+  border-color: var(--claude-text-tertiary, #9ca3af);
 }
 
 .cs-input {
   padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: 1px solid var(--claude-border-warm, #d1d5db);
+  border-radius: var(--claude-radius-sm, 6px);
   font-size: 14px;
+  background: var(--claude-ivory, white);
+  transition: all 0.2s ease;
 }
 
 .cs-input:focus {
   outline: none;
   border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.cs-filter-buttons {
-  display: flex;
-  gap: 4px;
-}
-
-.cs-filter-btn {
-  padding: 4px 8px;
-  border: none;
-  background: transparent;
-;
-  font-size: 12px;
-  color: #6b7280;
+.cs-select {
+  padding: 8px 12px;
+  border: 1px solid var(--claude-border-warm, #d1d5db);
+  border-radius: var(--claude-radius-sm, 6px);
+  font-size: 13px;
+  background: var(--claude-ivory, white);
   cursor: pointer;
-  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
-.cs-filter-btn.active {
-  background: #dbeafe;
-  color: #1d4ed8;
+.cs-select-type {
+  min-width: 120px;
+  max-width: 160px;
+}
+
+.cs-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 </style>

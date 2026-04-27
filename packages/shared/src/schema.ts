@@ -76,6 +76,9 @@ export interface ScriptFileMeta {
   metadata?: ParsedScriptMetadata;
   // 同步状态
   syncStatus?: 'synced' | 'modified' | 'file-missing';
+  // 来源信息（用于脚本可追溯性）
+  sourcePath?: string;      // 原始文件的完整路径
+  sourceDir?: string;       // 来源目录（便于筛选和分组）
 }
 
 // 脚本注释元数据类型

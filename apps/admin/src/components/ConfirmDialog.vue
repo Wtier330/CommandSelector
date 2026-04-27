@@ -73,7 +73,8 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
 .cs-confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(20, 20, 19, 0.4);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,13 +92,14 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
 }
 
 .cs-confirm-dialog {
-  background: white;
-  border-radius: 12px;
+  background: var(--claude-ivory, white);
+  border: 1px solid var(--claude-border, #e5e7eb);
+  border-radius: var(--claude-radius-lg, 12px);
   width: 400px;
   max-width: 90%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.08);
   animation: cs-slide-up 0.2s ease-out;
 }
 
@@ -116,8 +118,8 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--claude-border-warm, #e5e7eb);
 }
 
 .cs-confirm-icon {
@@ -145,14 +147,14 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
 
 .cs-confirm-title {
   font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: 500;
+  color: var(--claude-text-primary, #1f2937);
 }
 
 .cs-confirm-body {
   padding: 20px 24px;
   font-size: 15px;
-  color: #4b5563;
+  color: var(--claude-text-secondary, #4b5563);
   line-height: 1.6;
 }
 
@@ -161,12 +163,14 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 24px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--claude-border-warm, #e5e7eb);
+  background: var(--claude-parchment, #fafafa);
+  border-radius: 0 0 var(--claude-radius-lg, 12px) var(--claude-radius-lg, 12px);
 }
 
 .cs-btn {
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: var(--claude-radius-sm, 6px);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -175,14 +179,14 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
 }
 
 .cs-btn-cancel {
-  background: white;
-  color: #374151;
-  border-color: #d1d5db;
+  background: var(--claude-ivory, white);
+  color: var(--claude-text-primary, #374151);
+  border-color: var(--claude-border-warm, #d1d5db);
 }
 
 .cs-btn-cancel:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: var(--claude-parchment, #f9fafb);
+  border-color: var(--claude-text-tertiary, #9ca3af);
 }
 
 .cs-btn-confirm {
