@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, shallowRef } from "vue";
+import { ref, shallowRef, onMounted, onUnmounted } from "vue";
 import { NConfigProvider, NMessageProvider, NDialogProvider, NNotificationProvider } from "naive-ui";
 import MessageContainer from "./components/MessageContainer.vue";
 
@@ -7,6 +7,56 @@ import MessageContainer from "./components/MessageContainer.vue";
 const AsyncSettingsModal = shallowRef<any>(null);
 const AsyncProjectInfoModal = shallowRef<any>(null);
 const AsyncAIConfigDialog = shallowRef<any>(null);
+
+// 全局快捷键：监听 Tauri 后端发出的热键事件
+let hotkeyUnlisten: (() => void) | null = null;
+
+async function setupGlobalHotkeyListener() {
+  try {
+    const { listen } = await import("@tauri-apps/api/event");
+    const { invoke } = await import("@tauri-apps/api/core");
+
+    // 监听热键按下事件
+    hotkeyUnlisten = await listen("global-hotkey-pressed", async () => {
+      try {
+        await invoke("toggle_window_visibility");
+      } catch (e) {
+        console.error("全局快捷键切换窗口失败:", e);
+      }
+    });
+
+    // 启动时自动注册默认快捷键（Alt+C）
+    try {
+      const config = await invoke<{
+        enabled: boolean;
+        modifiers: number;
+        virtual_key: number;
+        display_name: string;
+      }>("get_default_hotkey");
+      if (config.enabled) {
+        await invoke("register_global_hotkey", {
+          modifiers: config.modifiers,
+          vk: config.virtual_key,
+        });
+      }
+    } catch (e) {
+      console.error("自动注册快捷键失败:", e);
+    }
+  } catch {
+    // 非 Tauri 环境，忽略
+  }
+}
+
+onMounted(() => {
+  setupGlobalHotkeyListener();
+});
+
+onUnmounted(() => {
+  if (hotkeyUnlisten) {
+    hotkeyUnlisten();
+    hotkeyUnlisten = null;
+  }
+});
 
 // 设置模态框
 const showSettings = ref(false);

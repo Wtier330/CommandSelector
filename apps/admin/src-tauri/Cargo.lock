@@ -578,6 +578,7 @@ dependencies = [
  "dirs",
  "encoding_rs",
  "log",
+ "parking_lot",
  "rust-pinyin",
  "serde",
  "serde_json",

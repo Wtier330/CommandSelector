@@ -32,5 +32,6 @@ tauri-plugin-log = "2"
 rust-pinyin = "0.1"
 tauri-plugin-store = "2"
 clipboard-win = "5.4"
-windows = { version = "0.60", features = ["Win32_Foundation", "Win32_System_Memory", "Win32_System_DataExchange", "Win32_UI_WindowsAndMessaging"] }
+parking_lot = "0.12"
+windows = { version = "0.60", features = ["Win32_Foundation", "Win32_System_Memory", "Win32_System_DataExchange", "Win32_System_LibraryLoader", "Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging", "Win32_UI_Input_KeyboardAndMouse"] }
 

@@ -8,6 +8,7 @@ export { default as ModeSwitcher } from "./components/ModeSwitcher.vue";
 export { default as ScriptCard } from "./components/ScriptCard.vue";
 export { default as ScriptCardGridView } from "./components/ScriptCardGridView.vue";
 export { default as AIConfigDialog } from "./components/AIConfigDialog.vue";
+export { default as NotificationDialog } from "./components/NotificationDialog.vue";
 export * from "./composables/useResponsiveLayout";
 export * from "./composables/useScriptMetadata";
 export * from "./composables/useScriptTemplates";

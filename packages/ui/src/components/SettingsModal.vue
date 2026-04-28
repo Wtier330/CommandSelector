@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, computed } from "vue";
+import NotificationDialog from "./NotificationDialog.vue";
 
 // @ts-ignore
-const APP_VERSION = __APP_VERSION__ || "1.3.5";
+const APP_VERSION = __APP_VERSION__ || "1.3.6";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -19,12 +20,13 @@ const emit = defineEmits<{
   (e: "openAIConfig"): void;
 }>();
 
-type TabType = "data" | "function" | "about";
+type TabType = "data" | "function" | "about" | "hotkey";
 const activeTab = ref<TabType>("data");
 
 const tabs = computed(() => [
   { key: "data" as TabType, label: "数据管理", icon: "database" },
   { key: "function" as TabType, label: "功能配置", icon: "settings" },
+  { key: "hotkey" as TabType, label: "全局快捷键", icon: "keyboard" },
   { key: "about" as TabType, label: "系统信息", icon: "info" },
 ]);
 
@@ -35,6 +37,32 @@ interface AppPathInfo {
 }
 
 const appPaths = ref<AppPathInfo[]>([]);
+
+// 全局快捷键状态
+const selectedModifiers = ref(1);
+const selectedKey = ref(67);
+const hotkeyDisplay = ref("Alt + C");
+const hotkeyEnabled = ref(true);
+
+// 通知弹窗状态
+const showNotification = ref(false);
+const notificationType = ref<'success' | 'error' | 'warning' | 'info'>('success');
+const notificationTitle = ref('');
+const notificationMessage = ref('');
+
+const modifierOptions = [
+  { label: "Alt", value: 1 },
+  { label: "Ctrl", value: 2 },
+  { label: "Shift", value: 4 },
+  { label: "Alt + Ctrl", value: 3 },
+  { label: "Alt + Shift", value: 5 },
+  { label: "Ctrl + Shift", value: 6 },
+];
+
+const keyOptions = Array.from({ length: 26 }, (_, i) => ({
+  label: String.fromCharCode(65 + i),
+  value: 65 + i,
+}));
 
 async function loadAppPaths() {
   try {
@@ -126,11 +154,97 @@ function handleOpenSettings() {
   loadAppPaths();
 }
 
+// 更新快捷键显示名称
+function updateHotkeyDisplay() {
+  const modifier = modifierOptions.find(m => m.value === selectedModifiers.value);
+  const key = keyOptions.find(k => k.value === selectedKey.value);
+  hotkeyDisplay.value = `${modifier?.label || ''} + ${key?.label || ''}`;
+}
+
+// 显示通知弹窗
+function showNotificationDialog(type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) {
+  notificationType.value = type;
+  notificationTitle.value = title;
+  notificationMessage.value = message;
+  showNotification.value = true;
+}
+
+// 注册快捷键
+async function registerHotkey() {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const success = await invoke<boolean>("register_global_hotkey", {
+      modifiers: selectedModifiers.value,
+      vk: selectedKey.value,
+    });
+    if (success) {
+      showNotificationDialog('success', '快捷键注册成功', `当前快捷键：${hotkeyDisplay.value}`);
+    } else {
+      showNotificationDialog('error', '注册失败', '快捷键注册失败，可能已被其他应用占用');
+    }
+  } catch (error) {
+    console.error('快捷键注册失败:', error);
+    showNotificationDialog('error', '注册失败', (error as Error).message || '快捷键注册失败');
+  }
+}
+
+// 注销快捷键
+async function unregisterHotkey() {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const success = await invoke<boolean>("unregister_global_hotkey");
+    if (success) {
+      showNotificationDialog('success', '快捷键已注销', '全局快捷键已停用');
+    }
+  } catch (error) {
+    showNotificationDialog('error', '注销失败', (error as Error).message || '快捷键注销失败');
+  }
+}
+
+// 应用快捷键设置
+async function applyHotkeySettings() {
+  if (hotkeyEnabled.value) {
+    await registerHotkey();
+  } else {
+    await unregisterHotkey();
+  }
+}
+
+// 加载默认快捷键配置
+async function loadDefaultHotkey() {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const config = await invoke<{ enabled: boolean; modifiers: number; virtual_key: number; display_name: string }>("get_default_hotkey");
+    hotkeyEnabled.value = config.enabled;
+    selectedModifiers.value = config.modifiers;
+    selectedKey.value = config.virtual_key;
+    updateHotkeyDisplay();
+  } catch (error) {
+    console.error('加载快捷键配置失败:', error);
+  }
+}
+
+// 关闭通知弹窗
+function closeNotification() {
+  showNotification.value = false;
+}
+
+// 测试快捷键
+async function testHotkey() {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke("toggle_window_visibility");
+  } catch (error) {
+    showNotificationDialog('error', '测试失败', (error as Error).message || '窗口切换测试失败');
+  }
+}
+
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
   window.addEventListener("cs-open-settings", handleOpenSettings);
-  // 初始化时加载路径信息
+  // 初始化时加载路径信息和快捷键配置
   loadAppPaths();
+  loadDefaultHotkey();
 });
 
 onUnmounted(() => {
@@ -168,6 +282,7 @@ onUnmounted(() => {
                 <line v-if="tab.icon === 'database'" x1="12" y1="15" x2="12" y2="3"></line>
                 <circle v-if="tab.icon === 'settings'" cx="12" cy="12" r="3"></circle>
                 <path v-if="tab.icon === 'settings'" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                <rect v-if="tab.icon === 'keyboard'" x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
                 <circle v-if="tab.icon === 'info'" cx="12" cy="12" r="10"></circle>
                 <line v-if="tab.icon === 'info'" x1="12" y1="16" x2="12" y2="12"></line>
                 <line v-if="tab.icon === 'info'" x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -343,11 +458,120 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
+
+            <div v-if="activeTab === 'hotkey'" class="cs-tab-content">
+              <div class="cs-hotkey-section">
+                <div class="cs-info-card">
+                  <div class="cs-info-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                      <line x1="6" y1="8" x2="6" y2="8"></line>
+                      <line x1="10" y1="8" x2="10" y2="8"></line>
+                      <line x1="14" y1="8" x2="14" y2="8"></line>
+                      <line x1="18" y1="8" x2="18" y2="8"></line>
+                      <line x1="6" y1="12" x2="6" y2="12"></line>
+                      <line x1="10" y1="12" x2="10" y2="12"></line>
+                      <line x1="14" y1="12" x2="14" y2="12"></line>
+                      <line x1="18" y1="12" x2="18" y2="12"></line>
+                      <line x1="7" y1="16" x2="17" y2="16"></line>
+                    </svg>
+                    <span class="cs-info-title">全局快捷键配置</span>
+                  </div>
+
+                  <div class="cs-hotkey-status">
+                    <div class="cs-hotkey-display">
+                      <span class="cs-hotkey-label">启用快捷键</span>
+                      <label class="cs-switch">
+                        <input type="checkbox" v-model="hotkeyEnabled" />
+                        <span class="cs-switch-slider"></span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <template v-if="hotkeyEnabled">
+                    <div class="cs-hotkey-status">
+                      <div class="cs-hotkey-display">
+                        <span class="cs-hotkey-label">当前快捷键</span>
+                        <span class="cs-hotkey-value">{{ hotkeyDisplay }}</span>
+                      </div>
+                    </div>
+
+                    <div class="cs-hotkey-config">
+                      <div class="cs-form-group">
+                        <label class="cs-form-label">修饰键</label>
+                        <div class="cs-select-wrapper">
+                          <select v-model="selectedModifiers" @change="updateHotkeyDisplay" class="cs-select">
+                            <option v-for="opt in modifierOptions" :key="opt.value" :value="opt.value">
+                              {{ opt.label }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="cs-form-group">
+                        <label class="cs-form-label">按键</label>
+                        <div class="cs-key-grid">
+                          <button
+                            v-for="key in keyOptions"
+                            :key="key.value"
+                            class="cs-key-btn"
+                            :class="{ active: selectedKey === key.value }"
+                            @click="selectedKey = key.value; updateHotkeyDisplay()"
+                          >
+                            {{ key.label }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="cs-hotkey-actions">
+                      <button class="cs-btn cs-btn-primary" @click="applyHotkeySettings">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        应用设置
+                      </button>
+                      <button class="cs-btn cs-btn-secondary" @click="unregisterHotkey">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                        </svg>
+                        注销快捷键
+                      </button>
+                      <button class="cs-btn cs-btn-secondary" @click="testHotkey">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        测试
+                      </button>
+                    </div>
+                  </template>
+
+                  <div class="cs-hotkey-tip">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="16" x2="12" y2="12"></line>
+                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span>注册后，按下快捷键可在任何地方快速唤起或隐藏应用窗口</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </transition>
+
+  <NotificationDialog
+    :is-open="showNotification"
+    :type="notificationType"
+    :title="notificationTitle"
+    :message="notificationMessage"
+    @close="closeNotification"
+    @confirm="closeNotification"
+  />
 </template>
 
 <style scoped>
@@ -866,5 +1090,220 @@ onUnmounted(() => {
   color: #3b82f6;
 }
 
+.cs-hotkey-section {
+  display: flex;
+  flex-direction: column;
+}
 
+.cs-hotkey-status {
+  margin-bottom: 20px;
+}
+
+.cs-hotkey-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.cs-hotkey-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.cs-hotkey-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cs-hotkey-value .cs-kbd {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.cs-hotkey-config {
+  margin-bottom: 20px;
+}
+
+.cs-form-group {
+  margin-bottom: 16px;
+}
+
+.cs-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.cs-form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.cs-select-wrapper {
+  position: relative;
+}
+
+.cs-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1e293b;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cs-select:hover {
+  border-color: #cbd5e1;
+}
+
+.cs-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.cs-key-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 6px;
+}
+
+.cs-key-btn {
+  width: 100%;
+  height: 36px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cs-key-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.cs-key-btn.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.cs-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 1;
+}
+
+.cs-btn-primary {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.cs-btn-primary:hover {
+  background: #2563eb;
+}
+
+.cs-btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.cs-btn-secondary:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.cs-hotkey-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fef3c7;
+  border-radius: 8px;
+  color: #92400e;
+  font-size: 12px;
+}
+
+.cs-hotkey-tip svg {
+  flex-shrink: 0;
+}
+
+/* Switch toggle */
+.cs-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  cursor: pointer;
+}
+
+.cs-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cs-switch-slider {
+  position: absolute;
+  inset: 0;
+  background: #cbd5e1;
+  border-radius: 22px;
+  transition: all 0.2s;
+}
+
+.cs-switch-slider::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  bottom: 3px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.cs-switch input:checked + .cs-switch-slider {
+  background: #3b82f6;
+}
+
+.cs-switch input:checked + .cs-switch-slider::before {
+  transform: translateX(18px);
+}
+
+.cs-hotkey-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.cs-hotkey-actions .cs-btn {
+  flex: 1;
+  min-width: 100px;
+}
 </style>

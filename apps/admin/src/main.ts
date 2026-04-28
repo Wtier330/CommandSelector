@@ -3,6 +3,7 @@ import App from "./App.vue";
 import { router } from "./router";
 import { isTauri } from "@tauri-apps/api/core";
 import { logger } from "./utils/logger";
+import "./assets/fonts/fonts.css";
 import "./styles/editor.css";
 
 createApp(App).use(router).mount("#app");

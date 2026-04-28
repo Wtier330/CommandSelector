@@ -3,6 +3,7 @@ mod app_paths;
 mod clipboard;
 mod debug;
 mod file_ops;
+mod global_hotkey;
 mod log_utils;
 mod search;
 mod shell_open;
@@ -41,6 +42,10 @@ pub fn run() {
             ai_config::load_ai_config,
             ai_config::save_ai_config,
             shell_open::open_in_explorer,
+            global_hotkey::register_global_hotkey,
+            global_hotkey::unregister_global_hotkey,
+            global_hotkey::get_default_hotkey,
+            global_hotkey::toggle_window_visibility,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
