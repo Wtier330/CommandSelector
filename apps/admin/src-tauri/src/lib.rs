@@ -8,6 +8,9 @@ mod log_utils;
 mod search;
 mod shell_open;
 
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -47,6 +50,84 @@ pub fn run() {
             global_hotkey::get_default_hotkey,
             global_hotkey::toggle_window_visibility,
         ])
+        .setup(move |app| {
+            // 创建托盘菜单
+            let toggle_item = MenuItem::with_id(
+                app, "toggle_visibility", "显示/隐藏主窗口", true, None::<&str>,
+            )?;
+            let quit_item = MenuItem::with_id(
+                app, "quit", "退出", true, None::<&str>,
+            )?;
+            let tray_menu = Menu::with_id(app, "tray_menu")?;
+            tray_menu.append(&toggle_item)?;
+            tray_menu.append(&quit_item)?;
+
+            // 加载托盘图标
+            let icon = tauri::image::Image::from_bytes(include_bytes!(
+                "../icons/32x32.png"
+            ))?;
+
+            // 构建系统托盘
+            let _tray = TrayIconBuilder::with_id("main-tray")
+                .icon(icon)
+                .tooltip("CommandSelector")
+                .menu(&tray_menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(move |app, event| {
+                    match event.id.as_ref() {
+                        "toggle_visibility" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let is_visible = window.is_visible().unwrap_or(false);
+                                let is_minimized = window.is_minimized().unwrap_or(false);
+                                if is_visible && !is_minimized {
+                                    let _ = window.hide();
+                                } else {
+                                    let _ = window.unminimize();
+                                    let _ = window.show();
+                                    let _ = window.set_focus();
+                                }
+                            }
+                        }
+                        "quit" => {
+                            app.exit(0);
+                        }
+                        _ => {}
+                    }
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        let app = tray.app_handle().clone();
+                        if let Some(window) = app.get_webview_window("main") {
+                            let is_visible = window.is_visible().unwrap_or(false);
+                            let is_minimized = window.is_minimized().unwrap_or(false);
+                            if is_visible && !is_minimized {
+                                let _ = window.hide();
+                            } else {
+                                let _ = window.unminimize();
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                    }
+                })
+                .build(app)?;
+
+            Ok(())
+        })
+        .on_window_event(|window, event| {
+            // 拦截关闭请求：隐藏到托盘而非退出
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if window.label() == "main" {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
