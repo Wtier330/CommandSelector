@@ -40,7 +40,7 @@ export default defineConfig(async () => ({
       // 3. tell Vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
-    // 代理配置解决 CORS 问题
+    // 代理配置解决 CORS 问题（仅开发环境）
     proxy: {
       // 火山引擎/字节跳动 API
       '/api/volces': {
@@ -52,8 +52,38 @@ export default defineConfig(async () => ({
           console.log('[Vite Proxy] rewrite:', path, '→', result);
           return result;
         },
-        configure: (proxy, options) => {
-          console.log('[Vite Proxy] Configured for /api/volces');
+      },
+      // Anthropic API
+      '/api/anthropic': {
+        target: 'https://api.anthropic.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => {
+          const result = path.replace(/^\/api\/anthropic/, '');
+          console.log('[Vite Proxy] rewrite:', path, '→', result);
+          return result;
+        },
+      },
+      // OpenAI API
+      '/api/openai': {
+        target: 'https://api.openai.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => {
+          const result = path.replace(/^\/api\/openai/, '');
+          console.log('[Vite Proxy] rewrite:', path, '→', result);
+          return result;
+        },
+      },
+      // OpenRouter API
+      '/api/openrouter': {
+        target: 'https://openrouter.ai',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => {
+          const result = path.replace(/^\/api\/openrouter/, '');
+          console.log('[Vite Proxy] rewrite:', path, '→', result);
+          return result;
         },
       },
     },

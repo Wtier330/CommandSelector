@@ -5,7 +5,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 
-export type AIProvider = 'anthropic' | 'openai' | 'openrouter' | 'custom';
+export type AIProvider = 'anthropic' | 'openai' | 'openrouter' | 'volcengine' | 'custom';
 
 export interface AIProviderConfig {
   id: string;
@@ -24,11 +24,15 @@ export interface AIMultiConfig {
 }
 
 const PROVIDER_DEFAULTS: Record<AIProvider, string> = {
-  anthropic: 'claude-3-haiku-20240307',
-  openai: 'gpt-3.5-turbo',
-  openrouter: 'anthropic/claude-3-haiku',
+  anthropic: 'claude-haiku-4-5-20251001',
+  openai: 'gpt-4o-mini',
+  openrouter: 'anthropic/claude-haiku-4-5-20251001',
+  volcengine: '',
   custom: ''
 };
+
+/** 火山引擎默认端点 */
+export const VOLCENGINE_DEFAULT_ENDPOINT = 'https://ark.cn-beijing.volces.com/api/v3';
 
 class AIConfigManager {
   private cachedConfig: AIMultiConfig | null = null;
@@ -163,6 +167,10 @@ class AIConfigManager {
 
     if (provider.provider === 'custom' && (!provider.customEndpoint || provider.customEndpoint.trim() === '')) {
       return { valid: false, error: '自定义端点需要输入 API 地址' };
+    }
+
+    if (provider.provider === 'volcengine' && (!provider.customEndpoint || provider.customEndpoint.trim() === '')) {
+      return { valid: false, error: '火山引擎需要输入 API 端点' };
     }
 
     if (provider.temperature !== undefined && (provider.temperature < 0 || provider.temperature > 1)) {

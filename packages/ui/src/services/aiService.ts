@@ -20,14 +20,14 @@ export { buildMetadataPrompt, buildCommandCompletionPrompt, type CommandInfo as 
 export { parseMetadataResponse, parseCommandResponse, formatCommandResponse } from './aiParsers';
 
 // 导出流式调用
-export type { CommandInfo } from './aiStreamCalls';
+export type { CommandInfo } from './aiPromptBuilder';
 export {
   completeCommandMetadataStream,
-  streamAnthropicCommand,
-  streamOpenAICommand,
-  streamCustomCommand,
   testConnection as testAIConnection
 } from './aiStreamCalls';
+
+// 导出 Adapter（供高级使用）
+export { getAdapter, type ProviderAdapter } from './aiProviderAdapter';
 
 /**
  * AI 服务主类
@@ -41,16 +41,13 @@ class AIService {
     scriptType: ScriptType,
     config: AIProviderConfig
   ): Promise<AIMetadataResponse> {
-    // 验证配置
     if (!config.apiKey || config.apiKey.length === 0) {
       throw new AIError('API Key 未配置', 'auth');
     }
 
-    // 构建提示词
     const { buildMetadataPrompt } = await import('./aiPromptBuilder');
     const prompt = buildMetadataPrompt(scriptContent, scriptType);
 
-    // 调用提供商
     const { generateMetadata: callProvider } = await import('./aiProviderCalls');
     return await callProvider(config, prompt);
   }
@@ -71,7 +68,6 @@ class AIService {
     },
     config: AIProviderConfig
   ): Promise<CommandCompletionResponse> {
-    // 验证配置
     if (!config.apiKey || config.apiKey.length === 0) {
       throw new AIError('API Key 未配置', 'auth');
     }
@@ -79,7 +75,6 @@ class AIService {
     const { buildCommandCompletionPrompt } = await import('./aiPromptBuilder');
     const prompt = buildCommandCompletionPrompt(command);
 
-    // 调用提供商
     const { completeCommandMetadata } = await import('./aiProviderCalls');
     return await completeCommandMetadata(config, prompt);
   }

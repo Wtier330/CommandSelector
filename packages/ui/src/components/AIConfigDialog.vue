@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import {
   type AIProviderConfig,
   type AIProvider,
-  aiConfigManager
+  aiConfigManager,
+  VOLCENGINE_DEFAULT_ENDPOINT
 } from '../utils/aiConfig';
 import { useAIMetadata } from '../composables/useAIMetadata';
 
@@ -103,6 +104,34 @@ function closeEditDialog() {
   testResult.value = null;
 }
 
+// 切换提供商类型时自动填充默认值
+watch(() => editForm.value.provider, (newType) => {
+  if (!editingProviderId.value) return; // 非编辑状态不处理
+
+  // 自动填充默认模型
+  if (!editForm.value.model || Object.values(PROVIDER_DEFAULTS).includes(editForm.value.model)) {
+    editForm.value.model = getDefaultModel(newType);
+  }
+
+  // 火山引擎自动填充端点
+  if (newType === 'volcengine' && !editForm.value.customEndpoint) {
+    editForm.value.customEndpoint = VOLCENGINE_DEFAULT_ENDPOINT;
+  }
+
+  // 非 custom/volcengine 时清空端点
+  if (newType !== 'custom' && newType !== 'volcengine') {
+    editForm.value.customEndpoint = undefined;
+  }
+});
+
+const PROVIDER_DEFAULTS: Record<string, string> = {
+  anthropic: 'claude-haiku-4-5-20251001',
+  openai: 'gpt-4o-mini',
+  openrouter: 'anthropic/claude-haiku-4-5-20251001',
+  volcengine: '',
+  custom: '',
+};
+
 // 添加新提供商
 async function handleAddProvider() {
   const validation = await addProvider({
@@ -174,6 +203,7 @@ function getProviderTypeName(type: AIProvider): string {
     anthropic: 'Anthropic Claude',
     openai: 'OpenAI GPT',
     openrouter: 'OpenRouter',
+    volcengine: '火山引擎',
     custom: '自定义',
   };
   return names[type];
@@ -184,6 +214,7 @@ function getProviderIcon(type: AIProvider): string {
   if (type === 'anthropic') return '🤖';
   if (type === 'openai') return '🧠';
   if (type === 'openrouter') return '🌐';
+  if (type === 'volcengine') return '🌋';
   return '⚙️';
 }
 </script>
@@ -289,10 +320,11 @@ function getProviderIcon(type: AIProvider): string {
                 <div class="cs-ai-edit-group">
                   <label>提供商类型</label>
                   <select v-model="editForm.provider" class="cs-ai-edit-input">
+                    <option value="volcengine">火山引擎</option>
                     <option value="anthropic">Anthropic Claude</option>
                     <option value="openai">OpenAI GPT</option>
                     <option value="openrouter">OpenRouter</option>
-                    <option value="custom">自定义</option>
+                    <option value="custom">自定义 (OpenAI 兼容)</option>
                   </select>
                 </div>
 
@@ -316,15 +348,17 @@ function getProviderIcon(type: AIProvider): string {
                   />
                 </div>
 
-                <div v-if="editForm.provider === 'custom'" class="cs-ai-edit-group">
-                  <label>API Base URL</label>
+                <div v-if="editForm.provider === 'custom' || editForm.provider === 'volcengine'" class="cs-ai-edit-group">
+                  <label>{{ editForm.provider === 'volcengine' ? 'API 端点' : 'API Base URL' }}</label>
                   <input
                     v-model="editForm.customEndpoint"
                     type="text"
                     class="cs-ai-edit-input"
-                    placeholder="如火山引擎: https://ark.cn-beijing.volces.com/api/v3"
+                    :placeholder="editForm.provider === 'volcengine' ? VOLCENGINE_DEFAULT_ENDPOINT : 'https://example.com/api/v3'"
                   />
-                  <p class="cs-ai-edit-hint">兼容 OpenAI API 格式的服务，填写 base_url 即可</p>
+                  <p class="cs-ai-edit-hint">
+                    {{ editForm.provider === 'volcengine' ? '火山引擎方舟平台端点，默认已填充' : '兼容 OpenAI API 格式的服务，填写 base_url 即可' }}
+                  </p>
                 </div>
 
                 <div class="cs-ai-edit-row">
