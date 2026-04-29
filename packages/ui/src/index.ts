@@ -8,6 +8,7 @@ export { default as ModeSwitcher } from "./components/ModeSwitcher.vue";
 export { default as ScriptCard } from "./components/ScriptCard.vue";
 export { default as ScriptCardGridView } from "./components/ScriptCardGridView.vue";
 export { default as AIConfigDialog } from "./components/AIConfigDialog.vue";
+export { default as AIPromptConfig } from "./components/AIPromptConfig.vue";
 export { default as NotificationDialog } from "./components/NotificationDialog.vue";
 export * from "./composables/useResponsiveLayout";
 export * from "./composables/useScriptMetadata";
@@ -30,4 +31,12 @@ export {
 } from "./utils/commentTemplates";
 export * from "./utils/searchConfig";
 export type { AIProvider, AIProviderConfig, AIMultiConfig } from "./utils/aiConfig";
+export type { AIPromptTemplates } from "./utils/promptConfig";
+export {
+  promptConfigManager,
+  DEFAULT_METADATA_PROMPT,
+  DEFAULT_COMMAND_PROMPT,
+  METADATA_TEMPLATE_VARIABLES,
+  COMMAND_TEMPLATE_VARIABLES
+} from "./utils/promptConfig";
 export * from "./services/aiService";

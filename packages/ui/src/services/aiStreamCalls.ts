@@ -159,7 +159,7 @@ export async function completeCommandMetadataStream(
     throw new AIError('API Key 未配置', 'auth');
   }
 
-  const prompt = buildCommandCompletionPrompt(command);
+  const prompt = await buildCommandCompletionPrompt(command);
   onStage?.('分析中');
 
   return await streamCommand(config, prompt, onChunk, onStage);

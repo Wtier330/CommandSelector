@@ -44,6 +44,8 @@ pub fn run() {
             search::search_scripts,
             ai_config::load_ai_config,
             ai_config::save_ai_config,
+            ai_config::load_ai_prompts,
+            ai_config::save_ai_prompts,
             shell_open::open_in_explorer,
             global_hotkey::register_global_hotkey,
             global_hotkey::unregister_global_hotkey,

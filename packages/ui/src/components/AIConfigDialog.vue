@@ -7,6 +7,10 @@ import {
   VOLCENGINE_DEFAULT_ENDPOINT
 } from '../utils/aiConfig';
 import { useAIMetadata } from '../composables/useAIMetadata';
+import AIPromptConfig from './AIPromptConfig.vue';
+
+type TabType = 'providers' | 'prompts';
+const activeTab = ref<TabType>('providers');
 
 const props = defineProps<{
   isOpen: boolean;
@@ -217,6 +221,11 @@ function getProviderIcon(type: AIProvider): string {
   if (type === 'volcengine') return '🌋';
   return '⚙️';
 }
+
+// 提示词保存后的事件
+function handlePromptSaved() {
+  window.dispatchEvent(new CustomEvent('cs-ai-config-updated'));
+}
 </script>
 
 <template>
@@ -226,12 +235,26 @@ function getProviderIcon(type: AIProvider): string {
         <div class="cs-ai-config-dialog">
           <!-- 头部 -->
           <div class="cs-ai-config-header">
-            <h3>AI 服务提供商管理</h3>
+            <h3>AI 配置</h3>
             <button class="cs-ai-config-close" @click="emit('close')">✕</button>
           </div>
 
-          <!-- 提供商列表 -->
-          <div class="cs-ai-config-body">
+          <!-- Tab 栏 -->
+          <div class="cs-ai-config-tabs">
+            <button
+              class="cs-ai-config-tab"
+              :class="{ active: activeTab === 'providers' }"
+              @click="activeTab = 'providers'"
+            >服务提供商</button>
+            <button
+              class="cs-ai-config-tab"
+              :class="{ active: activeTab === 'prompts' }"
+              @click="activeTab = 'prompts'"
+            >提示词模板</button>
+          </div>
+
+          <!-- 提供商 Tab -->
+          <div v-if="activeTab === 'providers'" class="cs-ai-config-body">
             <div v-if="providers.length === 0" class="cs-ai-config-empty">
               <div class="cs-ai-config-empty-icon">🤖</div>
               <p>还没有配置任何 AI 服务提供商</p>
@@ -294,6 +317,11 @@ function getProviderIcon(type: AIProvider): string {
               <span>＋</span>
               <span>添加提供商</span>
             </button>
+          </div>
+
+          <!-- 提示词 Tab -->
+          <div v-if="activeTab === 'prompts'" class="cs-ai-config-body">
+            <AIPromptConfig @saved="handlePromptSaved" />
           </div>
         </div>
 
@@ -494,6 +522,34 @@ function getProviderIcon(type: AIProvider): string {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
+}
+
+/* Tab 栏 */
+.cs-ai-config-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 24px;
+}
+
+.cs-ai-config-tab {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cs-ai-config-tab:hover {
+  color: #374151;
+}
+
+.cs-ai-config-tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
 }
 
 .cs-ai-config-close {

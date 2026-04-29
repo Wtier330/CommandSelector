@@ -46,7 +46,7 @@ class AIService {
     }
 
     const { buildMetadataPrompt } = await import('./aiPromptBuilder');
-    const prompt = buildMetadataPrompt(scriptContent, scriptType);
+    const prompt = await buildMetadataPrompt(scriptContent, scriptType);
 
     const { generateMetadata: callProvider } = await import('./aiProviderCalls');
     return await callProvider(config, prompt);
@@ -73,7 +73,7 @@ class AIService {
     }
 
     const { buildCommandCompletionPrompt } = await import('./aiPromptBuilder');
-    const prompt = buildCommandCompletionPrompt(command);
+    const prompt = await buildCommandCompletionPrompt(command);
 
     const { completeCommandMetadata } = await import('./aiProviderCalls');
     return await completeCommandMetadata(config, prompt);

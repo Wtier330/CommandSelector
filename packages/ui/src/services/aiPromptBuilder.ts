@@ -1,16 +1,32 @@
 /**
  * AI 提示词构建器
+ * 支持用户自定义模板，使用 {{ 变量 }} 插值
  */
+
+import { promptConfigManager } from '../utils/promptConfig';
 
 export type ScriptType = 'bat' | 'ps1' | 'vbs' | 'sh' | 'py';
 
 /**
- * 构建脚本元数据生成提示词
+ * 模板变量替换
  */
-export function buildMetadataPrompt(
+function applyTemplate(template: string, variables: Record<string, string>): string {
+  let result = template;
+  for (const [key, value] of Object.entries(variables)) {
+    const pattern = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+    result = result.replace(pattern, value);
+  }
+  return result;
+}
+
+/**
+ * 构建脚本元数据生成提示词
+ * 可用模板变量: scriptType, scriptTypeKey, platform, scriptContent
+ */
+export async function buildMetadataPrompt(
   scriptContent: string,
   scriptType: ScriptType
-): string {
+): Promise<string> {
   const scriptTypeNames: Record<string, string> = {
     bat: 'BAT',
     ps1: 'PowerShell',
@@ -29,17 +45,19 @@ export function buildMetadataPrompt(
   };
   const defaultPlatform = platforms[scriptType] || 'Any';
 
-  return `${scriptTypeName}脚本生成元数据JSON：
-{"name":"名称","shortDescription":"简短描述(<30字)","description":"详细描述(50-100字)","category":"分类","tags":["标签1","标签2"],"requires":"权限","platform":"${defaultPlatform}","version":"1.0.0","usage":"使用说明","params":[{"name":"参数","desc":"说明"}],"examples":["示例"],"notes":"备注"}
+  const template = await promptConfigManager.getMetadataPrompt();
 
-脚本：
-\`\`\`${scriptType}
-${scriptContent}
-\`\`\``;
+  return applyTemplate(template, {
+    scriptType: scriptTypeName,
+    scriptTypeKey: scriptType,
+    platform: defaultPlatform,
+    scriptContent,
+  });
 }
 
 /**
  * 构建命令元数据补全提示词
+ * 可用模板变量: scriptType, knownFields
  */
 export interface CommandInfo {
   name?: string;
@@ -52,7 +70,7 @@ export interface CommandInfo {
   platform?: string;
 }
 
-export function buildCommandCompletionPrompt(command: CommandInfo): string {
+export async function buildCommandCompletionPrompt(command: CommandInfo): Promise<string> {
   // 判断模板类型
   const hasPowerShell = command.powershellTemplate?.trim();
   const hasCmd = command.template?.trim();
@@ -68,12 +86,18 @@ export function buildCommandCompletionPrompt(command: CommandInfo): string {
   if (command.powershellTemplate) knownFields.push(`PS: ${command.powershellTemplate.slice(0, 50)}${command.powershellTemplate.length > 50 ? '...' : ''}`);
 
   const scriptTypeHint = isPowerShellType ? 'PowerShell' : 'CMD';
+  const knownFieldsStr = knownFields.length > 0 ? knownFields.join(' | ') : '暂无';
 
-  return `${scriptTypeHint}命令补全元数据。
-已有: ${knownFields.length > 0 ? knownFields.join(' | ') : '暂无'}
-返回格式（纯文本，无JSON无markdown）：
-描述: <20-50字>
-分类: <系统管理/文件操作/网络/进程/开发等>
-标签: <3个标签>
-使用说明: <注意事项>`;
+  const tmpl = await promptConfigManager.getCommandPrompt();
+
+  return applyTemplate(tmpl, {
+    scriptType: scriptTypeHint,
+    knownFields: knownFieldsStr,
+  });
 }
+
+/**
+ * 同步版本（用于不需要自定义模板的场景，如测试）
+ * 使用默认硬编码模板
+ */
+export { DEFAULT_METADATA_PROMPT, DEFAULT_COMMAND_PROMPT } from '../utils/promptConfig';
