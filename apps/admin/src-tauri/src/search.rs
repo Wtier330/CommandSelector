@@ -129,16 +129,6 @@ pub struct ScriptSearchResult {
     pub match_count: usize,
 }
 
-/// 拼音匹配结果
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PinyinMatchResult {
-    pub matched: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub matched_text: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub match_type: Option<String>,
-}
-
 // ==================== 搜索命令实现 ====================
 
 /// 获取字符串的拼音首字母
@@ -146,61 +136,94 @@ fn get_pinyin_initials(s: &str) -> String {
     get_pinyin(s)
 }
 
-/// 拼音匹配文本与关键词
-fn fuzzy_match_pinyin(text: &str, keyword: &str) -> PinyinMatchResult {
+/// 对单个字段计算拼音匹配得分
+/// 返回 0 表示不匹配，>0 表示匹配（值越大匹配度越高）
+fn pinyin_match_score(text: &str, keyword: &str) -> i32 {
     if text.is_empty() || keyword.is_empty() {
-        return PinyinMatchResult {
-            matched: false,
-            matched_text: None,
-            match_type: None,
-        };
+        return 0;
     }
 
     let lower_text = text.to_lowercase();
     let lower_keyword = keyword.to_lowercase();
 
+    // 直接文本匹配
     if lower_text.contains(&lower_keyword) {
-        return PinyinMatchResult {
-            matched: true,
-            matched_text: Some(text.to_string()),
-            match_type: Some("exact".to_string()),
-        };
+        // 前缀匹配加分
+        if lower_text.starts_with(&lower_keyword) {
+            return 100;
+        }
+        return 80;
     }
 
-    let initials = get_pinyin_initials(text);
-    let keyword_initials = get_pinyin_initials(keyword);
+    let initials = get_pinyin_initials(&lower_text);
+    let keyword_initials = get_pinyin_initials(&lower_keyword);
 
+    // 拼音首字母完全匹配（如 "qkhsz" 匹配 "qkhsz"）
+    if initials == keyword_initials {
+        return 70;
+    }
+
+    // 拼音首字母前缀匹配（如 "qkhsz" 匹配 "qk"）
+    if initials.starts_with(&keyword_initials) {
+        return 50;
+    }
+
+    // 拼音首字母包含匹配（如 "qkhsz" 包含 "hs"）
     if initials.contains(&keyword_initials) {
-        return PinyinMatchResult {
-            matched: true,
-            matched_text: Some(initials.clone()),
-            match_type: Some("initial".to_string()),
-        };
+        return 30;
     }
 
-    let mut keyword_idx = 0;
+    // 拼音首字母顺序子序列匹配（如 "qkhsz" 匹配 "qz" — 跳跃匹配，得分最低）
     let keyword_chars: Vec<char> = keyword_initials.chars().collect();
+    let mut keyword_idx = 0;
     for char in initials.chars() {
         if keyword_idx < keyword_chars.len() && char == keyword_chars[keyword_idx] {
             keyword_idx += 1;
             if keyword_idx == keyword_chars.len() {
-                return PinyinMatchResult {
-                    matched: true,
-                    matched_text: Some(initials),
-                    match_type: Some("initial".to_string()),
-                };
+                return 15;
             }
         }
     }
 
-    PinyinMatchResult {
-        matched: false,
-        matched_text: None,
-        match_type: None,
-    }
+    0
 }
 
-/// 搜索命令（支持拼音匹配）
+/// 计算命令的搜索得分（按字段分别匹配，避免跨字段拼接污染）
+fn score_command(cmd: &CommandEntry, keyword: &str) -> i32 {
+    let mut score = 0;
+
+    // 名称匹配（权重最高）
+    score = score.max(pinyin_match_score(&cmd.name, keyword) * 10);
+
+    // 描述匹配
+    if let Some(ref desc) = cmd.description {
+        score = score.max(pinyin_match_score(desc, keyword) * 5);
+    }
+
+    // 标签匹配（按标签单独匹配，避免标签间拼接）
+    if let Some(ref tags) = cmd.tags {
+        for tag in tags {
+            score = score.max(pinyin_match_score(tag, keyword) * 3);
+        }
+    }
+
+    // 分类匹配
+    if let Some(ref cat) = cmd.category {
+        score = score.max(pinyin_match_score(cat, keyword) * 2);
+    }
+
+    // 引擎/平台匹配（权重最低）
+    if let Some(ref engine) = cmd.engine {
+        score = score.max(pinyin_match_score(engine, keyword));
+    }
+    if let Some(ref platform) = cmd.platform {
+        score = score.max(pinyin_match_score(platform, keyword));
+    }
+
+    score
+}
+
+/// 搜索命令（支持拼音匹配，按字段分别匹配 + 评分排序）
 #[tauri::command]
 pub fn search_commands(request: CommandSearchRequest) -> Result<CommandSearchResult, String> {
     let CommandSearchRequest {
@@ -213,12 +236,18 @@ pub fn search_commands(request: CommandSearchRequest) -> Result<CommandSearchRes
     let is_all = categories.iter().any(|c| c == "__all__");
     let is_none = categories.iter().any(|c| c == "__none__");
 
-    let filtered: Vec<CommandEntry> = commands
+    if is_none {
+        return Ok(CommandSearchResult {
+            filtered: vec![],
+            match_count: 0,
+        });
+    }
+
+    let k_ref = &k;
+
+    let mut scored: Vec<(i32, CommandEntry)> = commands
         .into_iter()
         .filter(|c| {
-            if is_none {
-                return false;
-            }
             if !is_all {
                 if let Some(ref cat) = c.category {
                     if !categories.contains(cat) {
@@ -228,51 +257,25 @@ pub fn search_commands(request: CommandSearchRequest) -> Result<CommandSearchRes
                     return false;
                 }
             }
-
-            if k.is_empty() {
-                return true;
+            true
+        })
+        .filter_map(|c| {
+            if k_ref.is_empty() {
+                return Some((0, c));
             }
-
-            // 构建搜索字段
-            let hay = [
-                c.name.as_str(),
-                c.description.as_deref().unwrap_or(""),
-                c.category.as_deref().unwrap_or(""),
-                c.tags.as_deref().map(|t| t.join(" ")).unwrap_or_default().as_str(),
-                c.engine.as_deref().unwrap_or(""),
-                c.platform.as_deref().unwrap_or(""),
-            ]
-            .join(" ")
-            .to_lowercase();
-
-            // 1. 优先直接匹配
-            if hay.contains(&k) {
-                return true;
+            let score = score_command(&c, k_ref);
+            if score > 0 {
+                Some((score, c))
+            } else {
+                None
             }
-
-            // 2. 拼音首字母匹配
-            let initials = get_pinyin_initials(&hay);
-            let keyword_initials = get_pinyin_initials(&k);
-            if initials.contains(&keyword_initials) {
-                return true;
-            }
-
-            // 3. 连续首字母匹配
-            let keyword_chars: Vec<char> = keyword_initials.chars().collect();
-            let mut keyword_idx = 0;
-            for char in initials.chars() {
-                if keyword_idx < keyword_chars.len() && char == keyword_chars[keyword_idx] {
-                    keyword_idx += 1;
-                    if keyword_idx == keyword_chars.len() {
-                        return true;
-                    }
-                }
-            }
-
-            false
         })
         .collect();
 
+    // 按得分降序排序
+    scored.sort_by(|a, b| b.0.cmp(&a.0));
+
+    let filtered: Vec<CommandEntry> = scored.into_iter().map(|(_, c)| c).collect();
     let match_count = filtered.len();
     Ok(CommandSearchResult {
         filtered,
@@ -280,56 +283,75 @@ pub fn search_commands(request: CommandSearchRequest) -> Result<CommandSearchRes
     })
 }
 
-/// 搜索脚本（支持拼音匹配）
+/// 计算脚本的搜索得分（按字段分别匹配）
+fn score_script(script: &ScriptFileMeta, keyword: &str) -> i32 {
+    let mut score = 0;
+
+    // 文件名匹配（权重最高）
+    score = score.max(pinyin_match_score(&script.name, keyword) * 10);
+
+    // 描述匹配
+    if let Some(ref desc) = script.description {
+        score = score.max(pinyin_match_score(desc, keyword) * 5);
+    }
+
+    // 元数据字段匹配
+    if let Some(ref metadata) = script.metadata {
+        // 脚本内部名称
+        score = score.max(pinyin_match_score(&metadata.name, keyword) * 8);
+
+        // 描述
+        score = score.max(pinyin_match_score(&metadata.description, keyword) * 5);
+
+        if let Some(ref short_desc) = metadata.short_description {
+            score = score.max(pinyin_match_score(short_desc, keyword) * 6);
+        }
+
+        // 分类
+        score = score.max(pinyin_match_score(&metadata.category, keyword) * 2);
+
+        // 标签（按标签单独匹配）
+        for tag in &metadata.tags {
+            score = score.max(pinyin_match_score(tag, keyword) * 3);
+        }
+    }
+
+    score
+}
+
+/// 搜索脚本（支持拼音匹配，按字段分别匹配 + 评分排序）
 #[tauri::command]
 pub fn search_scripts(request: ScriptSearchRequest) -> Result<ScriptSearchResult, String> {
     let ScriptSearchRequest { keyword, scripts } = request;
 
     let k = keyword.trim().to_lowercase();
-    let script_count = scripts.len();
 
     if k.is_empty() {
+        let count = scripts.len();
         return Ok(ScriptSearchResult {
             filtered: scripts,
-            match_count: script_count,
+            match_count: count,
         });
     }
 
-    let filtered: Vec<ScriptFileMeta> = scripts
+    let k_ref = &k;
+
+    let mut scored: Vec<(i32, ScriptFileMeta)> = scripts
         .into_iter()
-        .filter(|s| {
-            if s.name.to_lowercase().contains(&k) {
-                return true;
+        .filter_map(|s| {
+            let score = score_script(&s, k_ref);
+            if score > 0 {
+                Some((score, s))
+            } else {
+                None
             }
-
-            if let Some(ref desc) = s.description {
-                if desc.to_lowercase().contains(&k) {
-                    return true;
-                }
-            }
-
-            let initials_match = fuzzy_match_pinyin(&s.name, &k);
-            if initials_match.matched {
-                return true;
-            }
-
-            if let Some(ref metadata) = s.metadata {
-                if metadata.name.to_lowercase().contains(&k)
-                    || metadata.description.to_lowercase().contains(&k)
-                    || metadata.category.to_lowercase().contains(&k)
-                {
-                    return true;
-                }
-
-                if metadata.tags.iter().any(|t| t.to_lowercase().contains(&k)) {
-                    return true;
-                }
-            }
-
-            false
         })
         .collect();
 
+    // 按得分降序排序
+    scored.sort_by(|a, b| b.0.cmp(&a.0));
+
+    let filtered: Vec<ScriptFileMeta> = scored.into_iter().map(|(_, s)| s).collect();
     let match_count = filtered.len();
     Ok(ScriptSearchResult {
         filtered,

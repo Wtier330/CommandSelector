@@ -269,7 +269,7 @@ onUnmounted(() => {
 
         <!-- 管理分类按钮 -->
         <button
-          class="cs-btn cs-btn-icon cs-btn-ghost cs-manage-category-btn"
+          class="cs-btn-icon cs-btn-icon-sm cs-btn-ghost cs-manage-category-btn"
           type="button"
           title="管理分类"
           @click="openCategoryManage"
@@ -591,28 +591,6 @@ onUnmounted(() => {
 
 .cs-manage-category-btn {
   flex-shrink: 0;
-}
-
-.cs-btn-icon {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-}
-
-.cs-btn-ghost {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--claude-text-secondary);
-}
-
-.cs-btn-ghost:hover {
-  background: var(--claude-border-warm);
-  border-color: var(--claude-border-warm);
-  color: var(--claude-text-primary);
 }
 
 .cs-dialog-overlay {

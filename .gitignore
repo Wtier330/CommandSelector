@@ -2,6 +2,7 @@ node_modules/
 dist/
 .turbo/
 .DS_Store
+build.ps1
 
 # Tauri
 **/src-tauri/target/

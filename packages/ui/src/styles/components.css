@@ -282,3 +282,111 @@
   outline: none;
   box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.1);
 }
+
+/* ---- Edit Form Buttons ---- */
+.cs-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cs-btn-sm {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.cs-btn-primary {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.cs-btn-primary:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.cs-btn-outline {
+  background: white;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.cs-btn-outline:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.cs-btn-ai {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #a855f7;
+  background: #faf5ff;
+  color: #a855f7;
+  transition: all 0.2s ease;
+}
+
+.cs-btn-ai:hover:not(:disabled) {
+  background: #f3e8ff;
+  border-color: #9333ea;
+}
+
+.cs-btn-ai:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cs-btn-ai-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.cs-btn-ai-icon svg {
+  animation: cs-spin 1s linear infinite;
+}
+
+.cs-btn-ai-step {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+@keyframes cs-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ---- Collapse Transition ---- */
+.cs-collapse-enter-active,
+.cs-collapse-leave-active {
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.cs-collapse-enter-from,
+.cs-collapse-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+
+.cs-collapse-enter-to,
+.cs-collapse-leave-from {
+  opacity: 1;
+  max-height: 400px;
+}
+
+/* ---- Inline Field Error ---- */
+.cs-field-error {
+  font-size: 12px;
+  color: #b91c1c;
+}

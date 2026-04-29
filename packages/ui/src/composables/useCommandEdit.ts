@@ -26,24 +26,35 @@ export function useCommandEdit(selected: Ref<CommandEntry | null>) {
   }
 
   // 保存编辑
-  function saveCommandEdit(onUpdate: (command: CommandEntry) => void, showToast: (msg: string, type: "success" | "error") => void) {
+  function saveCommandEdit(
+    onUpdate: (command: CommandEntry) => void,
+    showToast: (msg: string, type: "success" | "error") => void,
+    paramErrors?: Record<string, string[]>
+  ) {
     if (!draftCommand.value) return;
     if (!draftCommand.value.name.trim()) {
       showToast("命令名称不能为空", "error");
       return;
     }
-    if (!draftCommand.value.template.trim()) {
+    // 根据当前模板模式校验对应模板
+    const activeTemplate = templateEditMode.value === "powershell"
+      ? draftCommand.value.powershellTemplate
+      : draftCommand.value.template;
+    if (!activeTemplate?.trim()) {
       showToast("命令模板不能为空", "error");
       return;
+    }
+    // 校验参数配置
+    if (paramErrors) {
+      const hasErrors = Object.values(paramErrors).some(errs => errs.length > 0);
+      if (hasErrors) {
+        showToast("请修正参数配置中的错误", "error");
+        return;
+      }
     }
     onUpdate(draftCommand.value);
     isCommandEditing.value = false;
     showToast("保存成功", "success");
-  }
-
-  // 切换模板编辑模式
-  function handleEngineChange() {
-    // templateEditMode 切换即可
   }
 
   // 标签字符串计算属性
@@ -74,6 +85,5 @@ export function useCommandEdit(selected: Ref<CommandEntry | null>) {
     startCommandEdit,
     cancelCommandEdit,
     saveCommandEdit,
-    handleEngineChange
   };
 }

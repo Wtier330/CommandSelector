@@ -51,6 +51,14 @@ pub fn run() {
             global_hotkey::toggle_window_visibility,
         ])
         .setup(move |app| {
+            // 设置主窗口图标
+            if let Some(window) = app.get_webview_window("main") {
+                let window_icon = tauri::image::Image::from_bytes(include_bytes!(
+                    "../icons/icon.ico"
+                ))?;
+                let _ = window.set_icon(window_icon);
+            }
+
             // 创建托盘菜单
             let toggle_item = MenuItem::with_id(
                 app, "toggle_visibility", "显示/隐藏主窗口", true, None::<&str>,

@@ -22,7 +22,7 @@ const showAIBtn = computed(() => props.isAIConfigured === true);
 <template>
   <div class="cs-dialog-actions">
     <button
-      class="cs-btn cs-btn-icon"
+      class="cs-btn-icon cs-btn-icon--text"
       type="button"
       title="插入注释模板 (Ctrl+Shift+D)"
       @click="emit('insert-template')"
@@ -32,7 +32,7 @@ const showAIBtn = computed(() => props.isAIConfigured === true);
     </button>
     <button
       v-if="showAIBtn"
-      class="cs-btn cs-btn-icon cs-btn-ai"
+      class="cs-btn-icon cs-btn-icon--text cs-btn-ai"
       type="button"
       title="AI 生成元数据"
       :disabled="isGenerating"
@@ -47,7 +47,7 @@ const showAIBtn = computed(() => props.isAIConfigured === true);
       <span>{{ isGenerating ? 'AI 生成中...' : 'AI 生成' }}</span>
     </button>
     <button
-      class="cs-btn cs-btn-icon"
+      class="cs-btn-icon cs-btn-icon--text"
       type="button"
       title="保存 (Ctrl+S)"
       :disabled="isSaving"
@@ -71,52 +71,6 @@ const showAIBtn = computed(() => props.isAIConfigured === true);
 .cs-dialog-actions {
   display: flex;
   gap: 8px;
-}
-
-.cs-btn-icon {
-  padding: 4px 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.cs-btn-icon:hover:not(:disabled) {
-  background: #f3f4f6;
-}
-
-.cs-btn-icon:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.cs-btn-icon svg {
-  width: 16px;
-  height: 16px;
-  stroke-width: 2px;
-}
-
-.cs-btn-icon span {
-  font-size: 13.5px;
-}
-
-/* AI 按钮特殊样式 */
-.cs-btn-ai {
-  background: #f3e8ff;
-  color: #9333ea;
-}
-
-.cs-btn-ai:hover:not(:disabled) {
-  background: #e9d5ff;
-}
-
-.cs-btn-ai:disabled {
-  background: #f3e8ff;
 }
 
 /* 旋转动画 */

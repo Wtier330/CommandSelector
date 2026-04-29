@@ -148,7 +148,7 @@ onUnmounted(() => {
                 <div class="cs-category-meta">
                   <span class="cs-category-count">{{ categoryCommandCount[cat] || 0 }} 条命令</span>
                   <button
-                    class="cs-btn cs-btn-icon cs-btn-danger"
+                    class="cs-btn-icon cs-btn-icon-sm cs-btn-danger"
                     type="button"
                     :title="categoryCommandCount[cat] > 0 ? '删除分类' : '删除空分类'"
                     @click="openDeleteConfirm(cat)"
@@ -386,27 +386,6 @@ onUnmounted(() => {
 .cs-category-count {
   font-size: 12px;
   color: var(--claude-text-tertiary);
-}
-
-.cs-btn-icon {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cs-btn-danger {
-  color: var(--claude-error);
-  border-color: var(--claude-border-warm);
-  background: var(--claude-parchment);
-}
-
-.cs-btn-danger:hover:not(:disabled) {
-  background: var(--claude-error);
-  border-color: var(--claude-error);
-  color: var(--claude-ivory);
 }
 
 /* 删除确认对话框 */

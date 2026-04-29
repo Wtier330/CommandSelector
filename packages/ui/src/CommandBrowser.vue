@@ -485,48 +485,39 @@ defineExpose({
                   </template>
                 </header>
 
-                <!-- 2. 最终命令预览（核心区域） -->
-                <section class="cs-view-section cs-preview-section">
-                  <CommandPreview
-                    :final-command="finalCommand"
-                    :powershell-template="powershellTemplate"
-                    :can-copy="canCopy"
-                    :validation-ok="finalValidation.ok"
-                    :validation-reasons="finalValidation.reasons"
-                    @copy="handleCopy()"
-                  />
-                </section>
+                <!-- 编辑模式下只显示编辑表单，隐藏预览/参数/使用说明 -->
+                <template v-if="!isCommandEditing">
+                  <!-- 2. 最终命令预览（核心区域） -->
+                  <section class="cs-view-section cs-preview-section">
+                    <CommandPreview
+                      :final-command="finalCommand"
+                      :powershell-template="powershellTemplate"
+                      :can-copy="canCopy"
+                      :validation-ok="finalValidation.ok"
+                      :validation-reasons="finalValidation.reasons"
+                      @copy="handleCopy()"
+                    />
+                  </section>
 
-                <!-- 3. 参数配置 -->
-                <section v-if="selected" class="cs-view-section cs-params-section">
-                  <ParameterForm
-                    :command="selected"
-                    :param-defs="paramDefs"
-                    :param-values="paramValues"
-                    :param-errors="paramErrors"
-                    @update:paramValue="updateParam"
-                    @update:command="$emit('update:command', $event)"
-                  />
-                </section>
+                  <!-- 3. 参数配置 -->
+                  <section v-if="selected" class="cs-view-section cs-params-section">
+                    <ParameterForm
+                      :command="selected"
+                      :param-defs="paramDefs"
+                      :param-values="paramValues"
+                      :param-errors="paramErrors"
+                      @update:paramValue="updateParam"
+                    />
+                  </section>
 
-                <!-- 4. 使用说明 -->
-                <section v-if="selected?.usage || isCommandEditing" class="cs-view-section cs-usage-wrapper">
-                  <template v-if="isCommandEditing && draftCommand">
-                    <h2 class="cs-section-title-text cs-params-header">编辑使用说明</h2>
-                    <textarea
-                      v-model="draftCommand.usage"
-                      class="cs-input cs-textarea"
-                      rows="4"
-                      placeholder="补充说明或注意事项"
-                    ></textarea>
-                  </template>
-                  <template v-else-if="selected">
+                  <!-- 4. 使用说明 -->
+                  <section v-if="selected?.usage" class="cs-view-section cs-usage-wrapper">
                     <UsageInstruction
                       :usage="selected.usage"
                       :collapsible="usageCollapsible"
                     />
-                  </template>
-                </section>
+                  </section>
+                </template>
               </div>
             </div>
 

@@ -14,6 +14,7 @@ export * from "./composables/useScriptMetadata";
 export * from "./composables/useScriptTemplates";
 export * from "./composables/useKeyboardShortcuts";
 export * from "./composables/useCommandEdit";
+export * from "./composables/useParamEdit";
 export * from "./composables/useAIMetadata";
 export * from "./composables/useCommandAIMetadata";
 export * from "./composables/usePinyinSearch";
