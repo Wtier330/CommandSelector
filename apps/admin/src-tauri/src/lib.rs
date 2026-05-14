@@ -36,6 +36,7 @@ pub fn run() {
             file_ops::write_script_file,
             file_ops::delete_script_file,
             file_ops::copy_script_file,
+            file_ops::list_script_files,
             debug::read_debug_log,
             debug::get_logs_dir,
             debug::diagnose_logs,

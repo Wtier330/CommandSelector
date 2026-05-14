@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, toRef } from "vue";
 import type { ScriptFileMeta, ScriptType } from "@commandselector/shared";
 import ScriptCard from "./ScriptCard.vue";
 import { fuzzyMatch } from "../composables/usePinyinSearch";
+import { useScriptDedup } from "../composables/useScriptDedup";
 
 const props = defineProps<{
   scripts: ScriptFileMeta[];
@@ -11,7 +12,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "edit", id: string): void;
   (e: "more", id: string): void;
+  (e: "toggle-dedup", id: string): void;
 }>();
+
+// 脚本去重
+const { getDuplicates } = useScriptDedup(toRef(props, 'scripts'));
 
 // 视图模式
 const viewMode = ref<'grid' | 'list'>('grid');
@@ -302,8 +307,10 @@ function handleCategorySelect(category: string) {
           :key="script.id"
           :script="script"
           :compact="viewMode === 'list'"
+          :duplicates="getDuplicates(script)"
           @edit="handleEdit"
           @more="handleMore"
+          @toggle-dedup="emit('toggle-dedup', $event)"
         />
       </template>
       <div v-else class="cs-empty-state">

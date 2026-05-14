@@ -7,6 +7,7 @@ export { default as ProjectInfoModal } from "./components/ProjectInfoModal.vue";
 export { default as ModeSwitcher } from "./components/ModeSwitcher.vue";
 export { default as ScriptCard } from "./components/ScriptCard.vue";
 export { default as ScriptCardGridView } from "./components/ScriptCardGridView.vue";
+export { default as ScriptDedupPopover } from "./components/ScriptDedupPopover.vue";
 export { default as AIConfigDialog } from "./components/AIConfigDialog.vue";
 export { default as AIPromptConfig } from "./components/AIPromptConfig.vue";
 export { default as NotificationDialog } from "./components/NotificationDialog.vue";
@@ -19,6 +20,7 @@ export * from "./composables/useParamEdit";
 export * from "./composables/useAIMetadata";
 export * from "./composables/useCommandAIMetadata";
 export * from "./composables/usePinyinSearch";
+export * from "./composables/useScriptDedup";
 export * from "./utils/scriptCommentParser";
 export * from "./utils/commentTemplates";
 export {

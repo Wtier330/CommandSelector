@@ -110,7 +110,9 @@ onUnmounted(() => {
       <div class="cs-dialog">
         <div class="cs-dialog-header">
           <div class="cs-dialog-title">管理分类</div>
-          <button class="cs-dialog-close" type="button" @click="emit('close')">&times;</button>
+          <button class="cs-btn-icon cs-btn-icon-sm" type="button" title="关闭" @click="emit('close')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
         <div class="cs-dialog-body">
           <!-- 添加新分类 -->
@@ -174,7 +176,9 @@ onUnmounted(() => {
       <div class="cs-dialog cs-dialog-confirm">
         <div class="cs-dialog-header">
           <div class="cs-dialog-title">确认删除分类</div>
-          <button class="cs-dialog-close" type="button" @click="closeDeleteConfirm">&times;</button>
+          <button class="cs-btn-icon cs-btn-icon-sm" type="button" title="关闭" @click="closeDeleteConfirm">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
         <div class="cs-dialog-body">
           <div class="cs-confirm-warning">
@@ -237,71 +241,14 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.cs-dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(20, 20, 19, 0.4);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
 .cs-dialog {
-  background: var(--claude-ivory);
-  border: 1px solid var(--claude-border);
-  border-radius: var(--claude-radius-lg);
   width: 480px;
   max-width: 90%;
   max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.08);
 }
 
 .cs-dialog-confirm {
   width: 420px;
-}
-
-.cs-dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--claude-border-warm);
-}
-
-.cs-dialog-title {
-  font-family: var(--claude-font-serif);
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--claude-text-primary);
-}
-
-.cs-dialog-close {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  font-size: 24px;
-  color: var(--claude-text-secondary);
-  cursor: pointer;
-  border-radius: var(--claude-radius-sm);
-  transition: background 0.2s;
-}
-
-.cs-dialog-close:hover {
-  background: var(--claude-border-warm);
-}
-
-.cs-dialog-body {
-  padding: 20px;
-  overflow-y: auto;
-  flex: 1;
 }
 
 /* 添加分类部分 */

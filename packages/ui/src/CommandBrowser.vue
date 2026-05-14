@@ -7,6 +7,7 @@ import { useCommandParams } from "./composables/useCommandParams";
 import { useCommandEdit } from "./composables/useCommandEdit";
 import { useCommandAIMetadata } from "./composables/useCommandAIMetadata";
 import { useRustSearch } from "./composables/useRustSearch";
+import { useScriptDedup } from "./composables/useScriptDedup";
 
 import CommandSidebar from "./components/CommandSidebar.vue";
 import CommandPreview from "./components/CommandPreview.vue";
@@ -47,7 +48,9 @@ const emit = defineEmits<{
   (e: "update:mode", value: 'command' | 'script'): void;
   (e: "edit-script", id: string): void;
   (e: "more-script", id: string): void;
+  (e: "toggle-dedup", id: string): void;
 }>();
+
 
 const { commands, trashedCommands } = toRefs(props);
 
@@ -169,6 +172,10 @@ watch(
 );
 
 const filteredScripts = computed(() => rustFilteredScripts.value);
+
+// 脚本去重
+const allScripts = computed(() => props.scripts ?? []);
+const { getDuplicates } = useScriptDedup(allScripts);
 
 // 3. 选择逻辑
 const internalSelectedId = ref<string>(props.selectedId ?? "");
@@ -528,7 +535,9 @@ defineExpose({
                   v-for="script in filteredScripts"
                   :key="script.id"
                   :script="script"
+                  :duplicates="getDuplicates(script)"
                   @edit="$emit('edit-script', $event)"
+                  @toggle-dedup="$emit('toggle-dedup', $event)"
                 />
               </div>
               <div v-if="filteredScripts.length === 0" class="cs-empty-state">

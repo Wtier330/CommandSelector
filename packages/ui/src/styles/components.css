@@ -390,3 +390,61 @@
   font-size: 12px;
   color: #b91c1c;
 }
+
+/* ---- Dialog Shell ---- */
+.cs-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 19, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.cs-dialog {
+  background: var(--claude-ivory, #faf9f5);
+  border: 1px solid var(--claude-border-warm, #f0eee6);
+  border-radius: 12px;
+  min-width: 520px;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.cs-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--claude-border-warm, #e8e6dc);
+  flex-shrink: 0;
+}
+
+.cs-dialog-title {
+  font-family: "Georgia", serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--cs-text, #141413);
+  margin: 0;
+}
+
+.cs-dialog-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.cs-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--claude-border-warm, #e5e7eb);
+  background: var(--claude-parchment, #fafafa);
+  border-radius: 0 0 12px 12px;
+  flex-shrink: 0;
+}

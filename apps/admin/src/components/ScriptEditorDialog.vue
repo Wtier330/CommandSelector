@@ -352,7 +352,7 @@ loadScriptContent();
                 v-model="scriptContent"
                 :language="monacoLanguage"
                 @update:model-value="handleContentChange"
-"              />
+              />
             </div>
           </div>
         </div>
@@ -387,62 +387,47 @@ loadScriptContent();
 </template>
 
 <style scoped>
-/* 确保 overlay 不阻止鼠标事件 */
 .cs-dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 3000;
+  background: rgba(20, 20, 19, 0.5);
 }
 
 .cs-dialog {
-  background: white;
-  border-radius: 12px;
   width: 1000px;
   max-width: 95%;
   max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  position: relative;
+  background: var(--claude-ivory, #faf9f5);
 }
 
 .cs-dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom-color: var(--claude-border-warm, #e8e6dc);
 }
 
 .cs-dialog-title {
+  font-family: var(--claude-font-serif, Georgia), serif;
   font-size: 18px;
-  font-weight: 600;
-  color: #111827;
+  font-weight: 500;
+  color: var(--claude-text-primary, #141413);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .cs-unsaved-indicator {
-  font-size: 12px;
-  margin-left: 8px;
-  color: #f59e0b;
+  font-size: 10px;
+  color: var(--claude-terracotta, #c96442);
 }
 
-/* 对话框主体 */
 .cs-dialog-body {
-  flex: 1;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 0 24px 24px 24px;
-  position: relative;
-  /* 确保编辑器不会溢出到按钮区域 */
-  max-height: calc(90vh - 80px);
-  /* 确保编辑器不会遮挡按钮 */
-  overflow: auto;
+  padding-top: 0;
+}
+
+.cs-dialog-footer {
+  border-top-color: var(--claude-border-warm, #e8e6dc);
+  background: var(--claude-parchment, #f5f4ed);
 }
 
 .cs-loading-state,
@@ -451,11 +436,11 @@ loadScriptContent();
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  color: #6b7280;
+  color: var(--claude-text-secondary, #5e5d59);
 }
 
 .cs-error-state {
-  color: #ef4444;
+  color: var(--claude-error, #b53333);
 }
 
 .cs-editor-layout {
@@ -463,18 +448,17 @@ loadScriptContent();
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+  flex: 1;
+  min-height: 0;
 }
 
-/* 编辑器区域 */
 .cs-editor-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
   min-width: 0;
-  position: relative;
-  /* 确保编辑器区域不会遮挡底部按钮 */
-  flex-shrink: 0;
-  overflow: visible;
+  flex: 1;
+  min-height: 0;
 }
 
 .cs-editor-header {
@@ -485,9 +469,9 @@ loadScriptContent();
 }
 
 .cs-editor-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: #111827;
+  color: var(--claude-text-primary, #141413);
 }
 
 .cs-editor-info {
@@ -496,36 +480,24 @@ loadScriptContent();
 }
 
 .cs-editor-type {
-  padding: 4px 12px;
-  background: #dbeafe;
-  border: 1px solid #3b82f6;
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #3b82f6;
+  padding: 3px 10px;
+  background: var(--claude-parchment, #f5f4ed);
+  border: 1px solid var(--claude-border-warm, #e8e6dc);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--claude-text-secondary, #5e5d59);
 }
 
-/* 底部按钮 */
-.cs-dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px;
-  border-top: 1px solid #e5e7eb;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 10;
-}
-
+/* 底部按钮 — Claude Terracotta + Warm Sand */
 .cs-btn {
-  padding: 10px 20px;
+  padding: 8px 18px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid;
   transition: all 0.2s ease;
-  /* 确保按钮可点击 */
   pointer-events: auto;
 }
 
@@ -535,24 +507,26 @@ loadScriptContent();
 }
 
 .cs-btn-primary {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
+  background: var(--claude-terracotta, #c96442);
+  color: var(--claude-ivory, #faf9f5);
+  border-color: var(--claude-terracotta, #c96442);
+  box-shadow: var(--claude-terracotta, #c96442) 0px 0px 0px 0px, var(--claude-terracotta, #c96442) 0px 0px 0px 1px;
 }
 
 .cs-btn-primary:hover:not(:disabled) {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: #b85330;
+  border-color: #b85330;
 }
 
 .cs-btn-outline {
-  background: white;
-  color: #374151;
-  border-color: #d1d5db;
+  background: var(--claude-warm-sand, #e8e6dc);
+  color: var(--claude-charcoal-warm, #4d4c48);
+  border-color: var(--claude-border-warm, #e8e6dc);
+  box-shadow: #e8e6dc 0px 0px 0px 0px, #d1cfc5 0px 0px 0px 1px;
 }
 
 .cs-btn-outline:hover:not(:disabled) {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: var(--claude-border-warm, #d1cfc5);
+  box-shadow: #d1cfc5 0px 0px 0px 0px, #c2c0b6 0px 0px 0px 1px;
 }
 </style>

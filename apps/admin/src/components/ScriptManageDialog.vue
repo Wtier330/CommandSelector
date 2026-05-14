@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from "vue";
 import type { ScriptFileMeta, ScriptType } from "@commandselector/shared";
 import { useScriptsStore } from "../store/scripts";
-import { useKeyboardShortcuts } from "@commandselector/ui";
+import { useKeyboardShortcuts, ScriptDedupPopover, useScriptDedup } from "@commandselector/ui";
 import { useScriptFilters } from "../composables/useScriptFilters";
 import { useMessage } from "../composables/useMessage";
 import CreateScriptDialog from "./CreateScriptDialog.vue";
@@ -20,8 +20,24 @@ const {
   scripts,
   loadScripts,
   deleteScript,
-  exportScript
+  exportScript,
+  updateScriptMeta
 } = useScriptsStore();
+
+// 同名去重
+const { getDuplicates } = useScriptDedup(scripts);
+const showDedupFor = ref<string | null>(null);
+const dedupTriggerRect = ref<DOMRect | null>(null);
+
+const dedupScript = computed(() => {
+  return showDedupFor.value ? scripts.value.find(s => s.id === showDedupFor.value) : null;
+});
+
+function handleDedupBadgeClick(scriptId: string, event: MouseEvent) {
+  const target = event.currentTarget as HTMLElement;
+  dedupTriggerRect.value = target.getBoundingClientRect();
+  showDedupFor.value = showDedupFor.value === scriptId ? null : scriptId;
+}
 
 const showCreateDialog = ref(false);
 const showEditDialog = ref(false);
@@ -152,7 +168,50 @@ async function handleImportScript() {
     await importScript();
     await handleLoadScripts();
   } catch (e: any) {
-    message.error(`导入导入: ${e.message}`);
+    message.error(`导入失败: ${e.message}`);
+  }
+}
+
+async function handleToggleScriptDedup(id: string) {
+  try {
+    await updateScriptMeta(id, { excludeFromDedup: true });
+    showDedupFor.value = null;
+    message.success("已排除，不再纳入同名检测");
+  } catch (e: any) {
+    message.error(`排除失败: ${e.message}`);
+  }
+}
+
+async function handleImportFolder() {
+  try {
+    const { importScriptFolder } = useScriptsStore();
+    const result = await importScriptFolder();
+
+    if (result.total === 0) {
+      if (result.errors.length > 0) {
+        message.warning(result.errors[0]);
+      }
+      return;
+    }
+
+    await handleLoadScripts();
+
+    const parts: string[] = [];
+    parts.push(`共找到 ${result.total} 个脚本文件`);
+    parts.push(`成功导入 ${result.imported} 个`);
+    if (result.skipped > 0) {
+      parts.push(`跳过 ${result.skipped} 个`);
+    }
+    message.success(parts.join("，"));
+
+    if (result.errors.length > 0) {
+      // 延迟显示错误详情，避免立即覆盖成功消息
+      setTimeout(() => {
+        message.warning(`部分文件导入失败: ${result.errors.slice(0, 3).join("; ")}${result.errors.length > 3 ? "..." : ""}`);
+      }, 2000);
+    }
+  } catch (e: any) {
+    message.error(`导入文件夹失败: ${e.message}`);
   }
 }
 
@@ -195,7 +254,9 @@ onMounted(() => {
       <div class="cs-dialog">
         <div class="cs-dialog-header">
           <div class="cs-dialog-title">管理批处理脚本</div>
-          <button class="cs-dialog-close" type="button" @click="emit('close')">&times;</button>
+          <button class="cs-btn-icon cs-btn-icon-sm" type="button" title="关闭" @click="emit('close')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
 </div>
 
         <div class="cs-dialog-body">
@@ -205,6 +266,7 @@ onMounted(() => {
             :formatSourceName="formatSourceName"
             @create="openCreateDialog"
             @import="handleImportScript"
+            @import-folder="handleImportFolder"
             @update:keyword="keyword = $event"
             @update:selectedType="selectedType = $event"
             @update:selectedSource="selectedSource = $event"
@@ -240,7 +302,19 @@ onMounted(() => {
             <div v-for="script in filteredScripts" :key="script.id" class="cs-script-item">
               <div class="cs-script-icon">{{ script.type === 'ps1' ? "PS" : "BAT" }}</div>
               <div class="cs-script-info">
-                <div class="cs-script-name">{{ script.name }}</div>
+                <div class="cs-script-name">
+                  {{ script.name }}
+                  <template v-if="getDuplicates(script).length > 0">
+                    <button
+                      class="cs-dedup-badge-inline"
+                      type="button"
+                      :title="`${getDuplicates(script).length} 个同名脚本`"
+                      @click.stop="handleDedupBadgeClick(script.id, $event)"
+                    >
+                      {{ getDuplicates(script).length }}
+                    </button>
+                  </template>
+                </div>
                 <div class="cs-script-meta">
                   <span>{{ formatSize(script.size) }}</span>
                   <span>{{ formatTime(script.updatedAt) }}</span>
@@ -250,13 +324,28 @@ onMounted(() => {
                 </div>
               </div>
               <div class="cs-script-actions">
-                <button class="cs-action-btn" title="编辑" type="button" @click="openEditDialog(script)">✏️</button>
-                <button class="cs-action-btn" title="导出" type="button" :disabled="isExporting === script.id" @click="handleExportScript(script)">📤</button>
-                <button class="cs-action-btn cs-action-delete" title="删除" type="button" :disabled="isDeleting === script.id" @click="handleDeleteScript(script)">🗑️</button>
+                <button class="cs-action-btn" title="编辑" type="button" @click="openEditDialog(script)">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+                <button class="cs-action-btn" title="导出" type="button" :disabled="isExporting === script.id" @click="handleExportScript(script)">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </button>
+                <button class="cs-action-btn cs-action-delete" title="删除" type="button" :disabled="isDeleting === script.id" @click="handleDeleteScript(script)">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
               </div>
             </div>
           </div>
         </div>
+
+        <ScriptDedupPopover
+          v-if="dedupScript && getDuplicates(dedupScript).length > 0"
+          :scripts="[...getDuplicates(dedupScript), dedupScript]"
+          :current-id="dedupScript.id"
+          :trigger-rect="dedupTriggerRect"
+          @close="showDedupFor = null"
+          @exclude="handleToggleScriptDedup"
+        />
 
         <div class="cs-dialog-footer">
           <button class="cs-btn cs-btn-outline" type="button" @click="emit('close')">关闭</button>
@@ -287,69 +376,14 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.cs-dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(20, 20, 19, 0.4);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
+/* 对话框尺寸覆盖 */
 .cs-dialog {
-  background: var(--claude-ivory, white);
-  border: 1px solid var(--claude-border, #e5e7eb);
-  border-radius: var(--claude-radius-lg, 12px);
   width: 850px;
   max-width: 95%;
   max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.08);
 }
 
-.cs-dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--claude-border-warm, #e5e7eb);
-}
-
-.cs-dialog-title {
-  font-family: var(--claude-font-serif, system-ui);
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--claude-text-primary, #111827);
-}
-
-.cs-dialog-close {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  font-size: 24px;
-  color: var(--claude-text-secondary, #6b7280);
-  cursor: pointer;
-  border-radius: var(--claude-radius-sm, 4px);
-  transition: background 0.2s;
-}
-
-.cs-dialog-close:hover {
-  background: var(--claude-border-warm, #f3f4f6);
-}
-
-.cs-dialog-body {
-  padding: 20px 24px;
-  overflow-y: auto;
-  flex: 1;
-}
-
+/* 状态区 */
 .cs-loading-state, .cs-error-state, .cs-empty-state {
   display: flex;
   flex-direction: column;
@@ -386,6 +420,7 @@ onMounted(() => {
   to { transform: rotate(360deg); }
 }
 
+/* 脚本列表 */
 .cs-script-list {
   display: flex;
   flex-direction: column;
@@ -429,6 +464,10 @@ onMounted(() => {
 }
 
 .cs-script-name {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 15px;
   font-weight: 500;
   color: var(--claude-text-primary, #111827);
@@ -463,66 +502,64 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
+/* 操作按钮 — Warm Sand 底板 + ring 阴影，符合 Claude 设计规范 */
 .cs-action-btn {
   width: 36px;
   height: 36px;
   border: none;
-  border-radius: var(--claude-radius-sm, 6px);
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--claude-parchment, #f3f4f6);
-  color: var(--claude-text-secondary, #6b7280);
+  background: var(--claude-warm-sand, #e8e6dc);
+  color: var(--claude-charcoal-warm, #4d4c48);
+  box-shadow: #e8e6dc 0px 0px 0px 0px, #d1cfc5 0px 0px 0px 1px;
   transition: all 0.2s ease;
 }
 
 .cs-action-btn:hover:not(:disabled) {
-  background: var(--claude-border-warm, #e5e7eb);
-  color: var(--claude-text-primary, #111827);
+  background: var(--claude-border-warm, #d1cfc5);
+  box-shadow: #d1cfc5 0px 0px 0px 0px, #c2c0b6 0px 0px 0px 1px;
   transform: translateY(-1px);
+}
+
+.cs-action-btn:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .cs-action-delete:hover:not(:disabled) {
   background: #fef2f2;
-  color: #dc2626;
-  border-color: #fecaca;
+  color: #b53333;
+  box-shadow: #fef2f2 0px 0px 0px 0px, #fecaca 0px 0px 0px 1px;
 }
 
 .cs-action-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.cs-dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px;
-  border-top: 1px solid var(--claude-border-warm, #e5e7eb);
-  background: var(--claude-parchment, #fafafa);
-  border-radius: 0 0 var(--claude-radius-lg, 12px) var(--claude-radius-lg, 12px);
-}
-
-.cs-btn {
-  padding: 10px 20px;
-  border-radius: var(--claude-radius-sm, 6px);
-  font-size: 14px;
-  font-weight: 500;
+/* 同名去重内联标记 */
+.cs-dedup-badge-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 1px solid #fde68a;
+  border-radius: 9px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 10px;
+  font-weight: 600;
   cursor: pointer;
-  border: 1px solid;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
-.cs-btn-outline {
-  background: var(--claude-ivory, white);
-  color: var(--claude-text-primary, #374151);
-  border-color: var(--claude-border-warm, #d1d5db);
-}
-
-.cs-btn-outline:hover {
-  background: var(--claude-parchment, #f9fafb);
-  border-color: var(--claude-text-tertiary, #9ca3af);
+.cs-dedup-badge-inline:hover {
+  background: #fde68a;
+  border-color: #fbbf24;
 }
 </style>

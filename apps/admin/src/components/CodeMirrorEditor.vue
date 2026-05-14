@@ -29,8 +29,6 @@ const view = shallowRef<EditorView>();
 const resizeObserver = shallowRef<ResizeObserver>();
 const readonlyCompartment = new Compartment();
 
-const editorHeight = ref<string>('400px');
-
 // BAT 关键字列表
 const batchKeywords = new Set([
   "if", "else", "elseif", "for", "do", "in", "goto", "call", "exit", "return", "rem", "set",
@@ -115,7 +113,6 @@ const editorTheme = EditorView.theme({
   ".cm-selectionBackground": {
     backgroundColor: "#b4d5fe"
   },
-  // 语法高亮覆盖 - 使用 cm- 前缀确保高优先级
   ".cm-content .tok-comment": { color: "#6A9955 !important", fontStyle: "italic" },
   ".cm-content .tok-keyword": { color: "#0000FF !important", fontWeight: "bold" },
   ".cm-content .tok-string": { color: "#A31515 !important" },
@@ -136,7 +133,6 @@ function syntaxHighlighter(state: EditorState) {
   for (const line of lines) {
     const trimmedLine = line.trim();
 
-    // 注释处理
     if (lang === 'powershell' || lang === 'ps1') {
       if (trimmedLine.startsWith('#')) {
         ranges.push({ from: offset, to: offset + line.length, class: "tok-comment" });
@@ -150,21 +146,18 @@ function syntaxHighlighter(state: EditorState) {
         continue;
       }
     } else if (lang === 'vbscript' || lang === 'vbs') {
-      // VBS 注释使用单引号
       if (trimmedLine.startsWith("'")) {
         ranges.push({ from: offset, to: offset + line.length, class: "tok-comment" });
         offset += line.length + 1;
         continue;
       }
     } else if (lang === 'python' || lang === 'py') {
-      // Python 注释使用 #
       if (trimmedLine.startsWith('#')) {
         ranges.push({ from: offset, to: offset + line.length, class: "tok-comment" });
         offset += line.length + 1;
         continue;
       }
     } else {
-      // BAT 注释
       if (trimmedLine.startsWith('::') || trimmedLine.toLowerCase().startsWith('rem ') ||
           (trimmedLine.startsWith('@') && trimmedLine.slice(1).trim().startsWith('::'))) {
         ranges.push({ from: offset, to: offset + line.length, class: "tok-comment" });
@@ -173,65 +166,44 @@ function syntaxHighlighter(state: EditorState) {
       }
     }
 
-    // 标签
     if (trimmedLine.startsWith(':')) {
       ranges.push({ from: offset, to: offset + line.length, class: "tok-labelName" });
       offset += line.length + 1;
       continue;
     }
 
-    // 简单的 token 分析
     const words = line.split(/\s+/);
     let wordOffset = offset;
 
     for (const word of words) {
-      if (!word) {
-        wordOffset++;
-        continue;
-      }
+      if (!word) { wordOffset++; continue; }
 
       const lowerWord = word.toLowerCase();
       const wordLen = word.length;
 
-      // 检查关键字
       let keywordsSet = batchKeywords;
-      if (lang === 'powershell' || lang === 'ps1') {
-        keywordsSet = ps1Keywords;
-      } else if (lang === 'shell' || lang === 'sh' || lang === 'bash') {
-        keywordsSet = shellKeywords;
-      } else if (lang === 'vbscript' || lang === 'vbs') {
-        keywordsSet = vbsKeywords;
-      } else if (lang === 'python' || lang === 'py') {
-        keywordsSet = pythonKeywords;
-      }
+      if (lang === 'powershell' || lang === 'ps1') keywordsSet = ps1Keywords;
+      else if (lang === 'shell' || lang === 'sh' || lang === 'bash') keywordsSet = shellKeywords;
+      else if (lang === 'vbscript' || lang === 'vbs') keywordsSet = vbsKeywords;
+      else if (lang === 'python' || lang === 'py') keywordsSet = pythonKeywords;
 
       if (keywordsSet.has(lowerWord)) {
         ranges.push({ from: wordOffset, to: wordOffset + wordLen, class: "tok-keyword" });
       }
-
-      // 字符串
       if (word.startsWith('"') && word.endsWith('"')) {
         ranges.push({ from: wordOffset, to: wordOffset + wordLen, class: "tok-string" });
       }
-
-      // 变量
       if (word.includes('%') || word.startsWith('$')) {
         ranges.push({ from: wordOffset, to: wordOffset + wordLen, class: "tok-variableName" });
       }
-
-      // 数字
       if (/^\d+$/.test(word)) {
         ranges.push({ from: wordOffset, to: wordOffset + wordLen, class: "tok-number" });
       }
-
-      // 运算符
       if (operators.has(word)) {
         ranges.push({ from: wordOffset, to: wordOffset + wordLen, class: "tok-operator" });
       }
-
       wordOffset += wordLen + 1;
     }
-
     offset += line.length + 1;
   }
 
@@ -242,65 +214,32 @@ function syntaxHighlighter(state: EditorState) {
 
 const highlightExtension = EditorView.decorations.compute([], syntaxHighlighter);
 
-// 强制注入完整的 CodeMirror 样式（解决生产环境样式丢失问题）
 function injectCodeMirrorStyles() {
   if (typeof document === 'undefined') return;
-
   const styleId = 'codemirror-injected-styles';
   if (document.getElementById(styleId)) return;
 
   const style = document.createElement('style');
   style.id = styleId;
   style.textContent = `
-    /* CodeMirror 基础样式 */
     .cm-editor {
       height: 100% !important;
       font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     }
-    .cm-editor.cm-focused {
-      outline: none;
-    }
+    .cm-editor.cm-focused { outline: none; }
     .cm-scroller {
-      overflow: hidden !important;
+      overflow: auto !important;
       font-family: inherit;
     }
-    .cm-content {
-      overflow: visible !important;
-    }
-    .cm-content {
-      padding: 0;
-      caret-color: #000;
-    }
-    .cm-line {
-      padding: 0 2px;
-      min-height: 1.2em;
-    }
-    .cm-gutters {
-      background: #f7f7f7;
-      color: #999;
-      border: none;
-    }
-    .cm-lineNumbers .cm-gutterElement {
-      padding: 0 3px 0 5px;
-      min-width: 2em;
-      text-align: right;
-    }
-    .cm-activeLine {
-      background: rgba(0, 0, 0, 0.04);
-    }
-    .cm-activeLineGutter {
-      background: rgba(0, 0, 0, 0.06);
-    }
-    .cm-selectionBackground {
-      background: #b4d5fe !important;
-    }
-    .cm-cursor {
-      border-left: 2px solid #000;
-    }
-    .cm-matchingBracket {
-      background-color: rgba(0, 0, 0, 0.15);
-    }
-    /* 语法高亮颜色 - 使用 cm- 前缀确保更高优先级 */
+    .cm-content { padding: 0; caret-color: #000; }
+    .cm-line { padding: 0 2px; min-height: 1.2em; }
+    .cm-gutters { background: #f7f7f7; color: #999; border: none; }
+    .cm-lineNumbers .cm-gutterElement { padding: 0 3px 0 5px; min-width: 2em; text-align: right; }
+    .cm-activeLine { background: rgba(0, 0, 0, 0.04); }
+    .cm-activeLineGutter { background: rgba(0, 0, 0, 0.06); }
+    .cm-selectionBackground { background: #b4d5fe !important; }
+    .cm-cursor { border-left: 2px solid #000; }
+    .cm-matchingBracket { background-color: rgba(0, 0, 0, 0.15); }
     .cm-line .tok-comment { color: #6A9955 !important; font-style: italic !important; }
     .cm-line .tok-keyword { color: #0000FF !important; font-weight: bold !important; }
     .cm-line .tok-string { color: #A31515 !important; }
@@ -308,7 +247,6 @@ function injectCodeMirrorStyles() {
     .cm-line .tok-operator { color: #AF00DB !important; }
     .cm-line .tok-labelName { color: #880000 !important; font-weight: bold !important; }
     .cm-line .tok-number { color: #098658 !important; }
-    /* 滚动条 */
     .cm-scroller::-webkit-scrollbar { width: 10px; height: 10px; }
     .cm-scroller::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 5px; }
     .cm-scroller::-webkit-scrollbar-thumb { background: #888; border-radius: 5px; }
@@ -318,44 +256,13 @@ function injectCodeMirrorStyles() {
   logger.info('Editor', 'CodeMirror styles injected', { styleId });
 }
 
-function updateEditorHeight() {
-  if (!view.value) return;
-
-  requestAnimationFrame(() => {
-    if (!view.value) return;
-
-    const scrollDom = view.value.scrollDOM;
-    if (!scrollDom) return;
-
-    // 根据内容行数计算高度，让内容完整自适应显示
-    const doc = view.value.state.doc;
-    const lineCount = doc.lines;
-    const lineHeight = 21; // 与 CSS 中的 line-height 一致
-    // 添加额外的一行高度，确保光标行也能完整显示
-    const contentHeight = lineCount * lineHeight + lineHeight + 30; // 多加一行
-    const minHeight = Number(props.minHeight || 100);
-    const newHeight = Math.max(minHeight, contentHeight);
-
-    if (editorHeight.value !== `${newHeight}px`) {
-      editorHeight.value = `${newHeight}px`;
-    }
-  });
-}
-
 onMounted(() => {
   if (!editorContainer.value) {
     logger.error('CodeMirrorEditor', 'editorContainer not found');
     return;
   }
 
-  // 确保样式被注入
   injectCodeMirrorStyles();
-
-  logger.info('CodeMirrorEditor', 'Initializing editor', {
-    language: props.language,
-    contentLength: props.modelValue?.length || 0,
-    readonly: props.readonly
-  });
 
   const extensions = [
     basicSetup,
@@ -365,12 +272,8 @@ onMounted(() => {
     readonlyCompartment.of(EditorState.readOnly.of(props.readonly || false)),
     EditorView.lineWrapping,
     keymap.of([
-      ...defaultKeymap,
-      ...historyKeymap,
-      ...foldKeymap,
-      ...completionKeymap,
-      ...searchKeymap,
-      ...lintKeymap,
+      ...defaultKeymap, ...historyKeymap, ...foldKeymap,
+      ...completionKeymap, ...searchKeymap, ...lintKeymap,
       { key: "Tab", run: indentWithTab as any }
     ]),
     history(),
@@ -382,46 +285,17 @@ onMounted(() => {
     highlightExtension,
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
-        const content = update.state.doc.toString();
-        emit("update:modelValue", content);
-        setTimeout(updateEditorHeight, 50);
+        emit("update:modelValue", update.state.doc.toString());
       }
     })
   ];
 
   try {
-    const state = EditorState.create({
-      doc: props.modelValue,
-      extensions
-    });
-
-    view.value = new EditorView({
-      state,
-      parent: editorContainer.value
-    });
-
-    // 诊断：检查编辑器 DOM 结构
-    logger.info('Editor', 'Editor initialized successfully', {
-      hasContainer: !!editorContainer.value,
-      containerChildCount: editorContainer.value?.childElementCount || 0,
-      editorClass: view.value?.dom?.className || 'no-class',
-      hasScroller: !!view.value?.scrollDOM
-    });
-
-    // 检查注入的样式
-    const injectedStyle = document.getElementById('codemirror-injected-styles');
-    logger.info('Editor', 'Style check', {
-      hasInjectedStyle: !!injectedStyle,
-      injectedLength: injectedStyle?.textContent?.length || 0
-    });
-
-    setTimeout(updateEditorHeight, 100);
+    const state = EditorState.create({ doc: props.modelValue, extensions });
+    view.value = new EditorView({ state, parent: editorContainer.value });
 
     resizeObserver.value = new ResizeObserver(() => {
-      if (view.value) {
-        view.value.requestMeasure();
-        updateEditorHeight();
-      }
+      if (view.value) view.value.requestMeasure();
     });
     resizeObserver.value.observe(editorContainer.value);
   } catch (error) {
@@ -433,11 +307,9 @@ watch(
   () => props.modelValue,
   (newValue) => {
     if (view.value && view.value.state.doc.toString() !== newValue) {
-      const transaction = view.value.state.update({
+      view.value.dispatch({
         changes: { from: 0, to: view.value.state.doc.length, insert: newValue }
       });
-      view.value.dispatch(transaction);
-      updateEditorHeight();
     }
   }
 );
@@ -455,11 +327,7 @@ watch(
 
 watch(
   () => props.language,
-  () => {
-    if (view.value) {
-      view.value.dispatch({});
-    }
-  }
+  () => { if (view.value) view.value.dispatch({}); }
 );
 
 onBeforeUnmount(() => {
@@ -475,29 +343,20 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    ref="editorContainer"
-    class="codemirror-editor-container"
-    :style="{ height: editorHeight }"
-  ></div>
+  <div ref="editorContainer" class="codemirror-editor-container"></div>
 </template>
 
 <style scoped>
 .codemirror-editor-container {
   width: 100%;
-  max-width: 100%;
-  border: 1px solid #e5e7eb;
+  height: 100%;
+  min-height: 300px;
+  border: 1px solid var(--claude-border-warm, #e8e6dc);
   border-radius: 6px;
-  overflow: hidden;
-  position: relative;
   box-sizing: border-box;
 }
 
 .codemirror-editor-container :deep(.cm-editor) {
   height: 100%;
-}
-
-.codemirror-editor-container :deep(.cm-scroller) {
-  overflow: hidden !important;
 }
 </style>

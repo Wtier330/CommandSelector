@@ -1,17 +1,39 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import type { ScriptFileMeta, ScriptType } from "@commandselector/shared";
+import ScriptDedupPopover from "./ScriptDedupPopover.vue";
 
 const props = defineProps<{
   script: ScriptFileMeta;
   compact?: boolean;
+  duplicates?: ScriptFileMeta[];
 }>();
 
 const emit = defineEmits<{
   (e: "edit", id: string): void;
   (e: "more", id: string): void;
+  (e: "toggle-dedup", id: string): void;
 }>();
+
+const showDedupPopover = ref(false);
+const dedupBadgeRef = ref<HTMLElement | null>(null);
+const dedupTriggerRect = ref<DOMRect | null>(null);
+const hasDuplicates = computed(() => (props.duplicates?.length ?? 0) > 0);
+
+function handleDedupBadgeClick() {
+  if (dedupBadgeRef.value) {
+    dedupTriggerRect.value = dedupBadgeRef.value.getBoundingClientRect();
+  }
+  showDedupPopover.value = !showDedupPopover.value;
+}
+
+function handleToggleDedup(id: string) {
+  if (id === props.script.id) {
+    showDedupPopover.value = false;
+  }
+  emit("toggle-dedup", id);
+}
 
 // 脚本类型配置
 const typeConfig: Record<ScriptType, { label: string; color: string }> = {
@@ -131,6 +153,24 @@ async function handleCopyPath(e: Event) {
       <div class="cs-card-content-compact">
         <div class="cs-card-title-compact">
           <span class="cs-name">{{ script.name }}</span>
+          <button
+            v-if="hasDuplicates && duplicates"
+            ref="dedupBadgeRef"
+            class="cs-dedup-badge cs-dedup-badge-compact"
+            type="button"
+            :title="`${duplicates.length} 个同名脚本`"
+            @click.stop="handleDedupBadgeClick"
+          >
+            {{ duplicates.length }}
+          </button>
+          <ScriptDedupPopover
+            v-if="showDedupPopover"
+            :scripts="[...duplicates, script]"
+            :current-id="script.id"
+            :trigger-rect="dedupTriggerRect"
+            @close="showDedupPopover = false"
+            @exclude="handleToggleDedup"
+          />
           <span v-if="getSyncStatusIcon(script.syncStatus)" class="cs-sync-indicator">
             {{ getSyncStatusIcon(script.syncStatus) }}
           </span>
@@ -193,6 +233,24 @@ async function handleCopyPath(e: Event) {
       <div class="cs-card-content">
         <div class="cs-card-title">
           {{ script.name }}
+          <button
+            v-if="hasDuplicates && duplicates"
+            ref="dedupBadgeRef"
+            class="cs-dedup-badge"
+            type="button"
+            :title="`${duplicates.length} 个同名脚本`"
+            @click.stop="handleDedupBadgeClick"
+          >
+            {{ duplicates.length }}
+          </button>
+          <ScriptDedupPopover
+            v-if="showDedupPopover"
+            :scripts="[...duplicates, script]"
+            :current-id="script.id"
+            :trigger-rect="dedupTriggerRect"
+            @close="showDedupPopover = false"
+            @exclude="handleToggleDedup"
+          />
           <span v-if="getSyncStatusIcon(script.syncStatus)" class="cs-sync-indicator">
             {{ getSyncStatusIcon(script.syncStatus) }}
           </span>
@@ -447,5 +505,37 @@ async function handleCopyPath(e: Event) {
 
 .cs-action-btn:hover {
   background: #dbeafe;
+}
+
+/* 同名脚本标记 */
+.cs-dedup-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.cs-dedup-badge:hover {
+  background: #fde68a;
+  border-color: #fbbf24;
+}
+
+.cs-dedup-badge-compact {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 10px;
 }
 </style>

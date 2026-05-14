@@ -50,10 +50,8 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
       <div class="cs-dialog">
         <div class="cs-dialog-header">
           <div class="cs-dialog-title">新建脚本</div>
-          <button class="cs-dialog-close" type="button" @click="emit('close')">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
+          <button class="cs-btn-icon cs-btn-icon-sm" type="button" title="关闭" @click="emit('close')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
 

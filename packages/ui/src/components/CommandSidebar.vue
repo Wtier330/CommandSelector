@@ -381,7 +381,9 @@ onUnmounted(() => {
     <div class="cs-dialog">
       <div class="cs-dialog-header">
         <div class="cs-dialog-title">导入命令</div>
-        <button class="cs-dialog-close" type="button" @click="closeImportDialog">&times;</button>
+        <button class="cs-btn-icon cs-btn-icon-sm" type="button" title="关闭" @click="closeImportDialog">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
       <div class="cs-dialog-body">
         <div class="cs-dialog-desc">请粘贴命令的 JSON 内容：</div>

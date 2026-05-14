@@ -16,7 +16,7 @@
 	const route = useRoute();
 
 	const { commands, trashedCommands, isLoaded, errorMsg, loadLibrary, exportLibrary, importLibrary, saveCommand, moveToTrash, restoreCommand, deletePermanently, emptyTrash, addCategory, deleteCategory, librarySource, lastUpdateTime } = useLibraryStore();
-	const { scripts, loadScripts, updateScript } = useScriptsStore();
+	const { scripts, loadScripts, updateScript, updateScriptMeta } = useScriptsStore();
 
 	const showTrashModal = ref(false);
 	const showScriptManageModal = ref(false);
@@ -189,6 +189,15 @@
 	  // TODO: 实现脚本更多操作菜单
 	}
 
+	async function handleToggleDedup(id: string) {
+	  try {
+	    await updateScriptMeta(id, { excludeFromDedup: true });
+	    message.success("已排除，不再纳入同名检测");
+	  } catch (e: any) {
+	    message.error(`排除失败: ${e.message}`);
+	  }
+	}
+
 	onMounted(() => {
 	  loadLibrary();
 	  loadScripts();
@@ -237,6 +246,7 @@
         @update:mode="handleModeChange"
         @edit-script="handleEditScript"
         @more-script="handleMoreScript"
+        @toggle-dedup="handleToggleDedup"
       />
       <BottomStatusBar />
     </div>

@@ -270,7 +270,7 @@ export async function updateScript(
 
 export async function updateScriptMeta(
   id: string,
-  updates: Partial<Pick<ScriptFileMeta, "name" | "description">>
+  updates: Partial<Pick<ScriptFileMeta, "name" | "description" | "excludeFromDedup">>
 ): Promise<boolean> {
   try {
     const index = scripts.value.findIndex((s) => s.id === id);
@@ -289,7 +289,8 @@ export async function updateScriptMeta(
     const updatedScript: ScriptFileMeta = {
       ...script,
       ...(updates.name !== undefined && { name: updates.name }),
-      ...(updates.description !== undefined && { description: updates.description })
+      ...(updates.description !== undefined && { description: updates.description }),
+      ...(updates.excludeFromDedup !== undefined && { excludeFromDedup: updates.excludeFromDedup })
     };
 
     // 创建新数组以触发响应式更新
@@ -363,7 +364,7 @@ export async function importScript(): Promise<ScriptFileMeta | undefined> {
       throw new Error("脚本导入仅在 Tauri 环境中支持");
     }
 
-    // 选择文件
+    // 选择单个文件
     const selected = await open({
       multiple: false,
       filters: [
@@ -377,41 +378,104 @@ export async function importScript(): Promise<ScriptFileMeta | undefined> {
     });
 
     if (!selected) return undefined;
-
     importedPath = selected as string;
 
-    // 读取文件内容
-    const content = await invoke("read_script_file", { path: importedPath });
-
-    // 确定脚本类型
-    const ext = importedPath.toLowerCase();
-    let scriptType: ScriptType = "bat";
-    if (ext.endsWith(".ps1")) {
-      scriptType = "ps1";
-    } else if (ext.endsWith(".vbs")) {
-      scriptType = "vbs";
-    } else if (ext.endsWith(".sh") || ext.endsWith(".bash")) {
-      scriptType = "sh";
-    } else if (ext.endsWith(".py")) {
-      scriptType = "py";
-    } else if (ext.endsWith(".cmd")) {
-      scriptType = "cmd";
-    }
-
-    // 提取原始文件名（不含扩展名）
-    const fileName = importedPath.split(/[/\\]/).pop() || "script";
-    const baseName = fileName.replace(/\.(bat|cmd|ps1|vbs|sh|bash|py)$/i, "");
-
-    // 提取来源目录
-    const sourceDir = importedPath.replace(/[^/\\]+$/, "").replace(/[\/\\]+$/, "");
-
-    // 创建新脚本（直接使用原始文件名，UUID 子目录保证物理文件唯一）
-    const result = await createScript(baseName, scriptType, content as string, undefined, importedPath, sourceDir);
-    logger.info('Scripts', 'Script imported', { originalPath: importedPath, importedAs: baseName, type: scriptType, sourceDir });
-    return result ?? undefined;
+    return await importSingleFile(importedPath);
   } catch (e: any) {
     logger.error('Scripts', 'Failed to import script', { originalPath: importedPath, error: e.message });
     console.error("Failed to import script:", e);
+    throw e;
+  }
+}
+
+/** 导入单个文件（内部共用） */
+async function importSingleFile(filePath: string): Promise<ScriptFileMeta | undefined> {
+  // 读取文件内容
+  const content = await invoke("read_script_file", { path: filePath });
+
+  // 确定脚本类型
+  const ext = filePath.toLowerCase();
+  let scriptType: ScriptType = "bat";
+  if (ext.endsWith(".ps1")) {
+    scriptType = "ps1";
+  } else if (ext.endsWith(".vbs")) {
+    scriptType = "vbs";
+  } else if (ext.endsWith(".sh") || ext.endsWith(".bash")) {
+    scriptType = "sh";
+  } else if (ext.endsWith(".py")) {
+    scriptType = "py";
+  } else if (ext.endsWith(".cmd")) {
+    scriptType = "cmd";
+  } else {
+    // 不在支持列表中的跳过
+    logger.warn('Scripts', 'Unsupported script type, skipping', { path: filePath });
+    return undefined;
+  }
+
+  // 提取原始文件名（不含扩展名）
+  const fileName = filePath.split(/[/\\]/).pop() || "script";
+  const baseName = fileName.replace(/\.(bat|cmd|ps1|vbs|sh|bash|py)$/i, "");
+
+  // 提取来源目录
+  const sourceDir = filePath.replace(/[^/\\]+$/, "").replace(/[\/\\]+$/, "");
+
+  // 创建新脚本
+  const result = await createScript(baseName, scriptType, content as string, undefined, filePath, sourceDir);
+  logger.info('Scripts', 'Script imported', { originalPath: filePath, importedAs: baseName, type: scriptType, sourceDir });
+  return result ?? undefined;
+}
+
+/** 从文件夹批量导入脚本 */
+export async function importScriptFolder(): Promise<{ total: number; imported: number; skipped: number; errors: string[] }> {
+  const errors: string[] = [];
+
+  try {
+    if (!isTauri()) {
+      throw new Error("脚本导入仅在 Tauri 环境中支持");
+    }
+
+    // 选择文件夹
+    const selectedDir = await open({
+      directory: true,
+      multiple: false,
+      title: "选择要导入的脚本文件夹"
+    });
+
+    if (!selectedDir) {
+      return { total: 0, imported: 0, skipped: 0, errors: [] };
+    }
+
+    const dirPath = selectedDir as string;
+
+    // 使用 Rust 扫描目录
+    const scriptFiles = await invoke("list_script_files", { dir: dirPath }) as string[];
+
+    if (scriptFiles.length === 0) {
+      return { total: 0, imported: 0, skipped: 0, errors: ["所选目录中没有支持的脚本文件"] };
+    }
+
+    let imported = 0;
+    let skipped = 0;
+
+    for (const filePath of scriptFiles) {
+      try {
+        const result = await importSingleFile(filePath);
+        if (result) {
+          imported++;
+        } else {
+          skipped++;
+        }
+      } catch (e: any) {
+        skipped++;
+        errors.push(`${filePath}: ${e.message}`);
+      }
+    }
+
+    logger.info('Scripts', 'Folder import complete', { dir: dirPath, total: scriptFiles.length, imported, skipped });
+    return { total: scriptFiles.length, imported, skipped, errors };
+  } catch (e: any) {
+    logger.error('Scripts', 'Failed to import script folder', { error: e.message });
+    console.error("Failed to import script folder:", e);
     throw e;
   }
 }
@@ -521,6 +585,7 @@ export function useScriptsStore() {
     deleteScript,
     getScriptContent,
     importScript,
+    importScriptFolder,
     exportScript,
     createCommandFromScript
   };

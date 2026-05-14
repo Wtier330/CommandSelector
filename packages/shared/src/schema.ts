@@ -79,6 +79,8 @@ export interface ScriptFileMeta {
   // 来源信息（用于脚本可追溯性）
   sourcePath?: string;      // 原始文件的完整路径
   sourceDir?: string;       // 来源目录（便于筛选和分组）
+  // 同名去重：标记此脚本不参与同名关联检测
+  excludeFromDedup?: boolean;
 }
 
 // 脚本注释元数据类型
